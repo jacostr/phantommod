@@ -77,5 +77,4 @@ This project is intended as a lightweight client mod with a light UI and a small
 
 ## License
 
-Add your license here.
 All opensorce, free to make changes.
