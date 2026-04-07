@@ -20,7 +20,7 @@ public class SpeedBridge extends Module {
     public SpeedBridge() {
         super(
                 "Speedbridge Assist",
-                "Face away from the void, hold S and your place button, then once you reach the edge look at the block in front, It will start auto shifting for you after you start placing to help wiht speed briding.",
+                "Face away from the void, hold S and your place button on the blocks ahead. Once you reach the edge, it will auto sneak to assist with legit-looking speed bridging.",
                 ModuleCategory.MOVEMENT,
                 GLFW.GLFW_KEY_X);
     }
