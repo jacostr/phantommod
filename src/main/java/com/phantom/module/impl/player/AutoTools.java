@@ -11,7 +11,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class AutoTools extends Module {
     public AutoTools() {
-        super("AutoTools", "Switches to the best hotbar tool while mining.", ModuleCategory.PLAYER, GLFW.GLFW_KEY_R);
+        super("AutoTools", "Swaps to the best hotbar tool for mining and prefers weapon slots when you attack an entity.", ModuleCategory.PLAYER, GLFW.GLFW_KEY_R);
     }
 
     // Main routing:

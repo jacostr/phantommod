@@ -11,21 +11,22 @@ import org.lwjgl.glfw.GLFW;
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
 
-    // Runtime state captured when the assist is enabled so the bridge direction stays stable.
+    // Runtime state captured when the assist is enabled so the bridge direction
+    // stays stable.
     private float moveYaw;
     private double startX;
     private double startZ;
 
-    // Config exposed in the settings screen.
-    private boolean requirePlaceHeld = false;
-    private int startAfterBlocks = 0;
-    private BridgePreset preset = BridgePreset.STRAIGHT;
-
     public SpeedBridge() {
-        super("SpeedBridge", "Manual bridge assist that handles the sneak timing for you.", ModuleCategory.MOVEMENT, GLFW.GLFW_KEY_X);
+        super(
+                "Speedbridge Assist",
+                "Face away from the void, hold S and your place button, then once you reach the edge look at the block in front, It will start auto shifting for you after you start placing to help wiht speed briding.",
+                ModuleCategory.MOVEMENT,
+                GLFW.GLFW_KEY_X);
     }
 
-    // Capture the starting direction and position so we can measure progress from the
+    // Capture the starting direction and position so we can measure progress from
+    // the
     // exact spot the player enabled the module.
     @Override
     public void onEnable() {
@@ -39,7 +40,8 @@ public class SpeedBridge extends Module {
         startZ = mc.player.getZ();
     }
 
-    // Always release the virtual sneak key when the assist turns off so normal crouch
+    // Always release the virtual sneak key when the assist turns off so normal
+    // crouch
     // behavior is restored immediately.
     @Override
     public void onDisable() {
@@ -49,25 +51,29 @@ public class SpeedBridge extends Module {
     // Main assist loop:
     // 1. Make sure the player is in a valid bridging state.
     // 2. Verify the manual movement input matches the selected preset.
-    // 3. Start crouching only once the player has moved far enough and is hanging over air.
+    // 3. Start crouching only once the player has moved far enough and is hanging
+    // over air.
     @Override
     public void onTick() {
-        if (mc.level == null || mc.player == null || mc.options == null) return;
+        if (mc.level == null || mc.player == null || mc.options == null)
+            return;
 
         if (!(mc.player.getMainHandItem().getItem() instanceof BlockItem)) {
             releaseSneak();
             return;
         }
 
-        // This module is intentionally assist-only: the player keeps full camera control and
-        // still handles the actual movement and placing while the mod only helps with sneak timing.
+        // This module is intentionally assist-only: the player keeps full camera
+        // control and
+        // still handles the actual movement and placing while the mod only helps with
+        // sneak timing.
         TravelVector travelVector = getTravelVector();
         if (!isExpectedBridgeInputHeld(travelVector)) {
             updateSneakState(false);
             return;
         }
 
-        if (requirePlaceHeld && !mc.options.keyUse.isDown()) {
+        if (!mc.options.keyUse.isDown()) {
             updateSneakState(false);
             return;
         }
@@ -87,37 +93,11 @@ public class SpeedBridge extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    public boolean isRequirePlaceHeld() {
-        return requirePlaceHeld;
-    }
-
-    public void setRequirePlaceHeld(boolean requirePlaceHeld) {
-        this.requirePlaceHeld = requirePlaceHeld;
-    }
-
-    public int getStartAfterBlocks() {
-        return startAfterBlocks;
-    }
-
-    public void setStartAfterBlocks(int startAfterBlocks) {
-        this.startAfterBlocks = Math.max(0, Math.min(6, startAfterBlocks));
-    }
-
-    public String getPresetName() {
-        return preset.label;
-    }
-
-    public void cyclePreset() {
-        preset = switch (preset) {
-            case STRAIGHT -> BridgePreset.LEFT;
-            case LEFT -> BridgePreset.RIGHT;
-            case RIGHT -> BridgePreset.STRAIGHT;
-        };
-    }
-
-    // Convert the stored facing angle into the travel direction this preset expects.
-    // STRAIGHT means pure backwards, while LEFT/RIGHT add a sideways component so the
-    // player can do diagonal BedWars-style manual bridging.
+    // Convert the stored facing angle into the travel direction this preset
+    // expects.
+    // Pure backwards is always allowed, and holding A or D adds a sideways
+    // component so
+    // diagonal manual bridging works without separate presets.
     private TravelVector getTravelVector() {
         double backwardYawRadians = Math.toRadians(moveYaw);
         double backwardX = Math.sin(backwardYawRadians);
@@ -129,17 +109,15 @@ public class SpeedBridge extends Module {
 
         double moveX = backwardX;
         double moveZ = backwardZ;
-        boolean holdLeft = false;
-        boolean holdRight = false;
+        boolean holdLeft = mc.options.keyLeft.isDown();
+        boolean holdRight = mc.options.keyRight.isDown();
 
-        if (preset == BridgePreset.LEFT) {
+        if (holdLeft && !holdRight) {
             moveX -= rightX;
             moveZ -= rightZ;
-            holdLeft = true;
-        } else if (preset == BridgePreset.RIGHT) {
+        } else if (holdRight && !holdLeft) {
             moveX += rightX;
             moveZ += rightZ;
-            holdRight = true;
         }
 
         double length = Math.sqrt(moveX * moveX + moveZ * moveZ);
@@ -150,26 +128,29 @@ public class SpeedBridge extends Module {
         return new TravelVector(moveX / length, moveZ / length, holdLeft, holdRight);
     }
 
-    // Sample the block just behind the player's feet in the current bridge direction.
+    // Sample the block just behind the player's feet in the current bridge
+    // direction.
     // If that block is air, the player is hanging over the edge and should crouch.
     private boolean isOverEdge(double backwardX, double backwardZ) {
         BlockPos edgeCheckPos = BlockPos.containing(
                 mc.player.getX() + backwardX * EDGE_CHECK_OFFSET,
                 mc.player.getY() - 1.0D,
-                mc.player.getZ() + backwardZ * EDGE_CHECK_OFFSET
-        );
+                mc.player.getZ() + backwardZ * EDGE_CHECK_OFFSET);
         return mc.level.getBlockState(edgeCheckPos).isAir();
     }
 
-    // This module only owns crouch timing, so the whole assist effect is just toggling
+    // This module only owns crouch timing, so the whole assist effect is just
+    // toggling
     // the sneak key based on the edge check.
     private void updateSneakState(boolean overEdge) {
-        // Hold crouch while the player is hanging over the next air gap, and relax on solid ground.
+        // Hold crouch while the player is hanging over the next air gap, and relax on
+        // solid ground.
         mc.options.keyShift.setDown(overEdge);
     }
 
-    // Each preset expects a slightly different manual key combination from the user.
-    // STRAIGHT = S, LEFT = S + A, RIGHT = S + D.
+    // Accept normal backwards bridging plus either diagonal variant. The player
+    // stays in
+    // control of movement while the module only manages crouch timing.
     private boolean isExpectedBridgeInputHeld(TravelVector travelVector) {
         boolean holdingBack = mc.options.keyDown.isDown();
         boolean holdingLeft = !travelVector.holdLeft() || mc.options.keyLeft.isDown();
@@ -177,7 +158,8 @@ public class SpeedBridge extends Module {
         return holdingBack && holdingLeft && holdingRight;
     }
 
-    // Helper for clean shutdown and for cases where the module temporarily decides it
+    // Helper for clean shutdown and for cases where the module temporarily decides
+    // it
     // should not be sneaking.
     private void releaseSneak() {
         if (mc.options != null) {
@@ -185,30 +167,19 @@ public class SpeedBridge extends Module {
         }
     }
 
-    // Measure how far the player has travelled along the intended bridge line rather than
+    // Measure how far the player has travelled along the intended bridge line
+    // rather than
     // using raw distance, which keeps diagonal presets accurate.
     private boolean hasBridgeStarted(TravelVector travelVector) {
         double deltaX = mc.player.getX() - startX;
         double deltaZ = mc.player.getZ() - startZ;
         double travelledBlocks = deltaX * travelVector.x() + deltaZ * travelVector.z();
-        return travelledBlocks >= startAfterBlocks;
+        return travelledBlocks >= 0.0D;
     }
 
-    // Presets describe the manual bridge style the player wants to use.
-    private enum BridgePreset {
-        STRAIGHT("STRAIGHT"),
-        LEFT("LEFT"),
-        RIGHT("RIGHT");
-
-        private final String label;
-
-        BridgePreset(String label) {
-            this.label = label;
-        }
-    }
-
-    // Small bundle describing the current expected movement direction and whether the
-    // player should also be holding a side key for that preset.
+    // Small bundle describing the current expected movement direction and whether
+    // the
+    // player should also be holding a side key for the detected input style.
     private record TravelVector(double x, double z, boolean holdLeft, boolean holdRight) {
     }
 }

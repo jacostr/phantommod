@@ -1,12 +1,16 @@
 package com.phantom.module.impl.render;
 
-import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.PhantomMod;
 import com.phantom.module.Module;
+import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
@@ -15,11 +19,12 @@ public class HudModule extends Module {
     private boolean showPing = true;
 
     public HudModule() {
-        super("HUD", "Shows lightweight FPS and ping text.", ModuleCategory.RENDER, GLFW.GLFW_KEY_H);
+        super("HUD", "Shows a small top-right PhantomMod overlay with active features and optional FPS or ping text.",
+                ModuleCategory.RENDER, GLFW.GLFW_KEY_H);
     }
 
     @Override
-    public boolean hasSettings() {
+    public boolean hasConfigurableSettings() {
         return true;
     }
 
@@ -28,31 +33,40 @@ public class HudModule extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    // Draw a small top-left overlay so the player gets useful info without covering the
+    // Draw a small top-left overlay so the player gets useful info without covering
+    // the
     // center of the screen during PvP.
     @Override
     public void onHudRender(GuiGraphics graphics) {
-        if (mc.options.hideGui) return;
+        if (mc.options.hideGui)
+            return;
 
-        int x = 8;
-        int y = 8;
+        List<String> lines = new ArrayList<>();
+        lines.add("PhantomMod");
 
-        // Keep the HUD intentionally simple so it feels like a clean PvP overlay.
-        if (showFps) {
-            graphics.drawString(mc.font, Component.literal("FPS: " + mc.getFps()), x, y, 0xFFFFFFFF, true);
-            y += 12;
+        if (PhantomMod.getModuleManager() != null) {
+            for (Module module : PhantomMod.getModuleManager().getModules()) {
+                if (module == this || !module.isEnabled()) {
+                    continue;
+                }
+
+                lines.add(module.getName());
+            }
         }
 
-        // In singleplayer or other local contexts, latency may report as 0, so show a
-        // friendlier label instead of pretending the network ping is literally zero.
+        if (showFps) {
+            lines.add("FPS: " + mc.getFps());
+        }
+
         if (showPing && mc.player != null && mc.getConnection() != null) {
             PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
             if (playerInfo != null) {
                 int latency = playerInfo.getLatency();
-                String pingText = latency <= 0 ? "Ping: local" : "Ping: " + latency + "ms";
-                graphics.drawString(mc.font, Component.literal(pingText), x, y, 0xFFFFFFFF, true);
+                lines.add(latency <= 0 ? "Ping: local" : "Ping: " + latency + "ms");
             }
         }
+
+        drawCompactTopRight(graphics, lines);
     }
 
     public boolean isShowFps() {
@@ -69,5 +83,24 @@ public class HudModule extends Module {
 
     public void setShowPing(boolean showPing) {
         this.showPing = showPing;
+    }
+
+    private void drawCompactTopRight(GuiGraphics graphics, List<String> lines) {
+        final float scale = 0.8F;
+        int scaledWidth = (int) (mc.getWindow().getGuiScaledWidth() / scale);
+        int y = 8;
+
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(scale, scale);
+
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
+            int color = i == 0 ? 0xFFA8E6A3 : 0xFFFFFFFF;
+            int x = scaledWidth - mc.font.width(line) - 8;
+            graphics.drawString(mc.font, Component.literal(line), x, y, color, true);
+            y += i == 0 ? 11 : 10;
+        }
+
+        graphics.pose().popMatrix();
     }
 }

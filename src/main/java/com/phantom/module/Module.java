@@ -1,6 +1,7 @@
 package com.phantom.module;
 
 import com.phantom.gui.NotificationManager;
+import com.phantom.gui.ModuleSettingsScreen;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -23,15 +24,41 @@ public abstract class Module {
         this.enabled = false;
     }
 
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public ModuleCategory getCategory() { return category; }
-    public int getKey() { return key; }
-    public void setKey(int key) { this.key = key; }
-    public boolean isEnabled() { return enabled; }
-    public boolean wasKeyDown() { return keyWasDown; }
-    public void setKeyWasDown(boolean keyWasDown) { this.keyWasDown = keyWasDown; }
-    public void initializeEnabledSilently(boolean enabled) { this.enabled = enabled; }
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public ModuleCategory getCategory() {
+        return category;
+    }
+
+    public int getKey() {
+        return key;
+    }
+
+    public void setKey(int key) {
+        this.key = key;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean wasKeyDown() {
+        return keyWasDown;
+    }
+
+    public void setKeyWasDown(boolean keyWasDown) {
+        this.keyWasDown = keyWasDown;
+    }
+
+    public void initializeEnabledSilently(boolean enabled) {
+        this.enabled = enabled;
+    }
 
     public void setEnabled(boolean enabled) {
         if (this.enabled == enabled) {
@@ -52,11 +79,34 @@ public abstract class Module {
         setEnabled(!enabled);
     }
 
-    public void onEnable() {}
-    public void onDisable() {}
-    public void onTick() {}
-    public void onRender(WorldRenderContext context) {}
-    public void onHudRender(GuiGraphics graphics) {}
-    public boolean hasSettings() { return false; }
-    public Screen createSettingsScreen(Screen parent) { return parent; }
+    public void onEnable() {
+    }
+
+    public void onDisable() {
+    }
+
+    public void onTick() {
+    }
+
+    public void onRender(WorldRenderContext context) {
+    }
+
+    public void onHudRender(GuiGraphics graphics) {
+    }
+
+    public boolean hasSettings() {
+        return true;
+    }
+
+    public boolean hasConfigurableSettings() {
+        return false;
+    }
+
+    public String getSettingsButtonLabel() {
+        return "Opt";
+    }
+
+    public Screen createSettingsScreen(Screen parent) {
+        return new ModuleSettingsScreen(parent, this);
+    }
 }

@@ -3,6 +3,7 @@ package com.phantom.gui;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.ModuleManager;
+import com.phantom.module.impl.render.FullBright;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
@@ -21,7 +22,7 @@ public class ClickGUIScreen extends Screen {
     private int maxScroll;
 
     public ClickGUIScreen(ModuleManager moduleManager) {
-        super(Component.literal("Phantom Mod ClickGUI"));
+        super(Component.literal("Phantom Mod"));
         this.moduleManager = moduleManager;
     }
 
@@ -46,7 +47,7 @@ public class ClickGUIScreen extends Screen {
             int left = this.width / 2 - 95;
 
             this.addRenderableWidget(Button.builder(
-                    Component.literal(module.getName() + ": " + (module.isEnabled() ? "ON" : "OFF")),
+                    Component.literal(module.getName() + ": " + getDisplayedState(module)),
                     button -> {
                         module.toggle();
                         rebuildModuleButtons();
@@ -56,9 +57,9 @@ public class ClickGUIScreen extends Screen {
 
             if (module.hasSettings()) {
                 this.addRenderableWidget(Button.builder(
-                        Component.literal("cfg"),
-                        button -> this.minecraft.setScreen(module.createSettingsScreen(this))
-                ).bounds(left + BUTTON_WIDTH + 6, rowY, CFG_WIDTH, ROW_HEIGHT).build());
+                        Component.literal(module.getSettingsButtonLabel()),
+                        button -> this.minecraft.setScreen(module.createSettingsScreen(this)))
+                        .bounds(left + BUTTON_WIDTH + 6, rowY, CFG_WIDTH, ROW_HEIGHT).build());
             }
 
             rowY += ROW_HEIGHT + ROW_SPACING;
@@ -125,5 +126,13 @@ public class ClickGUIScreen extends Screen {
 
     private int clamp(int value, int min, int max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    private String getDisplayedState(Module module) {
+        if (module instanceof FullBright fullBright) {
+            return fullBright.isActuallyActive() ? "ON" : "OFF";
+        }
+
+        return module.isEnabled() ? "ON" : "OFF";
     }
 }
