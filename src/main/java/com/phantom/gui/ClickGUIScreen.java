@@ -3,7 +3,6 @@ package com.phantom.gui;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.ModuleManager;
-import com.phantom.module.impl.render.FullBright;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.components.Button;
@@ -129,10 +128,6 @@ public class ClickGUIScreen extends Screen {
     }
 
     private String getDisplayedState(Module module) {
-        if (module instanceof FullBright fullBright) {
-            return fullBright.isActuallyActive() ? "ON" : "OFF";
-        }
-
         return module.isEnabled() ? "ON" : "OFF";
     }
 }

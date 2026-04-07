@@ -173,7 +173,7 @@ public class ModuleSettingsScreen extends Screen {
     }
 
     private String onOff(boolean value) {
-        return value ? "OFF" : "ON";
+        return value ? "ON" : "OFF";
     }
 
     private void updateMaxScroll() {

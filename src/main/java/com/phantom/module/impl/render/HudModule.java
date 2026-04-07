@@ -11,6 +11,7 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
@@ -75,6 +76,7 @@ public class HudModule extends Module {
 
     public void setShowFps(boolean showFps) {
         this.showFps = showFps;
+        saveConfig();
     }
 
     public boolean isShowPing() {
@@ -83,6 +85,21 @@ public class HudModule extends Module {
 
     public void setShowPing(boolean showPing) {
         this.showPing = showPing;
+        saveConfig();
+    }
+
+    @Override
+    public void loadConfig(Properties properties) {
+        super.loadConfig(properties);
+        showFps = Boolean.parseBoolean(properties.getProperty("hud.show_fps", Boolean.toString(showFps)));
+        showPing = Boolean.parseBoolean(properties.getProperty("hud.show_ping", Boolean.toString(showPing)));
+    }
+
+    @Override
+    public void saveConfig(Properties properties) {
+        super.saveConfig(properties);
+        properties.setProperty("hud.show_fps", Boolean.toString(showFps));
+        properties.setProperty("hud.show_ping", Boolean.toString(showPing));
     }
 
     private void drawCompactTopRight(GuiGraphics graphics, List<String> lines) {

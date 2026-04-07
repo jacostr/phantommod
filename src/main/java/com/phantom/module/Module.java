@@ -1,11 +1,15 @@
 package com.phantom.module;
 
+import com.phantom.PhantomMod;
 import com.phantom.gui.NotificationManager;
 import com.phantom.gui.ModuleSettingsScreen;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+
+import java.util.Locale;
+import java.util.Properties;
 
 public abstract class Module {
     private final String name;
@@ -42,6 +46,7 @@ public abstract class Module {
 
     public void setKey(int key) {
         this.key = key;
+        saveConfig();
     }
 
     public boolean isEnabled() {
@@ -108,5 +113,36 @@ public abstract class Module {
 
     public Screen createSettingsScreen(Screen parent) {
         return new ModuleSettingsScreen(parent, this);
+    }
+
+    public void loadConfig(Properties properties) {
+        String id = getConfigId();
+        
+        String savedKey = properties.getProperty(id + ".key");
+        if (savedKey != null) {
+            try {
+                this.key = Integer.parseInt(savedKey);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
+        String savedEnabled = properties.getProperty(id + ".enabled");
+        if (savedEnabled != null) {
+            this.enabled = Boolean.parseBoolean(savedEnabled);
+        }
+    }
+
+    public void saveConfig(Properties properties) {
+        String id = getConfigId();
+        properties.setProperty(id + ".key", Integer.toString(key));
+        properties.setProperty(id + ".enabled", Boolean.toString(enabled));
+    }
+
+    protected void saveConfig() {
+        PhantomMod.saveConfig();
+    }
+
+    private String getConfigId() {
+        return name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
     }
 }

@@ -57,4 +57,10 @@ public class PhantomMod implements ClientModInitializer {
     public static ModuleManager getModuleManager() {
         return moduleManager;
     }
+
+    public static void saveConfig() {
+        if (moduleManager != null) {
+            moduleManager.saveConfig();
+        }
+    }
 }

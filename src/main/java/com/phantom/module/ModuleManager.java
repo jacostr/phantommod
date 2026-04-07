@@ -1,5 +1,6 @@
 package com.phantom.module;
 
+import com.phantom.config.ConfigManager;
 import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.player.AutoTools;
@@ -28,6 +29,7 @@ public class ModuleManager {
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())
                 .thenComparing(Module::getName));
         hudModule.initializeEnabledSilently(true);
+        ConfigManager.load(this);
     }
 
     public List<Module> getModules() { return modules; }
@@ -65,5 +67,9 @@ public class ModuleManager {
 
     public void onHudRender(GuiGraphics graphics) {
         modules.stream().filter(Module::isEnabled).forEach(module -> module.onHudRender(graphics));
+    }
+
+    public void saveConfig() {
+        ConfigManager.save(this);
     }
 }

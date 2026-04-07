@@ -18,9 +18,8 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 public class ESP extends Module {
@@ -44,7 +43,7 @@ public class ESP extends Module {
         }
 
         // Collect matching entities once, reuse the list to avoid double-querying.
-        List<Entity> targets = mc.level.getEntitiesOfClass(
+        var targets = mc.level.getEntitiesOfClass(
                 Entity.class,
                 mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
                 this::shouldHighlight
@@ -120,13 +119,38 @@ public class ESP extends Module {
     }
 
     public boolean isPlayersEnabled() { return playersEnabled; }
-    public void setPlayersEnabled(boolean v) { this.playersEnabled = v; }
+    public void setPlayersEnabled(boolean v) {
+        this.playersEnabled = v;
+        saveConfig();
+    }
 
     public boolean isMobsEnabled() { return mobsEnabled; }
-    public void setMobsEnabled(boolean v) { this.mobsEnabled = v; }
+    public void setMobsEnabled(boolean v) {
+        this.mobsEnabled = v;
+        saveConfig();
+    }
 
     public boolean isAnimalsEnabled() { return animalsEnabled; }
-    public void setAnimalsEnabled(boolean v) { this.animalsEnabled = v; }
+    public void setAnimalsEnabled(boolean v) {
+        this.animalsEnabled = v;
+        saveConfig();
+    }
+
+    @Override
+    public void loadConfig(Properties properties) {
+        super.loadConfig(properties);
+        playersEnabled = Boolean.parseBoolean(properties.getProperty("esp.players", Boolean.toString(playersEnabled)));
+        mobsEnabled = Boolean.parseBoolean(properties.getProperty("esp.mobs", Boolean.toString(mobsEnabled)));
+        animalsEnabled = Boolean.parseBoolean(properties.getProperty("esp.animals", Boolean.toString(animalsEnabled)));
+    }
+
+    @Override
+    public void saveConfig(Properties properties) {
+        super.saveConfig(properties);
+        properties.setProperty("esp.players", Boolean.toString(playersEnabled));
+        properties.setProperty("esp.mobs", Boolean.toString(mobsEnabled));
+        properties.setProperty("esp.animals", Boolean.toString(animalsEnabled));
+    }
 
     private boolean shouldHighlight(Entity entity) {
         if (entity == mc.player) return false;
