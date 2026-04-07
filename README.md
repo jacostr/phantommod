@@ -7,12 +7,12 @@ PhantomMod is a high-performance, lightweight Fabric client mod for Minecraft Ja
 ### PvP & Movement
 *   **AlwaysSprint**: Eliminates the need to double-tap or hold a sprint key. Automatically keeps you sprinting while moving forward.
 *   **SpeedBridge**: A specialized assist that helps with bridging. It automates crouch-un-crouch timing to make bridging faster and safer.
-*   **AutoTools**: Intelligently switches your active hotbar slot to the most efficient tool for the block you're looking at, or to your best weapon when targeting entities.
+*   **AutoTools**: Auto switches your active hotbar slot to the most efficient tool for the block you're mining, or to your best weapon when targeting entities.
 
 ### Visuals & Render
-*   **ESP (Extra Sensory Perception)**: Highlights nearby players, mobs, and animals with vibrant boxes that are visible through walls.
+*   **ESP**: Highlights nearby players, mobs, and animals with vibrant boxes that are visible through walls.
 *   **FullBright**: Applies a permanent Night Vision effect, ensuring you can see clearly in caves or at night without using torches.
-*   **HUD**: A compact, non-intrusive overlay in the top-right corner that displays your active modules, current FPS, and latency (Ping).
+*   **HUD**: A compact, non-intrusive overlay in the top-right corner that displays your active modules, current FPS, and Ping.
 
 ### Interface
 *   **Click GUI**: A sleek, easy-to-use menu to toggle modules on the fly. Accessible via **Right Shift** by default.
@@ -23,7 +23,7 @@ PhantomMod is a high-performance, lightweight Fabric client mod for Minecraft Ja
 ## Controls & Configuration
 
 ### Keybinds
-You can customize all module hotkeys through the **Module Settings** (the "Opt" button in the Click GUI).
+You can customize all module hotkeys through the **Module Settings** (the "Options" button in the Click GUI).
 
 | Action | Default Key |
 | :--- | :--- |
