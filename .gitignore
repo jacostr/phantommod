@@ -1,0 +1,30 @@
+# Gradle
+.gradle/
+build/
+out/
+
+# Java / JVM
+*.class
+hs_err_pid*
+replay_pid*
+
+# IDE files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local run/config files
+run/
+logs/
+crash-reports/
+
+# Fabric / Loom generated files
+remappedSrc/
+.fabric/

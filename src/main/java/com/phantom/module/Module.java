@@ -1,0 +1,62 @@
+package com.phantom.module;
+
+import com.phantom.gui.NotificationManager;
+import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+
+public abstract class Module {
+    private final String name;
+    private final String description;
+    private final ModuleCategory category;
+    private int key;
+    private boolean enabled;
+    private boolean keyWasDown;
+    protected static final Minecraft mc = Minecraft.getInstance();
+
+    public Module(String name, String description, ModuleCategory category, int key) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.key = key;
+        this.enabled = false;
+    }
+
+    public String getName() { return name; }
+    public String getDescription() { return description; }
+    public ModuleCategory getCategory() { return category; }
+    public int getKey() { return key; }
+    public void setKey(int key) { this.key = key; }
+    public boolean isEnabled() { return enabled; }
+    public boolean wasKeyDown() { return keyWasDown; }
+    public void setKeyWasDown(boolean keyWasDown) { this.keyWasDown = keyWasDown; }
+    public void initializeEnabledSilently(boolean enabled) { this.enabled = enabled; }
+
+    public void setEnabled(boolean enabled) {
+        if (this.enabled == enabled) {
+            return;
+        }
+
+        this.enabled = enabled;
+        if (enabled) {
+            onEnable();
+        } else {
+            onDisable();
+        }
+
+        NotificationManager.push(name + (enabled ? " enabled" : " disabled"));
+    }
+
+    public void toggle() {
+        setEnabled(!enabled);
+    }
+
+    public void onEnable() {}
+    public void onDisable() {}
+    public void onTick() {}
+    public void onRender(WorldRenderContext context) {}
+    public void onHudRender(GuiGraphics graphics) {}
+    public boolean hasSettings() { return false; }
+    public Screen createSettingsScreen(Screen parent) { return parent; }
+}

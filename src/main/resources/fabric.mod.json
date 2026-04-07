@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "phantom",
+  "version": "${version}",
+  "name": "Phantom Mod",
+  "description": "A Minecraft mod with ESP, Speed Bridge, and Always Sprint.",
+  "authors": [
+    "Phantom Team"
+  ],
+  "contact": {
+    "homepage": "https://fabricmc.net/",
+    "sources": "https://github.com/fabricmc/fabric-example-mod"
+  },
+  "license": "CC0-1.0",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.phantom.PhantomMod"
+    ]
+  },
+  "mixins": [
+    "phantom.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.5",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
