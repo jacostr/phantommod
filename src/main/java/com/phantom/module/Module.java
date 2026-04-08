@@ -1,3 +1,14 @@
+/*
+ * Module.java — Abstract base class that every PhantomMod feature extends.
+ *
+ * Provides the lifecycle hooks (onEnable/onDisable/onTick/onRender/onHudRender),
+ * hotkey management, enable/disable toggling with notification toasts, and config
+ * persistence (loadConfig/saveConfig via Properties). ModuleManager calls these
+ * methods each tick to drive all module logic.
+ *
+ * Subclasses only need to override the hooks they care about — everything else
+ * has sensible defaults (no-op methods, toggle-style keybind, etc.).
+ */
 package com.phantom.module;
 
 import com.phantom.PhantomMod;
@@ -125,7 +136,7 @@ public abstract class Module {
     }
 
     public boolean hasConfigurableSettings() {
-        return false;
+        return true;
     }
 
     public String getSettingsButtonLabel() {

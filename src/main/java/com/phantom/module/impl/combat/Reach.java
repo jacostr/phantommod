@@ -1,6 +1,11 @@
 /*
- * Blatant combat: separate transient modifiers for entity and block interaction range.
- * Vanilla bases are ~3.0 blocks (entities) and ~4.5 (blocks).
+ * Reach.java — Extends entity and block interaction range (Combat module).
+ *
+ * Uses Minecraft's Attributes system with transient AttributeModifiers to extend
+ * ENTITY_INTERACTION_RANGE and BLOCK_INTERACTION_RANGE independently. Modifiers are
+ * added on enable and removed on disable. Configurable via separate sliders +
+ * Legit/Normal/Obvious/Blatant presets.
+ * Detectability: Blatant — servers log hit distances directly.
  */
 package com.phantom.module.impl.combat;
 
@@ -26,7 +31,7 @@ public class Reach extends Module {
     private static final Identifier MODIFIER_BLOCK = Identifier.fromNamespaceAndPath(PhantomMod.MOD_ID, "reach_block");
 
     public Reach() {
-        super("Reach", "Extends entity hit reach and block reach separately (see settings).", ModuleCategory.BLATANT, -1);
+        super("Reach", "Increases your attack and interaction range.\nDetectability: Blatant", ModuleCategory.COMBAT, -1);
     }
 
     @Override
@@ -118,6 +123,12 @@ public class Reach extends Module {
     public void applyPresetLegit() {
         setEntityReach(3.1);
         setBlockReach(4.7);
+    }
+
+    /** Vanilla standards. */
+    public void applyPresetNormal() {
+        setEntityReach(3.0);
+        setBlockReach(4.5);
     }
 
     /** Noticeable but common cheat values. */

@@ -1,17 +1,26 @@
+/*
+ * ModuleManager.java — Central registry for all modules.
+ *
+ * Constructs every module instance at startup, loads saved config from disk,
+ * and provides dispatch methods (onTick, onRender, onHudRender, handleKeybinds)
+ * that PhantomMod.java calls from its event hooks. Also exposes lookup methods
+ * (getModuleByName, getModuleByClass) used by mixins and the GUI.
+ */
 package com.phantom.module;
 
 import com.phantom.config.ConfigManager;
 import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.player.AutoTools;
+import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.FullBright;
-import com.phantom.module.impl.render.Hitboxes;
 import com.phantom.module.impl.render.HudModule;
-import com.phantom.module.impl.render.Zoom;
 import com.phantom.module.impl.combat.AutoBlock;
 import com.phantom.module.impl.combat.Reach;
-import com.phantom.module.impl.movement.AutoJump;
+import com.phantom.module.impl.combat.Velocity;
+import com.phantom.module.impl.combat.Criticals;
+import com.phantom.module.impl.combat.AimAssist;
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
 import com.mojang.blaze3d.platform.InputConstants;
@@ -30,18 +39,21 @@ public class ModuleManager {
         modules.add(new AlwaysSprint());
         modules.add(new FullBright());
         modules.add(new ESP());
-        modules.add(new Hitboxes());
         modules.add(new SpeedBridge());
         modules.add(new AutoTools());
+        modules.add(new NoFall());
         modules.add(new Reach());
+        modules.add(new Velocity());
+        modules.add(new Criticals());
+        modules.add(new AimAssist());
         modules.add(new AutoBlock());
         modules.add(new Scaffold());
-        modules.add(new AutoJump());
         modules.add(new NoJumpDelay());
-        modules.add(new Zoom());
         modules.add(hudModule);
+
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())
                 .thenComparing(Module::getName));
+        
         hudModule.initializeEnabledSilently(true);
         ConfigManager.load(this);
         for (Module module : modules) {
@@ -91,11 +103,12 @@ public class ModuleManager {
         ConfigManager.save(this);
     }
 
-    /** Disables every module once, then saves config (panic key). */
-    public void panic() {
-        for (Module module : modules) {
-            module.disableSilently();
-        }
-        saveConfig();
+    /** Helper for Mixins to get a typed module reference. */
+    @SuppressWarnings("unchecked")
+    public <T extends Module> T getModuleByClass(Class<T> clazz) {
+        return (T) modules.stream()
+                .filter(m -> m.getClass().equals(clazz))
+                .findFirst()
+                .orElse(null);
     }
 }

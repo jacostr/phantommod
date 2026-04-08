@@ -1,3 +1,11 @@
+/*
+ * EntityOutlineRender.java — 3D wireframe box drawing utility for ESP.
+ *
+ * Draws AABB wireframes in world-space using the LINES render type, which ignores
+ * depth testing so boxes appear through walls. Used as a fallback rendering path
+ * alongside the glowing-tag approach in ESP.java. Camera-relative translation is
+ * handled via PoseStack so positions stay correct at any view angle.
+ */
 package com.phantom.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -12,7 +20,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Client-side AABB wireframes (works in multiplayer; does not rely on glowing tag).
+ * Client-side AABB wireframes (works in multiplayer; does not rely on glowing
+ * tag).
  */
 public final class EntityOutlineRender {
     private EntityOutlineRender() {
@@ -24,7 +33,8 @@ public final class EntityOutlineRender {
         drawBox(context, entity.getBoundingBox(), cam, r, g, b, a);
     }
 
-    public static void drawBox(WorldRenderContext context, AABB box, Vec3 cameraPos, float r, float g, float b, float a) {
+    public static void drawBox(WorldRenderContext context, AABB box, Vec3 cameraPos, float r, float g, float b,
+            float a) {
         MultiBufferSource consumers = context.consumers();
         if (consumers == null) {
             return;

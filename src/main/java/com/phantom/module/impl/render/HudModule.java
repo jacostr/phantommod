@@ -1,5 +1,10 @@
 /*
- * Render: small overlay listing enabled modules plus optional FPS and ping.
+ * HudModule.java — Top-right overlay showing active modules, FPS, and ping (Player module).
+ *
+ * Draws a compact, scaled text list in the top-right corner. Shows the mod name,
+ * a list of currently enabled modules (toggleable), FPS counter, and current ping.
+ * Each element can be shown/hidden independently via settings toggles.
+ * Detectability: Safe — purely client-side visual overlay.
  */
 package com.phantom.module.impl.render;
 
@@ -19,12 +24,14 @@ import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
     // Config toggles shown in the HUD settings screen.
+    private boolean showModuleList = true;
     private boolean showFps = true;
     private boolean showPing = true;
 
     public HudModule() {
-        super("HUD", "Shows a small top-right PhantomMod overlay with active features and optional FPS or ping text.",
-                ModuleCategory.RENDER, GLFW.GLFW_KEY_H);
+        // HUD lives in the Player tab alongside other non-combat visual aids.
+        super("HUD", "Shows a small top-right PhantomMod overlay with active features and optional FPS or ping text.\nDetectability: Safe",
+                ModuleCategory.PLAYER, GLFW.GLFW_KEY_H);
     }
 
     @Override
@@ -46,12 +53,12 @@ public class HudModule extends Module {
         List<String> lines = new ArrayList<>();
         lines.add("PhantomMod");
 
-        if (PhantomMod.getModuleManager() != null) {
+        // Only show the active-module list if the user has it enabled in settings.
+        if (showModuleList && PhantomMod.getModuleManager() != null) {
             for (Module module : PhantomMod.getModuleManager().getModules()) {
                 if (module == this || !module.isEnabled()) {
                     continue;
                 }
-
                 lines.add(module.getName());
             }
         }
@@ -69,6 +76,15 @@ public class HudModule extends Module {
         }
 
         drawCompactTopRight(graphics, lines);
+    }
+
+    public boolean isShowModuleList() {
+        return showModuleList;
+    }
+
+    public void setShowModuleList(boolean showModuleList) {
+        this.showModuleList = showModuleList;
+        saveConfig();
     }
 
     public boolean isShowFps() {
@@ -92,6 +108,7 @@ public class HudModule extends Module {
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
+        showModuleList = Boolean.parseBoolean(properties.getProperty("hud.show_modules", Boolean.toString(showModuleList)));
         showFps = Boolean.parseBoolean(properties.getProperty("hud.show_fps", Boolean.toString(showFps)));
         showPing = Boolean.parseBoolean(properties.getProperty("hud.show_ping", Boolean.toString(showPing)));
     }
@@ -99,6 +116,7 @@ public class HudModule extends Module {
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
+        properties.setProperty("hud.show_modules", Boolean.toString(showModuleList));
         properties.setProperty("hud.show_fps", Boolean.toString(showFps));
         properties.setProperty("hud.show_ping", Boolean.toString(showPing));
     }

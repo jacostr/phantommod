@@ -1,17 +1,21 @@
 /*
- * Ghost: keeps sprinting when vanilla would allow it (food, not blocking, not in fluids, etc.).
+ * AlwaysSprint.java — Automatically keeps the player sprinting (Movement module).
+ *
+ * Sets mc.player.setSprinting(true) every tick when moving forward and sprint is
+ * normally allowed (not too hungry, not in liquid, etc.). Eliminates the need to
+ * double-tap or hold a sprint key.
+ * Detectability: Safe — vanilla sprint behaviour, just automated.
  */
 package com.phantom.module.impl.movement;
 
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
-import org.lwjgl.glfw.GLFW;
 
 public class AlwaysSprint extends Module {
     public AlwaysSprint() {
         super("AlwaysSprint",
-                "Automatically keeps you sprinting while your movement state still allows a normal sprint.",
-                ModuleCategory.GHOST, -1);
+                "Keeps player sprinting automatically when moving forward.\nDetectability: Safe/Subtle",
+                ModuleCategory.MOVEMENT, -1);
     }
 
     @Override

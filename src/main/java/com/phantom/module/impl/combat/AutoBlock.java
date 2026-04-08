@@ -1,6 +1,10 @@
 /*
- * Blatant: when you take damage and hold a shield offhand, briefly holds use after a delay.
- * Strength 0–100: higher = shorter reaction wait and longer block hold (100 ≈ very strong).
+ * AutoBlock.java — Automatic sword blocking after hitting an entity (Combat module).
+ *
+ * After each sword hit, virtually holds the right-click (use) key for a configurable
+ * duration. On Hypixel 1.21, holding right-click with a sword triggers 1.8-style
+ * block-hitting. Strength slider controls blocking speed and duration.
+ * Detectability: Blatant — consistent block-hit timing is easily flagged.
  */
 package com.phantom.module.impl.combat;
 
@@ -23,10 +27,7 @@ public class AutoBlock extends Module {
     private boolean weAreHoldingUse;
 
     public AutoBlock() {
-        super("Auto Block",
-                "Raises shield (offhand) after you get hit. Strength slider: higher = quicker block and longer hold.",
-                ModuleCategory.BLATANT,
-                -1);
+        super("AutoBlock", "Automatically blocks after you hit an entity to significantly reduce incoming damage.\nDetectability: Blatant", ModuleCategory.COMBAT, -1);
     }
 
     @Override
@@ -83,6 +84,10 @@ public class AutoBlock extends Module {
     }
 
     private boolean canRaiseShield() {
+        ItemStack main = mc.player.getMainHandItem();
+        if (main.getItem().getDescriptionId().toLowerCase().contains("sword")) {
+            return true;
+        }
         ItemStack off = mc.player.getOffhandItem();
         return off.is(Items.SHIELD) && !mc.player.getCooldowns().isOnCooldown(off);
     }

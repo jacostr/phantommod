@@ -1,5 +1,10 @@
 /*
- * Render QoL: raises client gamma while enabled; restores your previous brightness when disabled.
+ * FullBright.java — Maximum ambient light level for night vision (Player module).
+ *
+ * Saves the current gamma value on enable, sets it to 1.0 (maximum), and restores
+ * the original value on disable. Re-applies gamma every tick in case the user opens
+ * vanilla Options and the value gets reset.
+ * Detectability: Safe — gamma is a client-only graphics option.
  */
 package com.phantom.module.impl.render;
 
@@ -11,9 +16,11 @@ public class FullBright extends Module {
     private Double savedGamma;
 
     public FullBright() {
+        // Moved to Player tab — it's a visual QoL feature, not combat automation.
+        // No hotkey by default; assign one in settings if you toggle this often.
         super("FullBright",
-                "Maxes brightness (gamma) while on. Turn off to restore your previous brightness setting.",
-                ModuleCategory.RENDER,
+                "Modifies ambient light level to maximum, letting you see perfectly in the dark.\nDetectability: Safe",
+                ModuleCategory.PLAYER,
                 -1);
     }
 

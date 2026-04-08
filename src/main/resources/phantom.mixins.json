@@ -6,7 +6,9 @@
   "client": [
     "MinecraftClientMixin",
     "LivingEntityJumpAccessor",
-    "LivingEntityJumpDelayMixin"
+    "LivingEntityJumpDelayMixin",
+    "ClientPacketListenerMixin",
+    "MultiPlayerGameModeMixin"
   ],
   "injectors": {
     "defaultRequire": 1

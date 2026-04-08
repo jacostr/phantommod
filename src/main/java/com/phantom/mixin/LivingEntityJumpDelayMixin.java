@@ -1,3 +1,10 @@
+/*
+ * LivingEntityJumpDelayMixin.java — Removes the vanilla jump cooldown for NoJumpDelay.
+ *
+ * Injects at the TAIL of LivingEntity.tick(). If the NoJumpDelay module is enabled and
+ * the entity is the local player, sets noJumpDelay to 0 via the LivingEntityJumpAccessor.
+ * This makes bunny-hopping feel instant instead of waiting 10 ticks between jumps.
+ */
 package com.phantom.mixin;
 
 import com.phantom.module.impl.movement.NoJumpDelay;

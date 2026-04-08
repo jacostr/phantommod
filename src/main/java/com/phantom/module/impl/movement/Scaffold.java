@@ -1,5 +1,10 @@
 /*
- * Places a block under you when that space is air. Presets: Standard, Legit (sneak + pacing), God bridge (fast).
+ * Scaffold.java — Automatically places blocks under the player (Movement module).
+ *
+ * Detects when the block directly below is air, temporarily adjusts pitch downward,
+ * triggers a use-item action to place a block, then restores pitch. Supports Standard
+ * (tower), Legit (sneaking), and God Bridge (fast) modes.
+ * Detectability: Blatant — impossible look angles are flagged by anti-cheat.
  */
 package com.phantom.module.impl.movement;
 
@@ -64,8 +69,8 @@ public class Scaffold extends Module {
 
     public Scaffold() {
         super("Scaffold",
-                "Places blocks under you. Standard uses the tower toggle. Legit sneaks and slows pacing. God bridge is fast for bridging up.",
-                ModuleCategory.BLATANT,
+                "Automatically places blocks under you.\nDetectability: Blatant",
+                ModuleCategory.MOVEMENT,
                 -1);
     }
 

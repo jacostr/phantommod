@@ -1,5 +1,15 @@
+/*
+ * ClickGUIScreen.java — The main module toggle overlay, opened with Right Shift.
+ *
+ * Displays all registered modules in categorised tabs (Combat, Movement, Player).
+ * Each row has an enable/disable button and a hamburger (≡) icon that opens
+ * ModuleSettingsScreen for that module. Includes a search bar and scroll support.
+ *
+ * This is the primary interface users interact with to manage PhantomMod features.
+ */
 package com.phantom.gui;
 
+import com.phantom.PhantomMod;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.ModuleManager;
@@ -23,7 +33,7 @@ public class ClickGUIScreen extends Screen {
     private static final int LIST_TOP = 52;
 
     private final ModuleManager moduleManager;
-    private ModuleCategory selectedCategory = ModuleCategory.BLATANT;
+    private ModuleCategory selectedCategory = ModuleCategory.COMBAT;
     private int scrollOffset;
     private int maxScroll;
     private String searchText = "";
@@ -42,13 +52,7 @@ public class ClickGUIScreen extends Screen {
     private void rebuildUI() {
         rebuildingSearch = true;
         this.clearWidgets();
-
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Client"),
-                        button -> this.minecraft.setScreen(new PhantomSettingsScreen(this, moduleManager)))
-                .bounds(this.width - 76, 4, 72, TAB_HEIGHT)
-                .build());
-
+        
         int tabWidth = 80;
         int totalTabsWidth = ModuleCategory.values().length * tabWidth;
         int startX = (this.width - totalTabsWidth) / 2;
@@ -110,7 +114,7 @@ public class ClickGUIScreen extends Screen {
 
             if (module.hasConfigurableSettings()) {
                 this.addRenderableWidget(Button.builder(
-                                Component.literal("CFG"),
+                                Component.empty(),
                                 button -> this.minecraft.setScreen(module.createSettingsScreen(this)))
                         .bounds(left + BUTTON_WIDTH + 6, rowY, CFG_WIDTH, ROW_HEIGHT)
                         .build());
@@ -118,6 +122,16 @@ public class ClickGUIScreen extends Screen {
 
             rowY += ROW_HEIGHT + ROW_SPACING;
         }
+
+        // Save Config Button (Bottom Left)
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Save Config"),
+                        button -> {
+                            PhantomMod.saveConfig();
+                            NotificationManager.push("Config saved");
+                        })
+                .bounds(4, this.height - 24, 80, 20)
+                .build());
 
         rebuildingSearch = false;
     }
@@ -127,7 +141,36 @@ public class ClickGUIScreen extends Screen {
         graphics.fill(0, 0, this.width, LIST_TOP, 0xFF202020);
         graphics.fill(0, LIST_TOP, this.width, this.height, 0x90101010);
 
+        // Header Branding
+        graphics.drawString(this.font, "PhantomMod", 4, 10, 0xFFA8E6A3);
+
         super.render(graphics, mouseX, mouseY, delta);
+
+        int rowY = LIST_TOP - scrollOffset;
+        String q = searchText.trim().toLowerCase(Locale.ROOT);
+        List<Module> modules = moduleManager.getModules().stream()
+                .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
+                .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
+                .collect(Collectors.toList());
+
+        for (Module module : modules) {
+            if (rowY + ROW_HEIGHT < LIST_TOP - 2 || rowY > this.height - 12) {
+                rowY += ROW_HEIGHT + ROW_SPACING;
+                continue;
+            }
+
+            int left = this.width / 2 - 95;
+            if (module.hasConfigurableSettings()) {
+                int btnX = left + BUTTON_WIDTH + 6;
+                int btnY = rowY;
+                int textW = this.font.width("≡");
+                graphics.drawString(this.font, "≡", btnX + CFG_WIDTH / 2 - textW / 2, btnY + ROW_HEIGHT / 2 - 4, 0xFFFFFFFF, false);
+            }
+
+            rowY += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        NotificationManager.render(graphics);
     }
 
     @Override

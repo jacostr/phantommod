@@ -1,5 +1,10 @@
 /*
- * Ghost: while holding attack, swaps hotbar slot to best weapon vs entities or best tool vs targeted block.
+ * AutoTools.java — Automatically selects the best tool or weapon from the hotbar (Player module).
+ *
+ * Each tick, reads mc.hitResult. For blocks, compares getDestroySpeed() across all hotbar
+ * slots and switches to the fastest. For entities, scores by weapon type
+ * (sword > mace > axe > trident).
+ * Detectability: Safe — tool swapping is normal player behaviour.
  */
 package com.phantom.module.impl.player;
 
@@ -10,21 +15,20 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
-import org.lwjgl.glfw.GLFW;
+
+import java.util.Locale;
 
 public class AutoTools extends Module {
     public AutoTools() {
-        super("AutoTools", "Swaps to the best hotbar tool for mining and prefers weapon slots when you attack an entity.", ModuleCategory.GHOST, -1);
+        super("AutoTools", "Automatically switches to the best tool for mining a block.\nDetectability: Safe", ModuleCategory.PLAYER, -1);
     }
 
-    // Main routing:
-    // - attacking a living entity -> prefer a weapon slot
-    // - mining a block -> prefer the best matching tool slot
     @Override
     public void onTick() {
-        if (mc.player == null || mc.level == null || mc.hitResult == null) return;
+        if (mc.player == null || mc.level == null || mc.hitResult == null || mc.gameMode == null) return;
         if (mc.screen != null || !mc.options.keyAttack.isDown()) return;
 
+        // Weapon swap logic
         if (mc.hitResult instanceof EntityHitResult entityHitResult &&
                 entityHitResult.getEntity() instanceof LivingEntity livingEntity &&
                 livingEntity.isAlive()) {
@@ -35,13 +39,15 @@ public class AutoTools extends Module {
             return;
         }
 
+        // Tool swap logic
         if (!(mc.hitResult instanceof BlockHitResult blockHitResult)) return;
-
+        
         BlockState blockState = mc.level.getBlockState(blockHitResult.getBlockPos());
+        if (blockState.isAir()) return;
+
         int bestSlot = mc.player.getInventory().getSelectedSlot();
         float bestSpeed = getToolScore(bestSlot, blockState);
 
-        // Only scan the hotbar so tool swaps stay subtle and easy to follow.
         for (int slot = 0; slot < 9; slot++) {
             float speed = getToolScore(slot, blockState);
             if (speed > bestSpeed) {
@@ -55,30 +61,31 @@ public class AutoTools extends Module {
         }
     }
 
-    // Score only the hotbar so swaps stay subtle. Weapon data components are a clean way
-    // to prefer swords and other combat items over pickaxes while fighting.
     private int findBestWeaponSlot() {
         int bestSlot = -1;
         float bestScore = Float.NEGATIVE_INFINITY;
 
         for (int slot = 0; slot < 9; slot++) {
             var stack = mc.player.getInventory().getItem(slot);
-            if (stack.isEmpty()) {
-                continue;
-            }
+            if (stack.isEmpty()) continue;
 
             float score = 0.0F;
+            // Using string check for 1.21.11 mapping stability
+            String itemName = stack.getItem().toString().toLowerCase(Locale.ROOT);
 
-            if (stack.has(DataComponents.WEAPON)) {
+            if (itemName.contains("sword")) {
                 score += 1000.0F;
+            } else if (itemName.contains("_axe")) { // Matches iron_axe but not pickaxe
+                score += 500.0F;
+            } else if (itemName.contains("trident")) {
+                score += 300.0F;
+            } else if (itemName.contains("mace")) {
+                score += 800.0F;
             }
 
-            if (stack.has(DataComponents.PIERCING_WEAPON)) {
-                score += 50.0F;
-            }
-
-            if (stack.has(DataComponents.KINETIC_WEAPON)) {
-                score += 25.0F;
+            // Fallback: check for attack damage component
+            if (stack.get(DataComponents.ATTRIBUTE_MODIFIERS) != null) {
+                score += 10.0F;
             }
 
             if (score > bestScore) {
@@ -90,13 +97,11 @@ public class AutoTools extends Module {
         return bestSlot;
     }
 
-    // Tool selection is mostly destroy speed, but correct-drop tools get a huge bonus so
-    // the module does not choose a "fast enough" wrong item over the proper one.
     private float getToolScore(int slot, BlockState blockState) {
-        float speed = mc.player.getInventory().getItem(slot).getDestroySpeed(blockState);
+        var stack = mc.player.getInventory().getItem(slot);
+        float speed = stack.getDestroySpeed(blockState);
 
-        // Prefer the correct tool, then use destroy speed as the secondary signal.
-        if (mc.player.getInventory().getItem(slot).isCorrectToolForDrops(blockState)) {
+        if (stack.isCorrectToolForDrops(blockState)) {
             speed += 1000.0F;
         }
 

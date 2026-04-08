@@ -1,6 +1,10 @@
 /*
- * Ghost bridge assist: when you hold back + place with blocks, auto-sneaks at the edge over air.
- * Direction is fixed at enable so diagonal adjustments still feel controlled.
+ * SpeedBridge.java — Edge-detection bridging assist with auto block refill (Movement module).
+ *
+ * Captures bridge direction on enable. Each tick, checks if the player is hanging over
+ * air and auto-sneaks to prevent falling. When the current block stack is depleted,
+ * scans the hotbar for the next BlockItem and auto-swaps to it.
+ * Detectability: Safe/Subtle — only sneak timing is automated; placement is manual.
  */
 package com.phantom.module.impl.movement;
 
@@ -10,7 +14,7 @@ import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BlockItem;
-import org.lwjgl.glfw.GLFW;
+import net.minecraft.world.item.ItemStack;
 
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
@@ -21,12 +25,16 @@ public class SpeedBridge extends Module {
     private double startX;
     private double startZ;
 
+    // Auto-disable timer state
+    private long lastPlaceTime;
+    private double autoOffDelay = 3.0; // seconds
+
     public SpeedBridge() {
         super(
-                "Speedbridge Assist",
-                "Face away from the void, hold S and your place button on the blocks ahead. Once you reach the edge, it will auto sneak to assist with legit-looking speed bridging.",
-                ModuleCategory.GHOST,
-                GLFW.GLFW_KEY_X);
+                "SpeedBridge",
+                "Re-sneaks at the edge of blocks automatically. Hold Sneak to use.\nDetectability: Safe/Subtle",
+                ModuleCategory.MOVEMENT,
+                -1);
     }
 
     // Capture the starting direction and position so we can measure progress from
@@ -42,6 +50,7 @@ public class SpeedBridge extends Module {
         moveYaw = mc.player.getYRot();
         startX = mc.player.getX();
         startZ = mc.player.getZ();
+        lastPlaceTime = System.currentTimeMillis();
     }
 
     // Always release the virtual sneak key when the assist turns off so normal
@@ -62,15 +71,40 @@ public class SpeedBridge extends Module {
         if (mc.level == null || mc.player == null || mc.options == null)
             return;
 
+        // If current slot is out of blocks, find and swap to next block stack
         if (!(mc.player.getMainHandItem().getItem() instanceof BlockItem)) {
-            releaseSneak();
-            return;
+            int nextSlot = findNextBlockSlot();
+            if (nextSlot != -1) {
+                mc.player.getInventory().setSelectedSlot(nextSlot);
+            } else {
+                releaseSneak();
+                checkAutoDisable();
+                return;
+            }
         }
 
+        // Also proactively swap when current stack is empty (consumed the last block)
+        if (mc.player.getMainHandItem().isEmpty()) {
+            int nextSlot = findNextBlockSlot();
+            if (nextSlot != -1) {
+                mc.player.getInventory().setSelectedSlot(nextSlot);
+            } else {
+                releaseSneak();
+                checkAutoDisable();
+                return;
+            }
+        }
+
+        // Update timer if placing
+        if (mc.options.keyUse.isDown()) {
+            lastPlaceTime = System.currentTimeMillis();
+        }
+
+        if (checkAutoDisable()) return;
+
         // This module is intentionally assist-only: the player keeps full camera
-        // control and
-        // still handles the actual movement and placing while the mod only helps with
-        // sneak timing.
+        // control and still handles the actual movement and placing while the
+        // mod only helps with sneak timing.
         TravelVector travelVector = getTravelVector();
         if (!isExpectedBridgeInputHeld(travelVector)) {
             updateSneakState(false);
@@ -85,6 +119,58 @@ public class SpeedBridge extends Module {
         boolean bridgeStarted = hasBridgeStarted(travelVector);
         boolean overEdge = isOverEdge(travelVector.x(), travelVector.z());
         updateSneakState(bridgeStarted && overEdge);
+    }
+
+    private boolean checkAutoDisable() {
+        if (System.currentTimeMillis() - lastPlaceTime > autoOffDelay * 1000) {
+            setEnabled(false);
+            return true;
+        }
+        return false;
+    }
+
+    public double getAutoOffDelay() {
+        return autoOffDelay;
+    }
+
+    public void setAutoOffDelay(double autoOffDelay) {
+        this.autoOffDelay = Math.max(0.5, Math.min(10.0, autoOffDelay));
+        saveConfig();
+    }
+
+    @Override
+    public void loadConfig(java.util.Properties properties) {
+        super.loadConfig(properties);
+        String v = properties.getProperty("speedbridge.auto_off_delay");
+        if (v != null) {
+            try {
+                autoOffDelay = Double.parseDouble(v);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void saveConfig(java.util.Properties properties) {
+        super.saveConfig(properties);
+        properties.setProperty("speedbridge.auto_off_delay", Double.toString(autoOffDelay));
+    }
+
+    /**
+     * Scans hotbar slots (0-8) for the first slot that has a block item with at
+     * least 1 count. Returns -1 if no blocks are found.
+     */
+    private int findNextBlockSlot() {
+        if (mc.player == null) return -1;
+        int current = mc.player.getInventory().getSelectedSlot();
+        // Start scanning from next slot, wrap around the 9 hotbar slots
+        for (int offset = 1; offset <= 9; offset++) {
+            int slot = (current + offset) % 9;
+            ItemStack stack = mc.player.getInventory().getItem(slot);
+            if (!stack.isEmpty() && stack.getItem() instanceof BlockItem) {
+                return slot;
+            }
+        }
+        return -1;
     }
 
     @Override
