@@ -74,7 +74,7 @@ PhantomMod/
 │   │   └── MultiPlayerGameModeMixin.java    ← Attack hook (Criticals module)
 │   ├── module/
 │   │   ├── Module.java              ← Abstract base class for every module
-│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER, RENDER
+│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER
 │   │   ├── ModuleManager.java       ← Registry; dispatches tick/render/keybind events
 │   │   └── impl/
 │   │       ├── combat/
@@ -94,7 +94,7 @@ PhantomMod/
 │   │       └── render/
 │   │           ├── ESP.java         ← Through-wall entity highlighting
 │   │           ├── FullBright.java  ← Gamma override for night vision
-│   │           └── HudModule.java   ← Top-right info overlay
+│   │           └── HudModule.java   ← Corner info overlay
 ├── src/main/resources/
 │   ├── fabric.mod.json              ← Mod metadata, entrypoint declaration
 │   └── phantom.mixins.json          ← Mixin registration file
@@ -142,7 +142,7 @@ Module names are normalized to lowercase snake_case (e.g. `"AimAssist"` → `"ai
 **Enable/disable flow:**  
 `toggle()` → `setEnabled(bool)` → calls `onEnable()`/`onDisable()` + fires a `NotificationManager` toast + auto-saves config.
 
-**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`, `RENDER`) that controls which tab a module appears under in the ClickGUI.
+**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`) that controls which tab a module appears under in the ClickGUI.
 
 **`ModuleManager`** is the registry. It:
 - Constructs all module instances at startup

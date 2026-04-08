@@ -80,4 +80,4 @@ The built jar is written to `build/libs/`.
 - Config persistence: `src/main/java/com/phantom/config/ConfigManager.java`
 - GUI screens: `src/main/java/com/phantom/gui/`
 
-See `TECHNICAL.md` for the full architecture reference.
+See `TECHNICAL-README.md` for the full architecture reference.
