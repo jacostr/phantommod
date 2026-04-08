@@ -34,6 +34,8 @@ PhantomMod is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a 
 
 Each module can also have its own hotkey assigned from the settings screen.
 
+If you used an older PhantomMod build before this release, Minecraft may keep the previous ClickGUI keybind in its saved controls. If the GUI still opens on a different key, open Minecraft's Controls menu and rebind `Open Phantom GUI` to `M`.
+
 ## Configuration
 
 PhantomMod stores its settings in `phantom-memory.properties` inside your Minecraft config directory. Module enabled state, hotkeys, and per-module settings are all persisted there.
