@@ -28,8 +28,6 @@
 ## Overview & Goals
 
 PhantomMod is a self-contained Fabric client mod. The primary goals are:
-
-- **Hypixel Watchdog bypass** — all automation modules are specifically tuned to avoid pattern-matching heuristics used by Hypixel's anti-cheat.
 - **Minimal footprint** — no third-party libraries beyond Fabric API. Pure vanilla mappings.
 - **Configurable detectability** — every automation module exposes sliders and presets so the user can tune risk vs. strength.
 
