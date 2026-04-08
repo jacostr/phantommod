@@ -18,17 +18,8 @@ public final class ConfigManager {
     }
 
     public static void load(ModuleManager moduleManager) {
-        Properties properties = new Properties();
-        Path path = getConfigPath();
-
-        if (Files.exists(path)) {
-            try (InputStream inputStream = Files.newInputStream(path)) {
-                properties.load(inputStream);
-            } catch (IOException exception) {
-                exception.printStackTrace();
-            }
-        }
-
+        Properties properties = readMainFile();
+        ClientConfig.loadFrom(properties);
         for (Module module : moduleManager.getModules()) {
             module.loadConfig(properties);
         }
@@ -36,12 +27,28 @@ public final class ConfigManager {
 
     public static void save(ModuleManager moduleManager) {
         Properties properties = new Properties();
-
+        ClientConfig.saveTo(properties);
         for (Module module : moduleManager.getModules()) {
             module.saveConfig(properties);
         }
+        writeMainFile(properties);
+    }
 
-        Path path = getConfigPath();
+    private static Properties readMainFile() {
+        Properties properties = new Properties();
+        Path path = getMainConfigPath();
+        if (Files.exists(path)) {
+            try (InputStream inputStream = Files.newInputStream(path)) {
+                properties.load(inputStream);
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+        }
+        return properties;
+    }
+
+    private static void writeMainFile(Properties properties) {
+        Path path = getMainConfigPath();
         try {
             Files.createDirectories(path.getParent());
             try (OutputStream outputStream = Files.newOutputStream(path)) {
@@ -52,7 +59,7 @@ public final class ConfigManager {
         }
     }
 
-    private static Path getConfigPath() {
+    private static Path getMainConfigPath() {
         return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
     }
 }

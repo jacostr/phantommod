@@ -1,3 +1,6 @@
+/*
+ * Ghost: keeps sprinting when vanilla would allow it (food, not blocking, not in fluids, etc.).
+ */
 package com.phantom.module.impl.movement;
 
 import com.phantom.module.Module;
@@ -8,7 +11,7 @@ public class AlwaysSprint extends Module {
     public AlwaysSprint() {
         super("AlwaysSprint",
                 "Automatically keeps you sprinting while your movement state still allows a normal sprint.",
-                ModuleCategory.MOVEMENT, GLFW.GLFW_KEY_V);
+                ModuleCategory.GHOST, -1);
     }
 
     @Override
@@ -27,5 +30,5 @@ public class AlwaysSprint extends Module {
                 !mc.player.getAbilities().flying;
 
         mc.player.setSprinting(canSprint);
-    } // ← closes onTick()
-} // ← closes AlwaysSprint class
+    }
+}

@@ -1,3 +1,6 @@
+/*
+ * Ghost: while holding attack, swaps hotbar slot to best weapon vs entities or best tool vs targeted block.
+ */
 package com.phantom.module.impl.player;
 
 import com.phantom.module.Module;
@@ -11,7 +14,7 @@ import org.lwjgl.glfw.GLFW;
 
 public class AutoTools extends Module {
     public AutoTools() {
-        super("AutoTools", "Swaps to the best hotbar tool for mining and prefers weapon slots when you attack an entity.", ModuleCategory.PLAYER, GLFW.GLFW_KEY_R);
+        super("AutoTools", "Swaps to the best hotbar tool for mining and prefers weapon slots when you attack an entity.", ModuleCategory.GHOST, -1);
     }
 
     // Main routing:

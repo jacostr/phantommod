@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
-    "MinecraftClientMixin"
+    "MinecraftClientMixin",
+    "LivingEntityJumpAccessor",
+    "LivingEntityJumpDelayMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,9 +1,14 @@
 package com.phantom.gui;
 
 import com.phantom.module.Module;
+import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.render.ESP;
+import com.phantom.module.impl.render.Hitboxes;
 import com.phantom.module.impl.render.HudModule;
+import com.phantom.module.impl.render.Zoom;
+import com.phantom.module.impl.combat.AutoBlock;
+import com.phantom.module.impl.combat.Reach;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -40,33 +45,134 @@ public class ModuleSettingsScreen extends Screen {
 
         int centerX = this.width / 2;
         int y = 54 - scrollOffset;
-        int left = centerX - PANEL_WIDTH / 2;
 
         List<FormattedCharSequence> descriptionLines = this.font.split(Component.literal(module.getDescription()),
                 PANEL_WIDTH - 20);
         y += descriptionLines.size() * 9 + TEXT_SPACING;
 
         if (module instanceof ESP esp) {
+            addFilterRow(centerX, y, esp::isPlayersEnabled, esp::setPlayersEnabled, "Players");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isMobsEnabled, esp::setMobsEnabled, "Mobs");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isAnimalsEnabled, esp::setAnimalsEnabled, "Animals");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Hitboxes hb) {
+            addFilterRow(centerX, y, hb::isPlayersEnabled, hb::setPlayersEnabled, "Players");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, hb::isMobsEnabled, hb::setMobsEnabled, "Mobs");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, hb::isAnimalsEnabled, hb::setAnimalsEnabled, "Animals");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Reach reach) {
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Players: " + onOff(esp.isPlayersEnabled())),
-                    button -> {
-                        esp.setPlayersEnabled(!esp.isPlayersEnabled());
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+                            Component.literal("Preset: Legit (~subtle)"),
+                            button -> {
+                                reach.applyPresetLegit();
+                                init();
+                            }).bounds(centerX - 120, y, 118, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> {
+                                reach.applyPresetObvious();
+                                init();
+                            }).bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Mobs: " + onOff(esp.isMobsEnabled())),
-                    button -> {
-                        esp.setMobsEnabled(!esp.isMobsEnabled());
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+                            Component.literal("Preset: Blatant (very long)"),
+                            button -> {
+                                reach.applyPresetBlatant();
+                                init();
+                            }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Animals: " + onOff(esp.isAnimalsEnabled())),
+                            Component.literal("Entity reach: " + String.format("%.1f", reach.getEntityReach())),
+                            button -> {
+                                double next = reach.getEntityReach() + 0.5;
+                                if (next > 8.0) next = 3.0;
+                                reach.setEntityReach(next);
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Block reach: " + String.format("%.1f", reach.getBlockReach())),
+                            button -> {
+                                double next = reach.getBlockReach() + 0.5;
+                                if (next > 10.0) next = 4.5;
+                                reach.setBlockReach(next);
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof AutoBlock autoBlock) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Strength preset: Legit"),
+                            button -> {
+                                autoBlock.applyPresetLegit();
+                                init();
+                            }).bounds(centerX - 120, y, 118, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> {
+                                autoBlock.applyPresetNormal();
+                                init();
+                            }).bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Strength preset: Obvious"),
+                            button -> {
+                                autoBlock.applyPresetObvious();
+                                init();
+                            }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Block strength: " + autoBlock.getStrength() + " (0–100)"),
+                            button -> {
+                                int next = autoBlock.getStrength() + 5;
+                                if (next > 100) next = 0;
+                                autoBlock.setStrength(next);
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Scaffold scaffold) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Preset: " + scaffold.getPreset().getLabel()),
+                            button -> {
+                                scaffold.cyclePreset();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            if (scaffold.getPreset() == Scaffold.Preset.STANDARD) {
+                this.addRenderableWidget(Button.builder(
+                                Component.literal("Tower: " + onOff(scaffold.isTower())),
+                                button -> {
+                                    scaffold.setTower(!scaffold.isTower());
+                                    init();
+                                }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+                y += ROW_HEIGHT + ROW_SPACING;
+            }
+        }
+
+        if (module instanceof Zoom zoom) {
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Zoom Level: " + String.format("%.1f", zoom.getZoomLevel())),
                     button -> {
-                        esp.setAnimalsEnabled(!esp.isAnimalsEnabled());
+                        double next = zoom.getZoomLevel() + 1.0;
+                        if (next > 10.0) next = 2.0;
+                        zoom.setZoomLevel(next);
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
@@ -94,14 +200,15 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_SPACING;
         }
 
+        String keyRowLabel = module instanceof Zoom ? "Hold key: " : "Toggle hotkey: ";
         this.addRenderableWidget(Button.builder(
-                Component.literal("Hotkey: " + getKeyName(module.getKey())),
+                Component.literal(keyRowLabel + getKeyName(module.getKey())),
                 button -> {
                 }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
         y += ROW_HEIGHT + ROW_SPACING;
 
         this.addRenderableWidget(Button.builder(
-                Component.literal(listeningForKey ? "Press a key..." : "Set Hotkey"),
+                Component.literal(listeningForKey ? "Press a key..." : (module instanceof Zoom ? "Set hold key" : "Set hotkey")),
                 button -> {
                     listeningForKey = true;
                     init();
@@ -122,13 +229,26 @@ public class ModuleSettingsScreen extends Screen {
                 .build());
     }
 
+    private void addFilterRow(int centerX, int y, java.util.function.Supplier<Boolean> get,
+            java.util.function.Consumer<Boolean> set, String label) {
+        this.addRenderableWidget(Button.builder(
+                        Component.literal(label + ": " + onOff(get.get())),
+                        button -> {
+                            set.accept(!get.get());
+                            init();
+                        }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+    }
+
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.fill(0, 0, this.width, this.height, 0x90101010);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 22, 0xFFFFFFFF);
         drawDescription(graphics);
         if (listeningForKey) {
-            graphics.drawCenteredString(this.font, Component.literal("Press any key to bind it. Press ESC to clear."),
+            String hint = module instanceof Zoom
+                    ? "Press a key to use while held for zoom. ESC clears."
+                    : "Press any key to bind toggle. ESC clears.";
+            graphics.drawCenteredString(this.font, Component.literal(hint),
                     this.width / 2, this.height - 64, 0xFFE6C278);
         }
         super.render(graphics, mouseX, mouseY, delta);
@@ -179,8 +299,27 @@ public class ModuleSettingsScreen extends Screen {
     private void updateMaxScroll() {
         int contentHeight = getDescriptionHeight() + TEXT_SPACING;
 
-        if (module instanceof ESP) {
+        if (module instanceof ESP || module instanceof Hitboxes) {
             contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Reach) {
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AutoBlock) {
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Scaffold scaffold) {
+            contentHeight += ROW_HEIGHT + ROW_SPACING;
+            if (scaffold.getPreset() == Scaffold.Preset.STANDARD) {
+                contentHeight += ROW_HEIGHT + ROW_SPACING;
+            }
+        }
+
+        if (module instanceof Zoom) {
+            contentHeight += (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof HudModule) {

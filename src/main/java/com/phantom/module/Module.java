@@ -36,6 +36,11 @@ public abstract class Module {
         return description;
     }
 
+    /** Longer usage text for the all-modules help screen; defaults to the short description. */
+    public String getUsageGuide() {
+        return description;
+    }
+
     public ModuleCategory getCategory() {
         return category;
     }
@@ -82,6 +87,22 @@ public abstract class Module {
 
     public void toggle() {
         setEnabled(!enabled);
+    }
+
+    /** Disable without toast or {@link #saveConfig()} — use with a single batch save after (e.g. panic). */
+    public void disableSilently() {
+        if (!enabled) {
+            return;
+        }
+        enabled = false;
+        onDisable();
+    }
+
+    /**
+     * When false, the bound key is hold-to-use instead of edge-toggle in {@link ModuleManager#handleKeybinds()}.
+     */
+    public boolean usesToggleKeybind() {
+        return true;
     }
 
     public void onEnable() {
@@ -144,5 +165,17 @@ public abstract class Module {
 
     private String getConfigId() {
         return name.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+", "_");
+    }
+
+    /**
+     * After config load, sync runtime side effects with the loaded {@code enabled} flag
+     * (load does not call {@link #onEnable()} or {@link #onDisable()}).
+     */
+    public void applyLoadedEnableState() {
+        if (enabled) {
+            onEnable();
+        } else {
+            onDisable();
+        }
     }
 }

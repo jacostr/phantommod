@@ -1,3 +1,6 @@
+/*
+ * Render: small overlay listing enabled modules plus optional FPS and ping.
+ */
 package com.phantom.module.impl.render;
 
 import com.phantom.PhantomMod;
@@ -34,9 +37,7 @@ public class HudModule extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    // Draw a small top-left overlay so the player gets useful info without covering
-    // the
-    // center of the screen during PvP.
+    // Compact top-right overlay so the player gets useful info without covering the center of the screen.
     @Override
     public void onHudRender(GuiGraphics graphics) {
         if (mc.options.hideGui)

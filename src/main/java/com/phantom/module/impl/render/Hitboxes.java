@@ -1,6 +1,5 @@
 /*
- * Entity ESP: client-side wireframe boxes (works in multiplayer). Ghost tab.
- * Filters by entity type in module settings.
+ * Draws wireframe boxes around players, mobs, and animals (client-side; works in multiplayer).
  */
 package com.phantom.module.impl.render;
 
@@ -21,16 +20,16 @@ import java.util.Properties;
 
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 
-public class ESP extends Module {
+public class Hitboxes extends Module {
     private static final double RANGE = 192.0D;
 
     private boolean playersEnabled = true;
     private boolean mobsEnabled = true;
     private boolean animalsEnabled = true;
 
-    public ESP() {
-        super("ESP",
-                "Colored wireframe boxes on players, mobs, and animals. Filters in settings.",
+    public Hitboxes() {
+        super("Hitboxes",
+                "Wireframe boxes around players, mobs, and animals. Filters in settings.",
                 ModuleCategory.GHOST,
                 -1);
     }
@@ -43,10 +42,10 @@ public class ESP extends Module {
         List<Entity> targets = mc.level.getEntitiesOfClass(
                 Entity.class,
                 mc.player.getBoundingBox().inflate(RANGE),
-                this::shouldHighlight
+                this::shouldDraw
         );
         for (Entity entity : targets) {
-            EntityOutlineRender.drawEntityBox(context, entity, 1f, 0.25f, 0.25f, 0.9f);
+            EntityOutlineRender.drawEntityBox(context, entity, 0.35f, 0.85f, 1f, 0.95f);
         }
     }
 
@@ -90,20 +89,20 @@ public class ESP extends Module {
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
-        playersEnabled = Boolean.parseBoolean(properties.getProperty("esp.players", "true"));
-        mobsEnabled = Boolean.parseBoolean(properties.getProperty("esp.mobs", "true"));
-        animalsEnabled = Boolean.parseBoolean(properties.getProperty("esp.animals", "true"));
+        playersEnabled = Boolean.parseBoolean(properties.getProperty("hitboxes.players", "true"));
+        mobsEnabled = Boolean.parseBoolean(properties.getProperty("hitboxes.mobs", "true"));
+        animalsEnabled = Boolean.parseBoolean(properties.getProperty("hitboxes.animals", "true"));
     }
 
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
-        properties.setProperty("esp.players", Boolean.toString(playersEnabled));
-        properties.setProperty("esp.mobs", Boolean.toString(mobsEnabled));
-        properties.setProperty("esp.animals", Boolean.toString(animalsEnabled));
+        properties.setProperty("hitboxes.players", Boolean.toString(playersEnabled));
+        properties.setProperty("hitboxes.mobs", Boolean.toString(mobsEnabled));
+        properties.setProperty("hitboxes.animals", Boolean.toString(animalsEnabled));
     }
 
-    private boolean shouldHighlight(Entity entity) {
+    private boolean shouldDraw(Entity entity) {
         if (entity == mc.player) return false;
         if (entity instanceof LivingEntity living && !living.isAlive()) return false;
         if (playersEnabled && entity instanceof AbstractClientPlayer) return true;

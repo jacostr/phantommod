@@ -1,3 +1,7 @@
+/*
+ * Ghost bridge assist: when you hold back + place with blocks, auto-sneaks at the edge over air.
+ * Direction is fixed at enable so diagonal adjustments still feel controlled.
+ */
 package com.phantom.module.impl.movement;
 
 import com.phantom.gui.ModuleSettingsScreen;
@@ -21,7 +25,7 @@ public class SpeedBridge extends Module {
         super(
                 "Speedbridge Assist",
                 "Face away from the void, hold S and your place button on the blocks ahead. Once you reach the edge, it will auto sneak to assist with legit-looking speed bridging.",
-                ModuleCategory.MOVEMENT,
+                ModuleCategory.GHOST,
                 GLFW.GLFW_KEY_X);
     }
 

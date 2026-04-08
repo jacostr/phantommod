@@ -1,58 +1,59 @@
+/*
+ * Render QoL: raises client gamma while enabled; restores your previous brightness when disabled.
+ */
 package com.phantom.module.impl.render;
 
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import org.lwjgl.glfw.GLFW;
 
 public class FullBright extends Module {
 
-    // Refresh when this many ticks remain so there's no visible flicker between cycles.
-    private static final int REFRESH_THRESHOLD = 40;
-    // Duration to apply — long enough that refreshes are rare.
-    private static final int EFFECT_DURATION = 800;
+    private Double savedGamma;
 
     public FullBright() {
-        super("FullBright", "Applies hidden night vision so dark areas stay bright until you turn it off.", ModuleCategory.RENDER, GLFW.GLFW_KEY_B);
+        super("FullBright",
+                "Maxes brightness (gamma) while on. Turn off to restore your previous brightness setting.",
+                ModuleCategory.RENDER,
+                -1);
     }
 
     @Override
     public void onEnable() {
-        // Apply immediately so the player sees the effect right away without waiting a tick.
-        applyNightVision();
+        applyGamma();
     }
 
     @Override
     public void onDisable() {
-        if (mc.player == null) return;
-        mc.player.removeEffect(MobEffects.NIGHT_VISION);
+        restoreGamma();
     }
 
     @Override
     public void onTick() {
-        if (mc.player == null) return;
-
-        // Only refresh when the effect is about to expire, not every single tick.
-        MobEffectInstance current = mc.player.getEffect(MobEffects.NIGHT_VISION);
-        if (current == null || current.getDuration() <= REFRESH_THRESHOLD) {
-            applyNightVision();
+        if (!isEnabled() || mc.options == null) {
+            return;
+        }
+        // Keep gamma applied if the user opened options and changed something mid-session.
+        var opt = mc.options.gamma();
+        if (savedGamma != null && opt.get() < 0.999) {
+            opt.set(1.0);
         }
     }
 
-    public boolean isActuallyActive() {
-        return mc.player != null && mc.player.hasEffect(MobEffects.NIGHT_VISION);
+    private void applyGamma() {
+        if (mc.options == null) {
+            return;
+        }
+        var opt = mc.options.gamma();
+        if (savedGamma == null) {
+            savedGamma = opt.get();
+        }
+        opt.set(1.0);
     }
 
-    private void applyNightVision() {
-        if (mc.player == null) return;
-        mc.player.addEffect(new MobEffectInstance(
-                MobEffects.NIGHT_VISION,
-                EFFECT_DURATION,
-                0,
-                false, // ambient — hides particles
-                false, // showParticles
-                false  // showIcon — keeps the HUD clean
-        ));
+    private void restoreGamma() {
+        if (mc.options != null && savedGamma != null) {
+            mc.options.gamma().set(savedGamma);
+        }
+        savedGamma = null;
     }
 }
