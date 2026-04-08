@@ -100,7 +100,7 @@ public abstract class Module {
         setEnabled(!enabled);
     }
 
-    /** Disable without toast or {@link #saveConfig()} — use with a single batch save after (e.g. panic). */
+    /** Disable without toast or {@link #saveConfig()}. */
     public void disableSilently() {
         if (!enabled) {
             return;

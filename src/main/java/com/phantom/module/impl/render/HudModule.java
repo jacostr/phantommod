@@ -23,10 +23,10 @@ import java.util.Properties;
 import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
-    // Config toggles shown in the HUD settings screen.
     private boolean showModuleList = true;
     private boolean showFps = true;
     private boolean showPing = true;
+    private boolean alignLeft;
 
     public HudModule() {
         // HUD lives in the Player tab alongside other non-combat visual aids.
@@ -75,7 +75,7 @@ public class HudModule extends Module {
             }
         }
 
-        drawCompactTopRight(graphics, lines);
+        drawCompactHud(graphics, lines);
     }
 
     public boolean isShowModuleList() {
@@ -105,12 +105,22 @@ public class HudModule extends Module {
         saveConfig();
     }
 
+    public boolean isAlignLeft() {
+        return alignLeft;
+    }
+
+    public void setAlignLeft(boolean alignLeft) {
+        this.alignLeft = alignLeft;
+        saveConfig();
+    }
+
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
         showModuleList = Boolean.parseBoolean(properties.getProperty("hud.show_modules", Boolean.toString(showModuleList)));
         showFps = Boolean.parseBoolean(properties.getProperty("hud.show_fps", Boolean.toString(showFps)));
         showPing = Boolean.parseBoolean(properties.getProperty("hud.show_ping", Boolean.toString(showPing)));
+        alignLeft = Boolean.parseBoolean(properties.getProperty("hud.align_left", Boolean.toString(alignLeft)));
     }
 
     @Override
@@ -119,9 +129,10 @@ public class HudModule extends Module {
         properties.setProperty("hud.show_modules", Boolean.toString(showModuleList));
         properties.setProperty("hud.show_fps", Boolean.toString(showFps));
         properties.setProperty("hud.show_ping", Boolean.toString(showPing));
+        properties.setProperty("hud.align_left", Boolean.toString(alignLeft));
     }
 
-    private void drawCompactTopRight(GuiGraphics graphics, List<String> lines) {
+    private void drawCompactHud(GuiGraphics graphics, List<String> lines) {
         final float scale = 0.8F;
         int scaledWidth = (int) (mc.getWindow().getGuiScaledWidth() / scale);
         int y = 8;
@@ -132,7 +143,7 @@ public class HudModule extends Module {
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             int color = i == 0 ? 0xFFA8E6A3 : 0xFFFFFFFF;
-            int x = scaledWidth - mc.font.width(line) - 8;
+            int x = alignLeft ? 8 : scaledWidth - mc.font.width(line) - 8;
             graphics.drawString(mc.font, Component.literal(line), x, y, color, true);
             y += i == 0 ? 11 : 10;
         }

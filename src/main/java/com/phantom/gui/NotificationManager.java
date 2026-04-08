@@ -2,7 +2,7 @@
  * NotificationManager.java — Lightweight toast notification system.
  *
  * Displays short text banners in the top-left of the screen for 1.5 seconds.
- * Used to confirm module toggles, config saves, and panic-key activation.
+ * Used to confirm module toggles and config saves.
  * Rendered on both the HUD layer and over GUI screens so messages are always visible.
  */
 package com.phantom.gui;
@@ -26,19 +26,15 @@ import java.util.List;
  * notification without holding a reference to a screen or manager instance.</p>
  */
 public final class NotificationManager {
-    /** How long each toast stays visible, in milliseconds. */
     private static final long LIFETIME_MS = 1500L;
-
-    /** Active notifications ordered oldest-first; iterated and expired every render frame. */
     private static final List<Notification> NOTIFICATIONS = new ArrayList<>();
 
-    // Static utility — prevent instantiation.
     private NotificationManager() {
     }
 
     /**
      * Queues a new notification that will be visible for {@link #LIFETIME_MS} ms.
-     * Called from module toggle, config save, panic, etc.
+     * Called from module toggle, config save, etc.
      *
      * @param message Short one-line string to display (keep under ~40 chars so it fits).
      */
@@ -59,28 +55,25 @@ public final class NotificationManager {
     public static void render(GuiGraphics graphics) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui || mc.font == null) {
-            return; // F1 mode or font not loaded yet.
+            return;
         }
 
         long now = System.currentTimeMillis();
         Iterator<Notification> iterator = NOTIFICATIONS.iterator();
-        int y = 12; // Start distance from the top edge of the screen.
+        int y = 12;
 
         while (iterator.hasNext()) {
             Notification notification = iterator.next();
             if (now >= notification.expiresAt()) {
-                // Toast expired — remove and skip rendering. Iterator-safe removal.
                 iterator.remove();
                 continue;
             }
 
-            // Draw a dark pill behind the text so it's readable over any background.
             int textWidth = mc.font.width(notification.message());
             int x = 10;
             graphics.fill(x - 5, y - 5, x + textWidth + 8, y + 13, 0xD0101010);
-            // White text with drop-shadow for readability.
             graphics.drawString(mc.font, notification.message(), x, y, 0xFFFFFFFF, true);
-            y += 18; // Move down for the next notification.
+            y += 18;
         }
     }
 

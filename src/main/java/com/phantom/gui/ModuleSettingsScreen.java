@@ -40,6 +40,8 @@ public class ModuleSettingsScreen extends Screen {
     private static final int ROW_HEIGHT = 20;
     private static final int ROW_SPACING = 4;
     private static final int TEXT_SPACING = 10;
+    private static final int DESCRIPTION_COLOR = 0xFFD9D9D9;
+    private static final int DETECTABILITY_COLOR = 0xFFE6C278;
 
     private final Screen parent;
     private final Module module;
@@ -74,8 +76,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof ESP esp) {
-            y += 16; // String offset + size
-            y += 10; // Extra padding
+            y += 26;
             addFilterRow(centerX, y, esp::isPlayersEnabled, esp::setPlayersEnabled, "Players");
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, esp::isMobsEnabled, esp::setMobsEnabled, "Mobs");
@@ -158,7 +159,6 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Crit Chance", 0.0, 1.0, crit.getChance(), val -> crit.setChance(val)));
             y += ROW_HEIGHT + ROW_SPACING;
 
-            // Presets: Legit=30%, Normal=60%, Obvious=85%, Blatant=100%
             this.addRenderableWidget(Button.builder(
                             Component.literal("Legit (30%)"),
                             button -> { crit.setChance(0.30); init(); })
@@ -185,7 +185,6 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "FOV Limit", 10.0, 360.0, aim.getFov(), val -> aim.setFov(val)));
             y += ROW_HEIGHT + ROW_SPACING;
 
-            // Presets: Legit=slow+narrow, Normal=medium, Obvious=fast+wide, Blatant=instant+360
             this.addRenderableWidget(Button.builder(
                             Component.literal("Legit"),
                             button -> { aim.setSmoothing(8.0); aim.setFov(60.0); init(); })
@@ -206,8 +205,6 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
-        // Scaffold specific buttons removed
-
         if (module instanceof HudModule hudModule) {
             this.addRenderableWidget(Button.builder(
                     Component.literal("Show Active Features: " + onOff(hudModule.isShowModuleList())),
@@ -221,6 +218,14 @@ public class ModuleSettingsScreen extends Screen {
                     Component.literal("Show FPS: " + onOff(hudModule.isShowFps())),
                     button -> {
                         hudModule.setShowFps(!hudModule.isShowFps());
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("HUD Side: " + (hudModule.isAlignLeft() ? "Left" : "Right")),
+                    button -> {
+                        hudModule.setAlignLeft(!hudModule.isAlignLeft());
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
@@ -354,17 +359,15 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Criticals) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING); // slider + 2 rows of preset buttons
+            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AimAssist) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING); // 2 sliders + 2 rows of preset buttons
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
 
-
-
         if (module instanceof HudModule) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING); // showModules + showFps + showPing
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof SpeedBridge) {
@@ -389,39 +392,23 @@ public class ModuleSettingsScreen extends Screen {
         String usage = module.getUsageGuide();
         String desc = module.getDescription();
 
-        // "How to use" header
         graphics.drawString(this.font, "How to use:", left, y, 0xFFA8E6A3);
         y += 10;
 
-        for (FormattedCharSequence line : this.font.split(Component.literal(usage), PANEL_WIDTH - 20)) {
-            graphics.drawString(this.font, line, left, y, 0xFFFFFFFF);
-            y += 9;
+        for (String rawLine : usage.split("\n")) {
+            int color = isDetectabilityLine(rawLine) ? DETECTABILITY_COLOR : 0xFFFFFFFF;
+            for (FormattedCharSequence subLine : this.font.split(Component.literal(rawLine), PANEL_WIDTH - 20)) {
+                graphics.drawString(this.font, subLine, left, y, color);
+                y += 9;
+            }
         }
 
         if (!usage.equals(desc)) {
             y += 4;
             for (String rawLine : desc.split("\n")) {
-                boolean isDetectLine = rawLine.toLowerCase(Locale.ROOT).contains("detectability:");
-                
                 for (FormattedCharSequence subLine : this.font.split(Component.literal(rawLine), PANEL_WIDTH - 20)) {
-                    if (isDetectLine) {
-                        // We found the detectability line. Color the header Gold.
-                        String fullText = rawLine; // Simplified: just use the raw text for splitting logic
-                        int colonIndex = fullText.indexOf(":");
-                        if (colonIndex != -1) {
-                            String prefix = fullText.substring(0, colonIndex + 1);
-                            String suffix = fullText.substring(colonIndex + 1);
-                            
-                            graphics.drawString(this.font, prefix, left, y, 0xFFFFD700); // Gold
-                            graphics.drawString(this.font, suffix, left + this.font.width(prefix), y, 0xFFFFFFFF);
-                        } else {
-                            graphics.drawString(this.font, subLine, left, y, 0xFFFFD700);
-                        }
-                        // Only color the FIRST wrapped sub-line as detectability if it wraps.
-                        isDetectLine = false; 
-                    } else {
-                        graphics.drawString(this.font, subLine, left, y, 0xFFD9D9D9);
-                    }
+                    int color = isDetectabilityLine(rawLine) ? DETECTABILITY_COLOR : DESCRIPTION_COLOR;
+                    graphics.drawString(this.font, subLine, left, y, color);
                     y += 9;
                 }
             }
@@ -429,17 +416,27 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof ESP) {
             y += 6;
-            graphics.drawString(this.font, "Seeing through walls is a work in progress", left, y, 0xFFFF5555);
+            graphics.drawString(this.font, "Wall visibility can vary by renderer", left, y, 0xFFFF5555);
         }
     }
 
     private int getUsageHeight() {
-        return (this.font.split(Component.literal(module.getUsageGuide()), PANEL_WIDTH - 20).size() * 9) + 10;
+        return (this.font.split(Component.literal(module.getUsageGuide()), PANEL_WIDTH - 20).size() * 9) + 12;
     }
 
     private int getDescriptionHeight() {
         if (module.getDescription().equals(module.getUsageGuide())) return 0;
-        return this.font.split(Component.literal(module.getDescription()), PANEL_WIDTH - 20).size() * 9 + 4;
+        
+        int height = 8;
+        for (String line : module.getDescription().split("\n")) {
+            if (line.isEmpty()) continue;
+            height += this.font.split(Component.literal(line), PANEL_WIDTH - 20).size() * 9;
+        }
+        return height;
+    }
+
+    private boolean isDetectabilityLine(String line) {
+        return line.toLowerCase(Locale.ROOT).startsWith("detectability:");
     }
 
     private String getKeyName(int key) {

@@ -1,67 +1,81 @@
 # PhantomMod
 
-PhantomMod is a high-performance, lightweight Fabric client mod for Minecraft Java. It focuses on essential utility features, Hypixel-tailored PvP modules, and quality-of-life enhancements without the bloat of larger clients.
+PhantomMod is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, configurable module settings, saved hotkeys, toast notifications, and a small HUD overlay.
 
-## Features
+## Included Modules
 
-### Combat ⚔️
-*   **AimAssist**: Smoothly adjusts your camera towards targets while you hold Left Click with a Sword. Bypasses Watchdog rotations.
-*   **AutoBlock**: Automatically blocks natively after you hit an entity with a Sword to significantly reduce incoming damage, bypassing 1.8 Watchdog checks.
-*   **Criticals**: Forces critical hits natively by spoofing mini-jumps before attacks. Configurable percentage chance to avoid flagging anti-cheats.
-*   **Reach**: Extends your attack and interaction range individually.
-*   **Velocity**: Intercepts Server Knockback and mathematically scales resistance to avoid 100% canceling flags.
+### Combat
+- `AimAssist`
+- `AutoBlock`
+- `Criticals`
+- `Reach`
+- `Velocity`
 
-### Movement 🏃
-*   **AlwaysSprint**: Eliminates the need to double-tap or hold a sprint key.
-*   **NoJumpDelay**: Removes the vanilla 10-tick delay between jumps when holding the jump key.
-*   **Scaffold**: Automatically places blocks under you allowing for quick tower or legit bridging.
-*   **SpeedBridge**: A specialized assist that automates crouch-un-crouch timing to make bridging faster and safer.
+### Movement
+- `AlwaysSprint`
+- `NoJumpDelay`
+- `Scaffold`
+- `SpeedBridge Assist`
 
-### Player 👤
-*   **AutoTools**: Auto switches your active hotbar slot to the most efficient tool for the block you're mining, or to your best weapon when targeting entities.
-*   **NoFall**: Spoofs being on the ground to prevent fall damage.
+### Player
+- `AutoTools`
+- `NoFall`
 
-### Render & UI 🎨
-*   **Click GUI**: A sleek, easy-to-use menu to toggle modules on the fly. Accessible via **Right Shift** by default. Re-designed with immersive scroll sliders.
-*   **ESP**: Highlights nearby players, mobs, and animals with vibrant boxes that are visible through walls.
-*   **FullBright**: Applies a permanent Night Vision effect, ensuring you can see clearly without torches.
-*   **HUD**: A compact, non-intrusive overlay in the top-right corner that displays your active modules, current FPS, and Ping.
+### Render
+- `ESP`
+- `FullBright`
+- `HUD`
 
----
+## Controls
 
-## Controls & Configuration
+| Action | Default |
+| --- | --- |
+| Open ClickGUI | `Right Shift` |
 
-### GUI and Modules
-The Click GUI categorizes all modules intuitively across **Combat**, **Movement**, **Player**, and **Render** tabs. Use the settings (≡ icon) next to any module to bind a customized activation hotkey, configure detectability limits, adjust graphical sliders, and change module strengths.
+Each module can also have its own hotkey assigned from the settings screen.
 
-| Action | Default Key |
-| :--- | :--- |
-| **Open Click GUI** | `Right Shift` |
+## Configuration
 
-### Configuration Saving Integration
-PhantomMod securely saves and persists all UI layout changes, slider inputs, detectability configuration offsets, and active hotkeys across reboots.
+PhantomMod stores its settings in `phantom-memory.properties` inside your Minecraft config directory. Module enabled state, hotkeys, and per-module settings are all persisted there.
 
-*   **File Name**: `phantom-memory.properties`
-*   **Location**: Your Minecraft instance's `config` folder.
+## Installation
 
----
+1. Install Fabric Loader for Minecraft `1.21.11`.
+2. Install Fabric API for Minecraft `1.21.11`.
+3. Place the PhantomMod jar in your `.minecraft/mods` folder.
+4. Launch the Fabric profile.
 
-## Installation & Building
+## Build
 
-### Requirements
-- Minecraft Java Edition **1.21.1 / 1.21.11**
-- [Fabric Loader](https://fabricmc.net/)
-- [Fabric API](https://modrinth.com/mod/fabric-api)
-- Java **21**
+Requirements:
+- Java `21`
+- Minecraft `1.21.11`
+- Fabric Loader `0.16.10+`
+- Fabric API for Minecraft `1.21.11`
 
-### Building from Source
-If you want to build the mod yourself, use the included Gradle wrapper:
+Tested with:
+- Fabric API `0.140.0+1.21.11`
+
+Build with:
+
 ```bash
 ./gradlew build
 ```
-The resulting jar will be located in `build/libs/`.
 
----
+The built jar is written to `build/libs/`.
 
-## License
-PhantomMod is open-source. Feel free to modify, fork, or use it as a learning resource. Stay safe and have fun!
+## First Release Notes
+
+- Tested against Minecraft `1.21.11`
+- Requires Fabric Loader `0.16.10+`
+- Tested with Fabric API `0.140.0+1.21.11`
+- Settings are saved automatically to `phantom-memory.properties`
+
+## Project Notes
+
+- Entrypoint: `src/main/java/com/phantom/PhantomMod.java`
+- Module registry: `src/main/java/com/phantom/module/ModuleManager.java`
+- Config persistence: `src/main/java/com/phantom/config/ConfigManager.java`
+- GUI screens: `src/main/java/com/phantom/gui/`
+
+See `TECHNICAL.md` for the full architecture reference.

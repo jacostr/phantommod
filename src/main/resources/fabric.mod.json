@@ -3,13 +3,13 @@
   "id": "phantom",
   "version": "${version}",
   "name": "Phantom Mod",
-  "description": "A Minecraft mod with ESP, Speed Bridge, and Always Sprint.",
+  "description": "A client-side Fabric mod with configurable PvP, movement, and HUD modules.",
   "authors": [
     "Phantom Team"
   ],
   "contact": {
-    "homepage": "https://fabricmc.net/",
-    "sources": "https://github.com/fabricmc/fabric-example-mod"
+    "homepage": "https://github.com/jacostr/phantomod",
+    "sources": "https://github.com/jacostr/phantomod"
   },
   "license": "CC0-1.0",
   "environment": "client",
@@ -22,7 +22,7 @@
     "phantom.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.16.5",
+    "fabricloader": ">=0.16.10",
     "minecraft": "~1.21.11",
     "java": ">=21",
     "fabric-api": "*"

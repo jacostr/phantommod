@@ -19,27 +19,21 @@ import net.minecraft.world.item.ItemStack;
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
 
-    // Runtime state captured when the assist is enabled so the bridge direction
-    // stays stable.
     private float moveYaw;
     private double startX;
     private double startZ;
 
-    // Auto-disable timer state
     private long lastPlaceTime;
-    private double autoOffDelay = 3.0; // seconds
+    private double autoOffDelay = 3.0;
 
     public SpeedBridge() {
         super(
-                "SpeedBridge",
-                "Re-sneaks at the edge of blocks automatically. Hold Sneak to use.\nDetectability: Safe/Subtle",
+                "SpeedBridge Assist",
+                "Re-sneaks at the edge of blocks automatically. Face away from the void, hold right click and place buttons, then hold s, it will sneak for you.\nDetectability: Safe/Subtle",
                 ModuleCategory.MOVEMENT,
                 -1);
     }
 
-    // Capture the starting direction and position so we can measure progress from
-    // the
-    // exact spot the player enabled the module.
     @Override
     public void onEnable() {
         if (mc.player == null) {
@@ -53,25 +47,16 @@ public class SpeedBridge extends Module {
         lastPlaceTime = System.currentTimeMillis();
     }
 
-    // Always release the virtual sneak key when the assist turns off so normal
-    // crouch
-    // behavior is restored immediately.
     @Override
     public void onDisable() {
         releaseSneak();
     }
 
-    // Main assist loop:
-    // 1. Make sure the player is in a valid bridging state.
-    // 2. Verify the manual movement input matches the selected preset.
-    // 3. Start crouching only once the player has moved far enough and is hanging
-    // over air.
     @Override
     public void onTick() {
         if (mc.level == null || mc.player == null || mc.options == null)
             return;
 
-        // If current slot is out of blocks, find and swap to next block stack
         if (!(mc.player.getMainHandItem().getItem() instanceof BlockItem)) {
             int nextSlot = findNextBlockSlot();
             if (nextSlot != -1) {
@@ -83,7 +68,6 @@ public class SpeedBridge extends Module {
             }
         }
 
-        // Also proactively swap when current stack is empty (consumed the last block)
         if (mc.player.getMainHandItem().isEmpty()) {
             int nextSlot = findNextBlockSlot();
             if (nextSlot != -1) {
@@ -95,16 +79,12 @@ public class SpeedBridge extends Module {
             }
         }
 
-        // Update timer if placing
         if (mc.options.keyUse.isDown()) {
             lastPlaceTime = System.currentTimeMillis();
         }
 
         if (checkAutoDisable()) return;
 
-        // This module is intentionally assist-only: the player keeps full camera
-        // control and still handles the actual movement and placing while the
-        // mod only helps with sneak timing.
         TravelVector travelVector = getTravelVector();
         if (!isExpectedBridgeInputHeld(travelVector)) {
             updateSneakState(false);
@@ -162,7 +142,6 @@ public class SpeedBridge extends Module {
     private int findNextBlockSlot() {
         if (mc.player == null) return -1;
         int current = mc.player.getInventory().getSelectedSlot();
-        // Start scanning from next slot, wrap around the 9 hotbar slots
         for (int offset = 1; offset <= 9; offset++) {
             int slot = (current + offset) % 9;
             ItemStack stack = mc.player.getInventory().getItem(slot);
@@ -183,11 +162,6 @@ public class SpeedBridge extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    // Convert the stored facing angle into the travel direction this preset
-    // expects.
-    // Pure backwards is always allowed, and holding A or D adds a sideways
-    // component so
-    // diagonal manual bridging works without separate presets.
     private TravelVector getTravelVector() {
         double backwardYawRadians = Math.toRadians(moveYaw);
         double backwardX = Math.sin(backwardYawRadians);
@@ -218,9 +192,6 @@ public class SpeedBridge extends Module {
         return new TravelVector(moveX / length, moveZ / length, holdLeft, holdRight);
     }
 
-    // Sample the block just behind the player's feet in the current bridge
-    // direction.
-    // If that block is air, the player is hanging over the edge and should crouch.
     private boolean isOverEdge(double backwardX, double backwardZ) {
         BlockPos edgeCheckPos = BlockPos.containing(
                 mc.player.getX() + backwardX * EDGE_CHECK_OFFSET,
@@ -229,18 +200,10 @@ public class SpeedBridge extends Module {
         return mc.level.getBlockState(edgeCheckPos).isAir();
     }
 
-    // This module only owns crouch timing, so the whole assist effect is just
-    // toggling
-    // the sneak key based on the edge check.
     private void updateSneakState(boolean overEdge) {
-        // Hold crouch while the player is hanging over the next air gap, and relax on
-        // solid ground.
         mc.options.keyShift.setDown(overEdge);
     }
 
-    // Accept normal backwards bridging plus either diagonal variant. The player
-    // stays in
-    // control of movement while the module only manages crouch timing.
     private boolean isExpectedBridgeInputHeld(TravelVector travelVector) {
         boolean holdingBack = mc.options.keyDown.isDown();
         boolean holdingLeft = !travelVector.holdLeft() || mc.options.keyLeft.isDown();
@@ -248,18 +211,12 @@ public class SpeedBridge extends Module {
         return holdingBack && holdingLeft && holdingRight;
     }
 
-    // Helper for clean shutdown and for cases where the module temporarily decides
-    // it
-    // should not be sneaking.
     private void releaseSneak() {
         if (mc.options != null) {
             mc.options.keyShift.setDown(false);
         }
     }
 
-    // Measure how far the player has travelled along the intended bridge line
-    // rather than
-    // using raw distance, which keeps diagonal presets accurate.
     private boolean hasBridgeStarted(TravelVector travelVector) {
         double deltaX = mc.player.getX() - startX;
         double deltaZ = mc.player.getZ() - startZ;
@@ -267,9 +224,6 @@ public class SpeedBridge extends Module {
         return travelledBlocks >= 0.0D;
     }
 
-    // Small bundle describing the current expected movement direction and whether
-    // the
-    // player should also be holding a side key for the detected input style.
     private record TravelVector(double x, double z, boolean holdLeft, boolean holdRight) {
     }
 }

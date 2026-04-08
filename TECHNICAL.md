@@ -1,6 +1,6 @@
 # PhantomMod — Technical Reference
 
-> A Fabric 1.21.1 client-side mod for Minecraft Java Edition.  
+> A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 > Focused on Hypixel-compatible PvP assistance with per-module detectability reasoning.
 
 ---
@@ -39,7 +39,7 @@ PhantomMod is a self-contained Fabric client mod. The primary goals are:
 
 | Technology | Version | Why |
 |---|---|---|
-| **Minecraft Java** | 1.21.1 | Target version |
+| **Minecraft Java** | 1.21.11 | Target version |
 | **Fabric Loader** | Latest stable | Mod loader; lightweight, fast startup |
 | **Fabric API** | Latest stable | Event hooks (tick, HUD render, world render) |
 | **Fabric Loom** | 1.14.10 | Gradle build plugin; remapping + mixin processing |
