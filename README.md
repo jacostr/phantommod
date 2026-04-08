@@ -30,7 +30,7 @@ PhantomMod is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a 
 
 | Action | Default |
 | --- | --- |
-| Open ClickGUI | `Right Shift` |
+| Open ClickGUI | `M` |
 
 Each module can also have its own hotkey assigned from the settings screen.
 

@@ -1,5 +1,5 @@
 /*
- * ClickGUIScreen.java — The main module toggle overlay, opened with Right Shift.
+ * ClickGUIScreen.java — The main module toggle overlay, opened with M.
  *
  * Displays all registered modules in categorised tabs (Combat, Movement, Player).
  * Each row has an enable/disable button and a hamburger (≡) icon that opens

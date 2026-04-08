@@ -16,7 +16,7 @@ import org.lwjgl.glfw.GLFW;
  * PhantomMod — Core entrypoint and event dispatcher.
  *
  * <p>Initializes the {@link ModuleManager} which handles individual feature logic,
- * registers the global toggle keys (ClickGUI on Right Shift), and hooks into
+ * registers the global toggle keys (ClickGUI on M), and hooks into
  * Fabric API's render and tick events to drive the mod's lifecycle.</p>
  */
 public final class PhantomMod implements ClientModInitializer {
@@ -32,7 +32,7 @@ public final class PhantomMod implements ClientModInitializer {
 
         guiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.phantom.gui",
-                GLFW.GLFW_KEY_RIGHT_SHIFT,
+                GLFW.GLFW_KEY_M,
                 KEY_CATEGORY
         ));
 

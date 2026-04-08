@@ -64,7 +64,7 @@ PhantomMod/
 │   ├── config/
 │   │   └── ConfigManager.java       ← Reads/writes phantom-memory.properties
 │   ├── gui/
-│   │   ├── ClickGUIScreen.java      ← Main module toggle overlay (Right Shift)
+│   │   ├── ClickGUIScreen.java      ← Main module toggle overlay (M)
 │   │   ├── ModuleSettingsScreen.java← Per-module settings with sliders/buttons
 │   │   ├── NotificationManager.java ← Toast-style on-screen popups
 │   │   └── widget/
@@ -113,7 +113,7 @@ PhantomMod/
 
 **What it does:**
 1. Creates the `ModuleManager` (which loads config and registers all modules)
-2. Registers `Right Shift` as the GUI open key
+2. Registers `M` as the GUI open key
 3. Hooks into three Fabric API events:
    - `ClientTickEvents.END_CLIENT_TICK` — runs every game tick for module logic
    - `WorldRenderEvents.AFTER_ENTITIES` — runs in the 3D render cycle (used by ESP)
@@ -195,7 +195,7 @@ All mixins are declared in **`phantom.mixins.json`**.
 ### GUI System
 
 #### `ClickGUIScreen`
-The main overlay opened with Right Shift. Renders:
+The main overlay opened with M. Renders:
 - Category tabs (Combat / Movement / Player / Render) at the top
 - A search box to quickly filter modules by name
 - Module rows with enable/disable buttons and a `≡` hamburger icon to open settings
