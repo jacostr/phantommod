@@ -1,4 +1,4 @@
-# PhantomMod — Technical Reference
+# PhantomMod v1.0.3 — Technical Reference
 
 > A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 
@@ -73,27 +73,39 @@ PhantomMod/
 │   │   └── MultiPlayerGameModeMixin.java    ← Attack hook (Criticals module)
 │   ├── module/
 │   │   ├── Module.java              ← Abstract base class for every module
-│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER
+│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER, RENDER
 │   │   ├── ModuleManager.java       ← Registry; dispatches tick/render/keybind events
 │   │   └── impl/
 │   │       ├── combat/
 │   │       │   ├── AimAssist.java   ← Smooth camera aim toward targets
 │   │       │   ├── AutoBlock.java   ← Auto sword-block on hit
+│   │       │   ├── AutoClicker.java ← Left click automation with presets
+│   │       │   ├── BlockHit.java    ← Visual/hold-use block-hit behavior
 │   │       │   ├── Criticals.java   ← Spoofed mini-jump critical hits
+│   │       │   ├── HitSelect.java   ← Attack timing / selective hit gating
+│   │       │   ├── JumpReset.java   ← Jump reset assist after taking hits
 │   │       │   ├── Reach.java       ← Extended entity/block reach
-│   │       │   └── Velocity.java    ← Knockback percentage reduction
+│   │       │   ├── RightClicker.java← Right click automation
+│   │       │   ├── Triggerbot.java  ← Auto attack when crosshair is on target
+│   │       │   ├── Velocity.java    ← Knockback percentage reduction
+│   │       │   └── WTap.java        ← Sprint reset on attack
 │   │       ├── movement/
 │   │       │   ├── AlwaysSprint.java    ← Sprint state enforcement
 │   │       │   ├── NoJumpDelay.java     ← Jump cooldown removal
+│   │       │   ├── SafeWalk.java        ← Edge protection while walking
 │   │       │   ├── Scaffold.java        ← Under-feet block placement
 │   │       │   └── SpeedBridge.java     ← Edge-detection bridging assist
 │   │       ├── player/
+│   │       │   ├── AntiAFK.java     ← Idle movement / input prevention
+│   │       │   ├── AntiBot.java     ← Client-side bot filtering helper
 │   │       │   ├── AutoTools.java   ← Auto tool/weapon swap
+│   │       │   ├── FastPlace.java   ← Reduced right-click place delay
 │   │       │   └── NoFall.java      ← Fall damage prevention
 │   │       └── render/
 │   │           ├── ESP.java         ← Through-wall entity highlighting
 │   │           ├── FullBright.java  ← Gamma override for night vision
-│   │           └── HudModule.java   ← Corner info overlay
+│   │           ├── HudModule.java   ← Corner info overlay
+│   │           └── Indicators.java  ← On-screen target / state indicators
 ├── src/main/resources/
 │   ├── fabric.mod.json              ← Mod metadata, entrypoint declaration
 │   └── phantom.mixins.json          ← Mixin registration file
@@ -141,7 +153,7 @@ Module names are normalized to lowercase snake_case (e.g. `"AimAssist"` → `"ai
 **Enable/disable flow:**  
 `toggle()` → `setEnabled(bool)` → calls `onEnable()`/`onDisable()` + fires a `NotificationManager` toast + auto-saves config.
 
-**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`) that controls which tab a module appears under in the ClickGUI.
+**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`, `RENDER`) that controls which tab a module appears under in the ClickGUI.
 
 **`ModuleManager`** is the registry. It:
 - Constructs all module instances at startup
@@ -286,9 +298,9 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 ### Render
 
 #### `ESP`
-- **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates `level.players()` and `level.entitiesForRendering()`. For each visible entity, computes its screen-space bounding box using `WorldRenderContext.camera()` and `RenderSystem` matrix math, then draws outline rectangles.
+- **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Visible targets use the normal line pass; hidden targets use a dedicated no-depth line render type so the boxes stay visible through walls.
 - **Detectability:** Safe — purely client-side visual; the server never sees it.
-- **Settings:** Toggle players / mobs / animals independently.
+- **Settings:** Toggle players / mobs / animals independently, plus `Through Walls`.
 
 #### `FullBright`
 - **How it works:** Saves `mc.options.gamma` on enable, sets it to `16.0` (well above the normal max of 1.0, which forces full ambient light rendering), restores on disable.

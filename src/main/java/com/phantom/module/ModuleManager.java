@@ -16,6 +16,7 @@ import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.combat.JumpReset;
 import com.phantom.module.impl.combat.RightClicker;
+import com.phantom.module.impl.combat.Velocity;
 import com.phantom.module.impl.combat.WTap;
 import com.phantom.module.impl.player.AutoTools;
 import com.phantom.module.impl.player.AntiAFK;
@@ -63,6 +64,7 @@ public class ModuleManager {
         modules.add(new JumpReset());
         modules.add(new Triggerbot());
         modules.add(new WTap());
+        modules.add(new Velocity());
         modules.add(new Scaffold());
         modules.add(new NoJumpDelay());
         modules.add(new AntiAFK());
