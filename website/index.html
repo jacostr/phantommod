@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhantomMod</title>
+    <meta name="description" content="PhantomMod for Minecraft 1.21.11. Download links, module overview, install guide, and documentation-style release notes.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="#top">
+                <span class="brand-mark">P</span>
+                <span class="brand-text">
+                    <strong>PhantomMod</strong>
+                    <small>v1.0.3</small>
+                </span>
+            </a>
+
+            <nav class="site-nav">
+                <a href="#download">Download</a>
+                <a href="#modules">Modules</a>
+                <a href="#docs">Docs</a>
+                <a href="#install">Install</a>
+            </nav>
+        </header>
+
+        <main id="top">
+            <section class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">Fabric 1.21.11 Client Mod</p>
+                    <h1>PhantomMod</h1>
+                    <p class="hero-text">
+                        A clean static landing page for the PhantomMod release with fast access to downloads,
+                        GitHub, module documentation, and setup steps in one place.
+                    </p>
+
+                    <div class="hero-actions">
+                        <a class="button button-primary" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Download Release</a>
+                        <a class="button button-secondary" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">View GitHub</a>
+                    </div>
+
+                    <ul class="hero-stats">
+                        <li>
+                            <span class="stat-label">Version</span>
+                            <strong>v1.0.3</strong>
+                        </li>
+                        <li>
+                            <span class="stat-label">Minecraft</span>
+                            <strong>1.21.11</strong>
+                        </li>
+                        <li>
+                            <span class="stat-label">Loader</span>
+                            <strong>Fabric</strong>
+                        </li>
+                    </ul>
+                </div>
+
+                <aside class="hero-panel">
+                    <div class="window-card">
+                        <div class="window-bar">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="window-body">
+                            <div class="code-line"><span class="code-key">release</span><span class="code-value">v1.0.3</span></div>
+                            <div class="code-line"><span class="code-key">status</span><span class="code-value">public build</span></div>
+                            <div class="code-line"><span class="code-key">target</span><span class="code-value">minecraft 1.21.11</span></div>
+                            <div class="code-line"><span class="code-key">ui</span><span class="code-value">clickgui + settings</span></div>
+                            <div class="code-line"><span class="code-key">render</span><span class="code-value">esp + hud + fullbright</span></div>
+                            <div class="code-line"><span class="code-key">docs</span><span class="code-value">install / modules / notes</span></div>
+                        </div>
+                    </div>
+                </aside>
+            </section>
+
+            <section class="link-strip" id="download">
+                <a class="strip-card" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">
+                    <span class="strip-label">Primary Download</span>
+                    <strong>GitHub Releases</strong>
+                    <small>Get the latest published Minecraft build</small>
+                </a>
+                <a class="strip-card" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">
+                    <span class="strip-label">Source Code</span>
+                    <strong>GitHub Repository</strong>
+                    <small>Browse source, issues, and project updates</small>
+                </a>
+            </section>
+
+            <section class="section">
+                <div class="section-heading">
+                    <p class="eyebrow">Highlights</p>
+                    <h2>Made to read like a product page, not just a file dump</h2>
+                </div>
+
+                <div class="feature-grid">
+                    <article class="feature-card">
+                        <h3>Fast Access</h3>
+                        <p>Direct links to the download release and the full GitHub repository from the top of the page.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Docs Style Layout</h3>
+                        <p>Sections for release info, module categories, install steps, and documentation links in a cleaner structure.</p>
+                    </article>
+                    <article class="feature-card">
+                        <h3>Static Hosting Ready</h3>
+                        <p>Pure HTML and CSS, so you can drop it into GitHub Pages, Netlify, Vercel static hosting, or any web server.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="modules">
+                <div class="section-heading">
+                    <p class="eyebrow">Module Overview</p>
+                    <h2>Core categories at a glance</h2>
+                </div>
+
+                <div class="docs-grid">
+                    <article class="docs-card">
+                        <span class="docs-tag">Combat</span>
+                        <h3>AimAssist, AutoClicker, Triggerbot, Velocity</h3>
+                        <p>Combat-focused modules with configurable behavior, presets, and per-module settings inside the ClickGUI.</p>
+                    </article>
+                    <article class="docs-card">
+                        <span class="docs-tag">Movement</span>
+                        <h3>Scaffold, SafeWalk, SpeedBridge, NoJumpDelay</h3>
+                        <p>Movement assistance and edge-control modules designed for quick toggling and profile-based setups.</p>
+                    </article>
+                    <article class="docs-card">
+                        <span class="docs-tag">Player</span>
+                        <h3>AutoTools, AntiBot, FastPlace, NoFall</h3>
+                        <p>Utility modules for swapping, filtering, placement timing, and other client-side quality-of-life behavior.</p>
+                    </article>
+                    <article class="docs-card">
+                        <span class="docs-tag">Render</span>
+                        <h3>ESP, Indicators, FullBright, HUD</h3>
+                        <p>Visual features including through-wall ESP, indicator overlays, and configurable on-screen module info.</p>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="docs">
+                <div class="section-heading">
+                    <p class="eyebrow">Documentation</p>
+                    <h2>Use it like a docs hub</h2>
+                </div>
+
+                <div class="timeline">
+                    <article class="timeline-card">
+                        <span class="timeline-step">01</span>
+                        <div>
+                            <h3>Release Notes</h3>
+                            <p>Show the current public version, target Minecraft version, and important fixes like the through-wall ESP render update.</p>
+                        </div>
+                    </article>
+                    <article class="timeline-card">
+                        <span class="timeline-step">02</span>
+                        <div>
+                            <h3>Installation Guide</h3>
+                            <p>Point users to Fabric Loader, Fabric API, and the release download without making them dig through repository files.</p>
+                        </div>
+                    </article>
+                    <article class="timeline-card">
+                        <span class="timeline-step">03</span>
+                        <div>
+                            <h3>Reference Links</h3>
+                            <p>Link out to your repository, release page, and any future technical docs or changelogs you want to add later.</p>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+            <section class="section" id="install">
+                <div class="section-heading">
+                    <p class="eyebrow">Install</p>
+                    <h2>Quick setup for players</h2>
+                </div>
+
+                <div class="install-panel">
+                    <ol class="install-list">
+                        <li>Install Fabric Loader for Minecraft <strong>1.21.11</strong>.</li>
+                        <li>Install the matching Fabric API version.</li>
+                        <li>Download PhantomMod from the release page.</li>
+                        <li>Move the jar into your <code>.minecraft/mods</code> folder.</li>
+                        <li>Launch Minecraft with the Fabric profile.</li>
+                    </ol>
+
+                    <div class="callout">
+                        <h3>Important Links</h3>
+                        <p>Use the release page for downloads and the repository page for source, issues, and updates.</p>
+                        <div class="callout-actions">
+                            <a class="button button-primary" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Open Download</a>
+                            <a class="button button-secondary" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">Open GitHub</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p>PhantomMod static site concept built in HTML and CSS.</p>
+            <div class="footer-links">
+                <a href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Download</a>
+                <a href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">GitHub</a>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
