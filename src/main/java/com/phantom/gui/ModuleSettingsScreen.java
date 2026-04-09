@@ -4,7 +4,7 @@
  * Opened via the ≡ button next to any module in the ClickGUI. Dynamically renders
  * the module's description, "how to use" text, a hotkey binding row, and module-
  * specific widgets (sliders for Reach/Velocity/AimAssist/Criticals, toggle
- * buttons for ESP entity filters, preset buttons for AutoBlock/Velocity/Reach).
+ * buttons for ESP entity filters, preset buttons for Velocity/Reach).
  *
  * Widget layout uses instanceof pattern matching to detect which module type is
  * open and render the appropriate controls — simpler than an abstract factory
@@ -24,7 +24,6 @@ import com.phantom.module.impl.render.HudModule;
 import com.phantom.gui.widget.PhantomSlider;
 import com.phantom.module.impl.combat.AimAssist;
 import com.phantom.module.impl.combat.AutoClicker;
-import com.phantom.module.impl.combat.AutoBlock;
 import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.HitSelect;
@@ -32,7 +31,6 @@ import com.phantom.module.impl.combat.JumpReset;
 import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.RightClicker;
 import com.phantom.module.impl.combat.Triggerbot;
-import com.phantom.module.impl.combat.Velocity;
 import com.phantom.module.impl.combat.WTap;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
@@ -96,7 +94,7 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(net.minecraft.client.gui.components.CycleButton.builder(
-                    (Boolean val) -> net.minecraft.network.chat.Component.literal(val ? "Through Walls: ON" : "Through Walls: OFF"), esp.isThroughWalls())
+                    (Boolean val) -> net.minecraft.network.chat.Component.literal(val ? "ON" : "OFF"), esp.isThroughWalls())
                     .withValues(true, false)
                     .create(centerX - 80, y, 160, ROW_HEIGHT, net.minecraft.network.chat.Component.literal("Through Walls"),
                             (btn, val) -> esp.setThroughWalls(val)));
@@ -148,71 +146,6 @@ public class ModuleSettingsScreen extends Screen {
                                 reach.setDisableInWater(!reach.isDisableInWater());
                                 init();
                             }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof Velocity velocity) {
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Legit"),
-                            button -> { velocity.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Subtle"),
-                            button -> { velocity.applyPresetSubtle(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Blatant"),
-                            button -> { velocity.applyPresetBlatant(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("None"),
-                            button -> { velocity.applyPresetNone(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Knockback %", 0.0, 1.0, velocity.getKbPercent(), val -> velocity.setKbPercent(val)));
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Hypixel Mode: " + onOff(velocity.isHypixelMode())),
-                            button -> {
-                                velocity.setHypixelMode(!velocity.isHypixelMode());
-                                init();
-                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof AutoBlock autoBlock) {
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Strength preset: Legit"),
-                            button -> {
-                                autoBlock.applyPresetLegit();
-                                init();
-                            }).bounds(centerX - 120, y, 118, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Normal"),
-                            button -> {
-                                autoBlock.applyPresetNormal();
-                                init();
-                            }).bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Strength preset: Obvious"),
-                            button -> {
-                                autoBlock.applyPresetObvious();
-                                init();
-                            }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Strength preset: Blatant"),
-                            button -> {
-                                autoBlock.applyPresetBlatant();
-                                init();
-                            }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Strength", 0, 100, autoBlock.getStrength(), val -> autoBlock.setStrength((int)val)));
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance %", 0, 100, autoBlock.getChance(), val -> autoBlock.setChance((int)val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -969,14 +902,6 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof Reach) {
             contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
-        }
-
-        if (module instanceof Velocity) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
-        }
-
-        if (module instanceof AutoBlock) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof Criticals) {

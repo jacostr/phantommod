@@ -3,10 +3,13 @@ package com.phantom.module.impl.render;
 import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import com.phantom.module.impl.player.AntiBot;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Camera;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
-import com.phantom.module.impl.player.AntiBot;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.component.DataComponents;
@@ -18,10 +21,11 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.scores.Team;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
 import java.util.Properties;
 
@@ -34,13 +38,8 @@ public class ESP extends Module {
     private boolean throughWalls = true;
 
     public ESP() {
-        super("ESP", "Vape Style: White hitboxes when visible, BedWars team colors when behind walls.\nDetectability: Safe",
+        super("ESP", "Team-colored 3D hitboxes with optional through-wall rendering.\nDetectability: Safe",
                 ModuleCategory.PLAYER, GLFW.GLFW_KEY_Y);
-    }
-
-    @Override
-    public void onTick() {
-        // We don't need onTick for glowing effect anymore
     }
 
     @Override
@@ -49,58 +48,115 @@ public class ESP extends Module {
             return;
         }
 
-        Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
-        var vertexConsumer = context.consumers().getBuffer(RenderTypes.lines());
+        MultiBufferSource consumers = context.consumers();
+        if (consumers == null) {
+            return;
+        }
+
+        Camera camera = mc.gameRenderer.getMainCamera();
+        Vec3 cameraPos = camera.position();
 
         for (Entity entity : mc.level.getEntitiesOfClass(
                 Entity.class,
                 mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
                 this::shouldHighlight)) {
-            
-            AABB box = entity.getBoundingBox().inflate(0.05D);
-            boolean visible = mc.player.hasLineOfSight(entity);
-            if (!visible && !throughWalls) continue;
+            if (!mc.player.hasLineOfSight(entity)) {
+                continue;
+            }
 
-            int color = visible ? 0xFFFFFFFF : getBedWarsColor(entity);
+            var visibleBuffer = consumers.getBuffer(RenderTypes.lines());
+            renderEspShape(context, visibleBuffer, cameraPos, entity, getEspColor(entity));
+        }
 
-            ShapeRenderer.renderShape(
-                    context.matrices(),
-                    vertexConsumer,
-                    Shapes.create(box),
-                    -cameraPos.x,
-                    -cameraPos.y,
-                    -cameraPos.z,
-                    color,
-                    1.0F);
+        if (consumers instanceof MultiBufferSource.BufferSource bufferSource) {
+            bufferSource.endBatch(RenderTypes.lines());
+        }
+
+        if (!throughWalls) {
+            return;
+        }
+
+        GL11.glDepthFunc(GL11.GL_ALWAYS);
+        try {
+            for (Entity entity : mc.level.getEntitiesOfClass(
+                    Entity.class,
+                    mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
+                    this::shouldHighlight)) {
+                if (mc.player.hasLineOfSight(entity)) {
+                    continue;
+                }
+
+                var hiddenBuffer = consumers.getBuffer(RenderTypes.lines());
+                renderEspShape(context, hiddenBuffer, cameraPos, entity, getEspColor(entity));
+            }
+
+            if (consumers instanceof MultiBufferSource.BufferSource bufferSource) {
+                bufferSource.endBatch(RenderTypes.lines());
+            }
+        } finally {
+            GL11.glDepthFunc(GL11.GL_LEQUAL);
         }
     }
 
-    private int getBedWarsColor(Entity entity) {
+    private void renderEspShape(WorldRenderContext context, com.mojang.blaze3d.vertex.VertexConsumer buffer,
+            Vec3 cameraPos, Entity entity, int color) {
+        ShapeRenderer.renderShape(
+                context.matrices(),
+                buffer,
+                Shapes.create(entity.getBoundingBox().inflate(0.05D)),
+                -cameraPos.x,
+                -cameraPos.y,
+                -cameraPos.z,
+                color,
+                1.0F);
+    }
+
+    private int getEspColor(Entity entity) {
         if (!(entity instanceof Player player)) {
             return getColor(entity);
         }
 
+        Integer teamColor = getScoreboardTeamColor(player);
+        if (teamColor != null) {
+            return teamColor;
+        }
+
         Integer armorColor = getArmorColor(player);
         if (armorColor != null) {
-            return 0xFF000000 | armorColor; // Ensure opaque
+            return 0xFF000000 | armorColor;
         }
 
         return getColor(entity);
+    }
+
+    private Integer getScoreboardTeamColor(Player player) {
+        Team team = player.getTeam();
+        if (team == null) {
+            return null;
+        }
+
+        ChatFormatting formatting = team.getColor();
+        if (formatting == null) {
+            return null;
+        }
+
+        Integer color = formatting.getColor();
+        return color == null ? null : 0xFF000000 | color;
     }
 
     private Integer getArmorColor(Player player) {
         int[] armorSlots = {36, 37, 38, 39};
         for (int slot : armorSlots) {
             ItemStack stack = player.getInventory().getItem(slot);
-            if (stack.isEmpty()) continue;
+            if (stack.isEmpty()) {
+                continue;
+            }
             DyedItemColor dyed = stack.get(DataComponents.DYED_COLOR);
-            if (dyed != null) return dyed.rgb();
+            if (dyed != null) {
+                return dyed.rgb();
+            }
         }
         return null;
-    }
-
-    @Override
-    public void onDisable() {
     }
 
     @Override
@@ -117,8 +173,8 @@ public class ESP extends Module {
         return playersEnabled;
     }
 
-    public void setPlayersEnabled(boolean v) {
-        this.playersEnabled = v;
+    public void setPlayersEnabled(boolean playersEnabled) {
+        this.playersEnabled = playersEnabled;
         saveConfig();
     }
 
@@ -126,8 +182,8 @@ public class ESP extends Module {
         return mobsEnabled;
     }
 
-    public void setMobsEnabled(boolean v) {
-        this.mobsEnabled = v;
+    public void setMobsEnabled(boolean mobsEnabled) {
+        this.mobsEnabled = mobsEnabled;
         saveConfig();
     }
 
@@ -135,8 +191,8 @@ public class ESP extends Module {
         return animalsEnabled;
     }
 
-    public void setAnimalsEnabled(boolean v) {
-        this.animalsEnabled = v;
+    public void setAnimalsEnabled(boolean animalsEnabled) {
+        this.animalsEnabled = animalsEnabled;
         saveConfig();
     }
 
@@ -168,32 +224,34 @@ public class ESP extends Module {
     }
 
     private boolean shouldHighlight(Entity entity) {
-        if (entity == mc.player)
+        if (entity == mc.player) {
             return false;
-
-        if (entity instanceof LivingEntity living && !living.isAlive())
+        }
+        if (entity instanceof LivingEntity living && !living.isAlive()) {
             return false;
-
-        if (AntiBot.isBot(entity))
+        }
+        if (AntiBot.isBot(entity)) {
             return false;
-
-        if (playersEnabled && entity instanceof AbstractClientPlayer)
+        }
+        if (playersEnabled && entity instanceof AbstractClientPlayer) {
             return true;
-        if (animalsEnabled && (entity instanceof Animal || entity instanceof AgeableMob))
+        }
+        if (animalsEnabled && (entity instanceof Animal || entity instanceof AgeableMob)) {
             return true;
-        if (mobsEnabled && entity instanceof Mob)
-            return true;
-
-        return false;
+        }
+        return mobsEnabled && entity instanceof Mob;
     }
 
     private int getColor(Entity entity) {
-        if (entity instanceof AbstractClientPlayer)
-            return 0xFF55FFFF; // cyan
-        if (entity instanceof Animal || entity instanceof AgeableMob)
-            return 0xFF55FF55; // green
-        if (entity instanceof Mob)
-            return 0xFFFF5555; // red
-        return 0xFFFFFF55; // yellow fallback
+        if (entity instanceof AbstractClientPlayer) {
+            return 0xFF55FFFF;
+        }
+        if (entity instanceof Animal || entity instanceof AgeableMob) {
+            return 0xFF55FF55;
+        }
+        if (entity instanceof Mob) {
+            return 0xFFFF5555;
+        }
+        return 0xFFFFFF55;
     }
 }

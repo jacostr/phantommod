@@ -8,8 +8,10 @@
  */
 package com.phantom.module.impl.movement;
 
+import com.phantom.PhantomMod;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import com.phantom.module.impl.combat.WTap;
 
 public class AlwaysSprint extends Module {
     public AlwaysSprint() {
@@ -22,6 +24,12 @@ public class AlwaysSprint extends Module {
     public void onTick() {
         if (mc.player == null || mc.player.input == null)
             return;
+
+        WTap wTap = PhantomMod.getModuleManager().getModuleByClass(WTap.class);
+        if (wTap != null && wTap.isEnabled() && wTap.isTapActive()) {
+            mc.player.setSprinting(false);
+            return;
+        }
 
         // This is intentionally conservative so it behaves like a held sprint key.
         boolean canSprint = mc.player.input.hasForwardImpulse() &&

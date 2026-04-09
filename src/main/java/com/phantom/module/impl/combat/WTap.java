@@ -26,7 +26,7 @@ public class WTap extends Module {
     public WTap() {
         super("WTap",
                 "Briefly drops sprint after attacks, then re-applies it to refresh sprint knockback.\nDetectability: Moderate",
-                ModuleCategory.COMBAT,
+                ModuleCategory.MOVEMENT,
                 -1);
     }
 
@@ -71,6 +71,10 @@ public class WTap extends Module {
     @Override
     public void onDisable() {
         tapStartedAt = -1L;
+    }
+
+    public boolean isTapActive() {
+        return tapStartedAt >= 0L;
     }
 
     private boolean canResumeSprint() {

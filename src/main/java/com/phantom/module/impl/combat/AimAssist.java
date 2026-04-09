@@ -9,6 +9,7 @@
  */
 package com.phantom.module.impl.combat;
 
+import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
@@ -262,6 +263,9 @@ public class AimAssist extends Module {
 
     private boolean isValidTarget(Entity entity) {
         if (!(entity instanceof LivingEntity living) || entity == mc.player || !living.isAlive() || mc.player.distanceTo(entity) > distance) {
+            return false;
+        }
+        if (AntiBot.isBot(entity)) {
             return false;
         }
         if (visibilityCheck && !mc.player.hasLineOfSight(entity)) {

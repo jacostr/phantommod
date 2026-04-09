@@ -11,7 +11,6 @@ import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.combat.JumpReset;
 import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
-import com.phantom.module.impl.combat.Velocity;
 import com.phantom.module.impl.combat.WTap;
 import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.movement.NoJumpDelay;
@@ -61,12 +60,6 @@ public final class ProfileManager {
             reach.setOnlyWhileSprinting(true);
             reach.setDisableInWater(true);
             reach.setEnabledSilently(false);
-        }
-
-        Velocity velocity = moduleManager.getModuleByClass(Velocity.class);
-        if (velocity != null) {
-            velocity.applyPresetLegit();
-            velocity.setEnabledSilently(false);
         }
 
         Triggerbot triggerbot = moduleManager.getModuleByClass(Triggerbot.class);
@@ -164,12 +157,6 @@ public final class ProfileManager {
             reach.setOnlyWhileSprinting(true);
             reach.setDisableInWater(true);
             reach.setEnabledSilently(true);
-        }
-
-        Velocity velocity = moduleManager.getModuleByClass(Velocity.class);
-        if (velocity != null) {
-            velocity.applyPresetSubtle();
-            velocity.setEnabledSilently(true);
         }
 
         Triggerbot triggerbot = moduleManager.getModuleByClass(Triggerbot.class);

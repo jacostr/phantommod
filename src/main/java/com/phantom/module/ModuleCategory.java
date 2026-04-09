@@ -11,8 +11,8 @@ package com.phantom.module;
  * Tabs shown in the ClickGUI. Modules are sorted alphabetically within each tab.
  *
  * <ul>
- *   <li>{@link #COMBAT}   — PvP automation: reach, velocity, aim, crits, autoblock.</li>
- *   <li>{@link #MOVEMENT} — Traversal helpers: sprint, scaffold, speedbridge, no-jump-delay.</li>
+ *   <li>{@link #COMBAT}   — PvP automation: reach, aim, crits, block-hit, trigger logic.</li>
+ *   <li>{@link #MOVEMENT} — Traversal helpers: sprint, W-tap, scaffold, speedbridge, no-jump-delay.</li>
  *   <li>{@link #PLAYER}   — Everything else: QoL, visuals, HUD, tools, fall protection, zoom, ESP.</li>
  * </ul>
  *
@@ -33,4 +33,3 @@ public enum ModuleCategory {
         return label;
     }
 }
-

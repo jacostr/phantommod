@@ -202,19 +202,19 @@ public class HudModule extends Module {
     }
 
     private String getPingText() {
-        ServerData currentServer = mc.getCurrentServer();
-        if (currentServer != null && currentServer.ping > 0L) {
-            return "Ping: " + currentServer.ping + "ms";
-        }
-
         if (mc.player != null && mc.getConnection() != null) {
             PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
             if (playerInfo != null) {
                 int latency = playerInfo.getLatency();
-                if (latency > 0) {
+                if (latency > 1) {
                     return "Ping: " + latency + "ms";
                 }
             }
+        }
+
+        ServerData currentServer = mc.getCurrentServer();
+        if (currentServer != null && currentServer.ping > 1L) {
+            return "Ping: " + currentServer.ping + "ms";
         }
 
         return "Ping: local";

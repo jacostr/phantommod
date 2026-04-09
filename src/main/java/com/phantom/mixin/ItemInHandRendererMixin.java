@@ -2,7 +2,6 @@ package com.phantom.mixin;
 
 import com.phantom.PhantomMod;
 import com.phantom.module.impl.combat.BlockHit;
-import com.phantom.module.impl.combat.AutoBlock;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -41,11 +40,8 @@ public class ItemInHandRendererMixin {
     ) {
         if (hand == InteractionHand.MAIN_HAND) {
             BlockHit blockHit = (BlockHit) PhantomMod.getModuleManager().getModuleByName("BlockHit");
-            AutoBlock autoBlock = (AutoBlock) PhantomMod.getModuleManager().getModuleByName("AutoBlock");
-
             boolean isBlocking =
-                    (blockHit != null && blockHit.isEnabled() && blockHit.isVisualAnimation() && blockHit.isHoldingUse())
-                    || (autoBlock != null && autoBlock.isEnabled() && autoBlock.isHoldingUse());
+                    blockHit != null && blockHit.isEnabled() && blockHit.isVisualAnimation() && blockHit.isHoldingUse();
 
             if (isBlocking && stack.getItem().getDescriptionId().toLowerCase().contains("sword")) {
                 matrices.translate(0.15f, -0.1f, -0.1f);

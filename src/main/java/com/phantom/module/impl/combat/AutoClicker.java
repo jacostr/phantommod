@@ -6,6 +6,7 @@
 package com.phantom.module.impl.combat;
 
 import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
@@ -62,7 +63,7 @@ public class AutoClicker extends Module {
                 return;
             }
             Entity entity = entityHitResult.getEntity();
-            if (!(entity instanceof LivingEntity living) || !living.isAlive() || entity == mc.player) {
+            if (!(entity instanceof LivingEntity living) || !living.isAlive() || entity == mc.player || AntiBot.isBot(entity)) {
                 return;
             }
         }
@@ -74,7 +75,7 @@ public class AutoClicker extends Module {
 
         if (mc.hitResult instanceof EntityHitResult entityHitResult) {
             Entity entity = entityHitResult.getEntity();
-            if (entity instanceof LivingEntity living && living.isAlive() && entity != mc.player && !isTeammateTarget(entity)) {
+            if (entity instanceof LivingEntity living && living.isAlive() && entity != mc.player && !AntiBot.isBot(entity) && !isTeammateTarget(entity)) {
                 mc.gameMode.attack(mc.player, entity);
                 mc.player.swing(InteractionHand.MAIN_HAND);
                 lastClickAt = now;
