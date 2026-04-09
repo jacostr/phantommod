@@ -43,7 +43,7 @@ public class ESP extends Module {
     public ESP() {
         // ESP sits in the Player tab — it's a visual/QoL aid, not combat automation.
         // Default hotkey Y toggles the whole module; per-type filters are in settings.
-        super("ESP", "Highlights nearby players, mobs, and animals with boxes that stay visible through blocks.\nDetectability: Safe",
+        super("ESP", "Draw Box around nearby players, mobs, and animals with boxes that stay visible through blocks.\nDetectability: Safe",
                 ModuleCategory.PLAYER, GLFW.GLFW_KEY_Y);
     }
 

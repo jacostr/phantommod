@@ -10,6 +10,7 @@
 package com.phantom.gui;
 
 import com.phantom.PhantomMod;
+import com.phantom.config.ProfileManager;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.ModuleManager;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 public class ClickGUIScreen extends Screen {
     private static final int BUTTON_WIDTH = 150;
     private static final int CFG_WIDTH = 34;
+    private static final int PROFILE_WIDTH = 86;
     private static final int ROW_HEIGHT = 20;
     private static final int ROW_SPACING = 6;
     private static final int TAB_HEIGHT = 20;
@@ -86,6 +88,51 @@ public class ClickGUIScreen extends Screen {
         });
         this.addRenderableWidget(search);
 
+        int profileX = 6;
+        int profileY = LIST_TOP + 18;
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Legit"),
+                        button -> {
+                            ProfileManager.applyLegit(moduleManager);
+                            NotificationManager.push("Loaded Legit profile");
+                            rebuildUI();
+                        })
+                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
+                .build());
+        profileY += ROW_HEIGHT + 4;
+
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Obvious"),
+                        button -> {
+                            ProfileManager.applyObvious(moduleManager);
+                            NotificationManager.push("Loaded Obvious profile");
+                            rebuildUI();
+                        })
+                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
+                .build());
+        profileY += ROW_HEIGHT + 4;
+
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Custom"),
+                        button -> {
+                            boolean loaded = ProfileManager.loadCustom(moduleManager);
+                            NotificationManager.push(loaded ? "Loaded Custom profile" : "No Custom profile saved");
+                            rebuildUI();
+                        })
+                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
+                .build());
+        profileY += ROW_HEIGHT + 4;
+
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Save Custom"),
+                        button -> {
+                            ProfileManager.saveCustom(moduleManager);
+                            NotificationManager.push("Saved Custom profile");
+                            rebuildUI();
+                        })
+                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
+                .build());
+
         String q = searchText.trim().toLowerCase(Locale.ROOT);
         List<Module> modules = moduleManager.getModules().stream()
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
@@ -123,16 +170,6 @@ public class ClickGUIScreen extends Screen {
             rowY += ROW_HEIGHT + ROW_SPACING;
         }
 
-        // Save Config Button (Bottom Left)
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Save Config"),
-                        button -> {
-                            PhantomMod.saveConfig();
-                            NotificationManager.push("Config saved");
-                        })
-                .bounds(4, this.height - 24, 80, 20)
-                .build());
-
         rebuildingSearch = false;
     }
 
@@ -143,6 +180,7 @@ public class ClickGUIScreen extends Screen {
 
         // Header Branding
         graphics.drawString(this.font, "PhantomMod", 4, 10, 0xFFA8E6A3);
+        graphics.drawString(this.font, "Profiles", 8, LIST_TOP + 6, 0xFFFFFFFF);
 
         super.render(graphics, mouseX, mouseY, delta);
 

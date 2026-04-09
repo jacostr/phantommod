@@ -14,15 +14,26 @@ package com.phantom.gui;
 
 import com.phantom.module.Module;
 
+import com.phantom.module.impl.player.AntiAFK;
+import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.movement.SpeedBridge;
+import com.phantom.module.impl.render.ReachDisplay;
+import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.gui.widget.PhantomSlider;
 import com.phantom.module.impl.combat.AimAssist;
+import com.phantom.module.impl.combat.AutoClicker;
 import com.phantom.module.impl.combat.AutoBlock;
+import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
+import com.phantom.module.impl.combat.HitSelect;
+import com.phantom.module.impl.combat.JumpReset;
 import com.phantom.module.impl.combat.Reach;
+import com.phantom.module.impl.combat.RightClicker;
+import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Velocity;
+import com.phantom.module.impl.combat.WTap;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -107,6 +118,22 @@ public class ModuleSettingsScreen extends Screen {
 
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Block reach", 4.5, 10.0, reach.getBlockReach(), val -> reach.setBlockReach(val)));
             y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Only while sprinting: " + onOff(reach.isOnlyWhileSprinting())),
+                            button -> {
+                                reach.setOnlyWhileSprinting(!reach.isOnlyWhileSprinting());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Disable in water: " + onOff(reach.isDisableInWater())),
+                            button -> {
+                                reach.setDisableInWater(!reach.isDisableInWater());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
         if (module instanceof Velocity velocity) {
@@ -151,6 +178,14 @@ public class ModuleSettingsScreen extends Screen {
                             }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
 
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Strength preset: Blatant"),
+                            button -> {
+                                autoBlock.applyPresetBlatant();
+                                init();
+                            }).bounds(centerX - 120, y, 240, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Strength", 0, 100, autoBlock.getStrength(), val -> autoBlock.setStrength((int)val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
@@ -180,28 +215,133 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof AimAssist aim) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> { aim.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> { aim.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> { aim.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> { aim.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Smoothing", 1.0, 10.0, aim.getSmoothing(), val -> aim.setSmoothing(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Snapiness", 1.0, 10.0, aim.getSnapiness(), val -> aim.setSnapiness(val)));
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "FOV Limit", 10.0, 360.0, aim.getFov(), val -> aim.setFov(val)));
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Distance", 2.5, 6.0, aim.getDistance(), val -> aim.setDistance(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
+                            Component.literal("Require mouse down: " + onOff(aim.isRequireMouseDown())),
+                            button -> {
+                                aim.setRequireMouseDown(!aim.isRequireMouseDown());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Aim vertically: " + onOff(aim.isAimVertically())),
+                            button -> {
+                                aim.setAimVertically(!aim.isAimVertically());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Limit to weapons: " + onOff(aim.isLimitToWeapons())),
+                            button -> {
+                                aim.setLimitToWeapons(!aim.isLimitToWeapons());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Target players: " + onOff(aim.isTargetPlayers())),
+                            button -> {
+                                aim.setTargetPlayers(!aim.isTargetPlayers());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Target mobs: " + onOff(aim.isTargetMobs())),
+                            button -> {
+                                aim.setTargetMobs(!aim.isTargetMobs());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Target animals: " + onOff(aim.isTargetAnimals())),
+                            button -> {
+                                aim.setTargetAnimals(!aim.isTargetAnimals());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Target area: " + aim.getTargetArea().getLabel()),
+                            button -> {
+                                aim.cycleTargetArea();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Target mode: " + aim.getTargetMode().getLabel()),
+                            button -> {
+                                aim.cycleTargetMode();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof AutoClicker autoClicker) {
+            this.addRenderableWidget(Button.builder(
                             Component.literal("Legit"),
-                            button -> { aim.setSmoothing(8.0); aim.setFov(60.0); init(); })
-                    .bounds(centerX - 122, y, 118, ROW_HEIGHT).build());
+                            button -> { autoClicker.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
             this.addRenderableWidget(Button.builder(
                             Component.literal("Normal"),
-                            button -> { aim.setSmoothing(5.0); aim.setFov(90.0); init(); })
-                    .bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
+                            button -> { autoClicker.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
             this.addRenderableWidget(Button.builder(
                             Component.literal("Obvious"),
-                            button -> { aim.setSmoothing(3.0); aim.setFov(180.0); init(); })
-                    .bounds(centerX - 122, y, 118, ROW_HEIGHT).build());
+                            button -> { autoClicker.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
             this.addRenderableWidget(Button.builder(
                             Component.literal("Blatant"),
-                            button -> { aim.setSmoothing(1.0); aim.setFov(360.0); init(); })
-                    .bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
+                            button -> { autoClicker.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Min CPS", 1.0, 20.0, autoClicker.getMinCps(), autoClicker::setMinCps));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max CPS", 1.0, 20.0, autoClicker.getMaxCps(), autoClicker::setMaxCps));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Only with weapon: " + onOff(autoClicker.isOnlyWithWeapon())),
+                            button -> {
+                                autoClicker.setOnlyWithWeapon(!autoClicker.isOnlyWithWeapon());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Require mouse down: " + onOff(autoClicker.isRequireMouseDown())),
+                            button -> {
+                                autoClicker.setRequireMouseDown(!autoClicker.isRequireMouseDown());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Hit entities only: " + onOff(autoClicker.isHitEntitiesOnly())),
+                            button -> {
+                                autoClicker.setHitEntitiesOnly(!autoClicker.isHitEntitiesOnly());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -237,10 +377,375 @@ public class ModuleSettingsScreen extends Screen {
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("FPS/Ping Side: " + hudModule.getStatsSide().getLabel()),
+                    button -> {
+                        hudModule.cycleStatsSide();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
         if (module instanceof SpeedBridge sb) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Auto-off (s)", 0.5, 10.0, sb.getAutoOffDelay(), val -> sb.setAutoOffDelay(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof WTap wTap) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> { wTap.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> { wTap.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> { wTap.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> { wTap.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0, wTap.getChance(), wTap::setChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Release delay", 0.0, 250.0, wTap.getReleaseDelayMs(), val -> wTap.setReleaseDelayMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Re-press delay", 0.0, 250.0, wTap.getRepressDelayMs(), val -> wTap.setRepressDelayMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Select hits: " + onOff(wTap.isSelectHits())),
+                            button -> {
+                                wTap.setSelectHits(!wTap.isSelectHits());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Triggerbot triggerbot) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> { triggerbot.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> { triggerbot.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> { triggerbot.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> { triggerbot.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Extra delay", -4.0, 10.0, triggerbot.getExtraDelayTicks(),
+                    val -> triggerbot.setExtraDelayTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Require mouse down: " + onOff(triggerbot.isRequireMouseDown())),
+                            button -> {
+                                triggerbot.setRequireMouseDown(!triggerbot.isRequireMouseDown());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Air crits: " + onOff(triggerbot.isAirCrits())),
+                            button -> {
+                                triggerbot.setAirCrits(!triggerbot.isAirCrits());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Shield check: " + onOff(triggerbot.isShieldCheck())),
+                            button -> {
+                                triggerbot.setShieldCheck(!triggerbot.isShieldCheck());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Miss chance", 0.0, 1.0, triggerbot.getTargetMissChance(), triggerbot::setTargetMissChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Early hit chance", 0.0, 1.0, triggerbot.getEarlyHitChance(), triggerbot::setEarlyHitChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Limit items: " + onOff(triggerbot.isLimitItems())),
+                            button -> {
+                                triggerbot.setLimitItems(!triggerbot.isLimitItems());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof BlockHit blockHit) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> { blockHit.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> { blockHit.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> { blockHit.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> { blockHit.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0, blockHit.getChance(), blockHit::setChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Require mouse down: " + onOff(blockHit.isRequireMouseDown())),
+                            button -> {
+                                blockHit.setRequireMouseDown(!blockHit.isRequireMouseDown());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Mode: " + blockHit.getMode().getLabel()),
+                            button -> {
+                                blockHit.cycleMode();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof HitSelect hitSelect) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> { hitSelect.applyPresetLegit(); init(); }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> { hitSelect.applyPresetNormal(); init(); }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> { hitSelect.applyPresetObvious(); init(); }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> { hitSelect.applyPresetBlatant(); init(); }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0, hitSelect.getChance(), hitSelect::setChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Mode: " + hitSelect.getMode().getLabel()),
+                            button -> {
+                                hitSelect.cycleMode();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Preference: " + hitSelect.getPreference().getLabel()),
+                            button -> {
+                                hitSelect.cyclePreference();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof RightClicker rightClicker) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Min CPS", 1.0, 20.0, rightClicker.getMinCps(), rightClicker::setMinCps));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max CPS", 1.0, 20.0, rightClicker.getMaxCps(), rightClicker::setMaxCps));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Start delay", 0.0, 1000.0, rightClicker.getStartDelayMs(),
+                    val -> rightClicker.setStartDelayMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Block place delay", 0.0, 1000.0, rightClicker.getBlockPlaceDelayMs(),
+                    val -> rightClicker.setBlockPlaceDelayMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Randomization: " + rightClicker.getRandomization().getLabel()),
+                            button -> {
+                                rightClicker.cycleRandomization();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Jitter", 0.0, 3.0, rightClicker.getJitter(), rightClicker::setJitter));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Use item whitelist: " + onOff(rightClicker.isUseItemWhitelist())),
+                            button -> {
+                                rightClicker.setUseItemWhitelist(!rightClicker.isUseItemWhitelist());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof JumpReset jumpReset) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0, jumpReset.getChance(), jumpReset::setChance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Accuracy", 0.0, 1.0, jumpReset.getAccuracy(), jumpReset::setAccuracy));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Only when targeting: " + onOff(jumpReset.isOnlyWhenTargeting())),
+                            button -> {
+                                jumpReset.setOnlyWhenTargeting(!jumpReset.isOnlyWhenTargeting());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Water check: " + onOff(jumpReset.isWaterCheck())),
+                            button -> {
+                                jumpReset.setWaterCheck(!jumpReset.isWaterCheck());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof FastPlace fastPlace) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> {
+                                fastPlace.applyPresetLegit();
+                                init();
+                            }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> {
+                                fastPlace.applyPresetNormal();
+                                init();
+                            }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> {
+                                fastPlace.applyPresetObvious();
+                                init();
+                            }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> {
+                                fastPlace.applyPresetBlatant();
+                                init();
+                            }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Delay ticks", 0.0, 4.0, fastPlace.getDelayTicks(), val -> fastPlace.setDelayTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blocks only: " + onOff(fastPlace.isBlocksOnly())),
+                            button -> {
+                                fastPlace.setBlocksOnly(!fastPlace.isBlocksOnly());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof ReachDisplay reachDisplay) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Render background: " + onOff(reachDisplay.isRenderBackground())),
+                            button -> {
+                                reachDisplay.setRenderBackground(!reachDisplay.isRenderBackground());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof AntiAFK antiAFK) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Start delay min", 5.0, 300.0, antiAFK.getMinStartDelaySeconds(), antiAFK::setMinStartDelaySeconds));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Start delay max", 5.0, 300.0, antiAFK.getMaxStartDelaySeconds(), antiAFK::setMaxStartDelaySeconds));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Frequency", 0.1, 1.0, antiAFK.getFrequency(), antiAFK::setFrequency));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Keep close: " + onOff(antiAFK.isKeepClose())),
+                            button -> {
+                                antiAFK.setKeepClose(!antiAFK.isKeepClose());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Rotation: " + onOff(antiAFK.isRotation())),
+                            button -> {
+                                antiAFK.setRotation(!antiAFK.isRotation());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Silent Aim: " + onOff(antiAFK.isSilentAim())),
+                            button -> {
+                                antiAFK.setSilentAim(!antiAFK.isSilentAim());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max yaw change", 1.0, 90.0, antiAFK.getMaxYawChange(), antiAFK::setMaxYawChange));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max pitch change", 1.0, 90.0, antiAFK.getMaxPitchChange(), antiAFK::setMaxPitchChange));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Indicators indicators) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Alert type: " + indicators.getAlertType().getLabel()),
+                            button -> {
+                                indicators.cycleAlertType();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Uncommon color: " + onOff(indicators.isUncommonProjectileColor())),
+                            button -> {
+                                indicators.setUncommonProjectileColor(!indicators.isUncommonProjectileColor());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show arrows: " + onOff(indicators.isShowArrows())),
+                            button -> {
+                                indicators.setShowArrows(!indicators.isShowArrows());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show pearls: " + onOff(indicators.isShowPearls())),
+                            button -> {
+                                indicators.setShowPearls(!indicators.isShowPearls());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show potions: " + onOff(indicators.isShowPotions())),
+                            button -> {
+                                indicators.setShowPotions(!indicators.isShowPotions());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show eggs: " + onOff(indicators.isShowEggs())),
+                            button -> {
+                                indicators.setShowEggs(!indicators.isShowEggs());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show snowballs: " + onOff(indicators.isShowSnowballs())),
+                            button -> {
+                                indicators.setShowSnowballs(!indicators.isShowSnowballs());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show fireballs: " + onOff(indicators.isShowFireballs())),
+                            button -> {
+                                indicators.setShowFireballs(!indicators.isShowFireballs());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Radius scale", 0.5, 2.0, indicators.getRadiusScale(), indicators::setRadiusScale));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Show distance: " + onOff(indicators.isShowDistance())),
+                            button -> {
+                                indicators.setShowDistance(!indicators.isShowDistance());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -347,7 +852,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Reach) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof Velocity) {
@@ -355,7 +860,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof AutoBlock) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof Criticals) {
@@ -363,15 +868,59 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof AimAssist) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 15 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AutoClicker) {
+            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof HudModule) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof SpeedBridge) {
             contentHeight += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof WTap) {
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof FastPlace) {
+            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof ReachDisplay) {
+            contentHeight += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Indicators) {
+            contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Triggerbot) {
+            contentHeight += 8 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof BlockHit) {
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof HitSelect) {
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof RightClicker) {
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof JumpReset) {
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AntiAFK) {
+            contentHeight += 8 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);

@@ -65,11 +65,31 @@ public final class ConfigManager {
      * automatically drops any stale keys for deleted modules.</p>
      */
     public static void save(ModuleManager moduleManager) {
+        Properties properties = capture(moduleManager);
+        writeMainFile(properties);
+    }
+
+    public static Properties capture(ModuleManager moduleManager) {
         Properties properties = new Properties();
         for (Module module : moduleManager.getModules()) {
             module.saveConfig(properties);
         }
-        writeMainFile(properties);
+        return properties;
+    }
+
+    public static void apply(ModuleManager moduleManager, Properties properties, boolean saveAsMainConfig) {
+        for (Module module : moduleManager.getModules()) {
+            module.setEnabledSilently(false);
+        }
+        for (Module module : moduleManager.getModules()) {
+            module.loadConfig(properties);
+        }
+        for (Module module : moduleManager.getModules()) {
+            module.applyLoadedEnableState();
+        }
+        if (saveAsMainConfig) {
+            writeMainFile(properties);
+        }
     }
 
     /**
@@ -80,6 +100,19 @@ public final class ConfigManager {
     private static Properties readMainFile() {
         Properties properties = new Properties();
         Path path = getMainConfigPath();
+        if (Files.exists(path)) {
+            try (InputStream inputStream = Files.newInputStream(path)) {
+                properties.load(inputStream);
+            } catch (IOException exception) {
+                exception.printStackTrace();
+            }
+        }
+        return properties;
+    }
+
+    public static Properties readProfile(String profileName) {
+        Properties properties = new Properties();
+        Path path = getProfileConfigPath(profileName);
         if (Files.exists(path)) {
             try (InputStream inputStream = Files.newInputStream(path)) {
                 properties.load(inputStream);
@@ -106,8 +139,24 @@ public final class ConfigManager {
         }
     }
 
+    public static void writeProfile(String profileName, Properties properties) {
+        Path path = getProfileConfigPath(profileName);
+        try {
+            Files.createDirectories(path.getParent());
+            try (OutputStream outputStream = Files.newOutputStream(path)) {
+                properties.store(outputStream, "PhantomMod profile: " + profileName);
+            }
+        } catch (IOException exception) {
+            exception.printStackTrace();
+        }
+    }
+
     /** Resolves the config file path using Fabric's config directory (platform-agnostic). */
     private static Path getMainConfigPath() {
         return FabricLoader.getInstance().getConfigDir().resolve(FILE_NAME);
+    }
+
+    private static Path getProfileConfigPath(String profileName) {
+        return FabricLoader.getInstance().getConfigDir().resolve("phantom-profiles").resolve(profileName + ".properties");
     }
 }

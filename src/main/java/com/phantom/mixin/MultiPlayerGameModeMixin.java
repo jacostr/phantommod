@@ -9,7 +9,11 @@
 package com.phantom.mixin;
 
 import com.phantom.PhantomMod;
+import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
+import com.phantom.module.impl.combat.HitSelect;
+import com.phantom.module.impl.combat.WTap;
+import com.phantom.module.impl.render.ReachDisplay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -26,10 +30,19 @@ import java.util.Random;
 public class MultiPlayerGameModeMixin {
     private final Random rand = new Random();
 
-    @Inject(method = "attack", at = @At("HEAD"))
+    @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttack(Player player, Entity target, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
+        HitSelect hitSelect = (HitSelect) PhantomMod.getModuleManager().getModuleByName("HitSelect");
         Criticals critModule = (Criticals) PhantomMod.getModuleManager().getModuleByName("Criticals");
+        BlockHit blockHit = (BlockHit) PhantomMod.getModuleManager().getModuleByName("BlockHit");
+        WTap wTapModule = (WTap) PhantomMod.getModuleManager().getModuleByName("WTap");
+        ReachDisplay reachDisplay = (ReachDisplay) PhantomMod.getModuleManager().getModuleByName("Reach Display");
+
+        if (hitSelect != null && hitSelect.isEnabled() && hitSelect.shouldCancelAttack(target)) {
+            ci.cancel();
+            return;
+        }
         
         if (critModule != null && critModule.isEnabled() && mc.player != null && mc.player.onGround() && mc.player.fallDistance <= 0.0f) {
             // Apply randomized chance
@@ -46,6 +59,18 @@ public class MultiPlayerGameModeMixin {
                     mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, false, false));
                 }
             }
+        }
+
+        if (wTapModule != null && wTapModule.isEnabled()) {
+            wTapModule.onAttack(target);
+        }
+
+        if (blockHit != null && blockHit.isEnabled()) {
+            blockHit.onAttack(target);
+        }
+
+        if (reachDisplay != null && reachDisplay.isEnabled()) {
+            reachDisplay.recordHit(target);
         }
     }
 }

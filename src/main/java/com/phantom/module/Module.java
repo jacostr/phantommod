@@ -18,8 +18,16 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.phys.BlockHitResult;
 
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Properties;
 
 public abstract class Module {
@@ -79,6 +87,19 @@ public abstract class Module {
 
     public void initializeEnabledSilently(boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public void setEnabledSilently(boolean enabled) {
+        if (this.enabled == enabled) {
+            return;
+        }
+
+        this.enabled = enabled;
+        if (enabled) {
+            onEnable();
+        } else {
+            onDisable();
+        }
     }
 
     public void setEnabled(boolean enabled) {
@@ -188,5 +209,49 @@ public abstract class Module {
         } else {
             onDisable();
         }
+    }
+
+    protected boolean shouldPauseForBedMining() {
+        if (mc.player == null || mc.level == null || mc.options == null || !mc.options.keyAttack.isDown()) {
+            return false;
+        }
+        if (!(mc.hitResult instanceof BlockHitResult blockHitResult)) {
+            return false;
+        }
+        return mc.level.getBlockState(blockHitResult.getBlockPos()).getBlock() instanceof BedBlock;
+    }
+
+    protected boolean isTeammateTarget(Entity entity) {
+        if (!(entity instanceof Player other) || mc.player == null || entity == mc.player) {
+            return false;
+        }
+
+        if (mc.player.isAlliedTo(other) || other.isAlliedTo(mc.player)) {
+            return true;
+        }
+
+        if (mc.player.getTeam() != null && other.getTeam() != null
+                && Objects.equals(mc.player.getTeam().getName(), other.getTeam().getName())) {
+            return true;
+        }
+
+        Integer selfArmor = getPrimaryArmorColor(mc.player);
+        Integer otherArmor = getPrimaryArmorColor(other);
+        return selfArmor != null && selfArmor.equals(otherArmor);
+    }
+
+    private Integer getPrimaryArmorColor(Player player) {
+        int[] armorSlots = {36, 37, 38, 39};
+        for (int slot : armorSlots) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            DyedItemColor dyed = stack.get(DataComponents.DYED_COLOR);
+            if (dyed != null) {
+                return dyed.rgb();
+            }
+        }
+        return null;
     }
 }

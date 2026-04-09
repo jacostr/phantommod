@@ -9,12 +9,13 @@
 package com.phantom.module.impl.render;
 
 import com.phantom.PhantomMod;
-import com.phantom.module.Module;
 import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
@@ -23,10 +24,30 @@ import java.util.Properties;
 import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
+    public enum CornerSide {
+        LEFT("Left"),
+        RIGHT("Right");
+
+        private final String label;
+
+        CornerSide(String label) {
+            this.label = label;
+        }
+
+        public String getLabel() {
+            return label;
+        }
+
+        public CornerSide next() {
+            return this == LEFT ? RIGHT : LEFT;
+        }
+    }
+
     private boolean showModuleList = true;
     private boolean showFps = true;
     private boolean showPing = true;
     private boolean alignLeft;
+    private CornerSide statsSide = CornerSide.LEFT;
 
     public HudModule() {
         // HUD lives in the Player tab alongside other non-combat visual aids.
@@ -50,32 +71,8 @@ public class HudModule extends Module {
         if (mc.options.hideGui)
             return;
 
-        List<String> lines = new ArrayList<>();
-        lines.add("PhantomMod");
-
-        // Only show the active-module list if the user has it enabled in settings.
-        if (showModuleList && PhantomMod.getModuleManager() != null) {
-            for (Module module : PhantomMod.getModuleManager().getModules()) {
-                if (module == this || !module.isEnabled()) {
-                    continue;
-                }
-                lines.add(module.getName());
-            }
-        }
-
-        if (showFps) {
-            lines.add("FPS: " + mc.getFps());
-        }
-
-        if (showPing && mc.player != null && mc.getConnection() != null) {
-            PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
-            if (playerInfo != null) {
-                int latency = playerInfo.getLatency();
-                lines.add(latency <= 0 ? "Ping: local" : "Ping: " + latency + "ms");
-            }
-        }
-
-        drawCompactHud(graphics, lines);
+        drawModuleHud(graphics);
+        drawCornerStats(graphics);
     }
 
     public boolean isShowModuleList() {
@@ -114,6 +111,15 @@ public class HudModule extends Module {
         saveConfig();
     }
 
+    public CornerSide getStatsSide() {
+        return statsSide;
+    }
+
+    public void cycleStatsSide() {
+        statsSide = statsSide.next();
+        saveConfig();
+    }
+
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
@@ -121,6 +127,13 @@ public class HudModule extends Module {
         showFps = Boolean.parseBoolean(properties.getProperty("hud.show_fps", Boolean.toString(showFps)));
         showPing = Boolean.parseBoolean(properties.getProperty("hud.show_ping", Boolean.toString(showPing)));
         alignLeft = Boolean.parseBoolean(properties.getProperty("hud.align_left", Boolean.toString(alignLeft)));
+        String side = properties.getProperty("hud.stats_side");
+        if (side != null) {
+            try {
+                statsSide = CornerSide.valueOf(side);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
     }
 
     @Override
@@ -130,9 +143,22 @@ public class HudModule extends Module {
         properties.setProperty("hud.show_fps", Boolean.toString(showFps));
         properties.setProperty("hud.show_ping", Boolean.toString(showPing));
         properties.setProperty("hud.align_left", Boolean.toString(alignLeft));
+        properties.setProperty("hud.stats_side", statsSide.name());
     }
 
-    private void drawCompactHud(GuiGraphics graphics, List<String> lines) {
+    private void drawModuleHud(GuiGraphics graphics) {
+        List<String> lines = new ArrayList<>();
+        lines.add("PhantomMod");
+
+        if (showModuleList && PhantomMod.getModuleManager() != null) {
+            for (Module module : PhantomMod.getModuleManager().getModules()) {
+                if (module == this || !module.isEnabled()) {
+                    continue;
+                }
+                lines.add(module.getName());
+            }
+        }
+
         final float scale = 0.8F;
         int scaledWidth = (int) (mc.getWindow().getGuiScaledWidth() / scale);
         int y = 8;
@@ -149,5 +175,48 @@ public class HudModule extends Module {
         }
 
         graphics.pose().popMatrix();
+    }
+
+    private void drawCornerStats(GuiGraphics graphics) {
+        final float scale = 0.8F;
+        int y = 8;
+        int scaledWidth = (int) (mc.getWindow().getGuiScaledWidth() / scale);
+
+        graphics.pose().pushMatrix();
+        graphics.pose().scale(scale, scale);
+
+        if (showFps) {
+            String fpsText = "FPS: " + mc.getFps();
+            int fpsX = statsSide == CornerSide.LEFT ? 8 : scaledWidth - mc.font.width(fpsText) - 8;
+            graphics.drawString(mc.font, Component.literal(fpsText), fpsX, y, 0xFFFFFFFF, true);
+            y += 10;
+        }
+
+        if (showPing) {
+            String pingText = getPingText();
+            int pingX = statsSide == CornerSide.LEFT ? 8 : scaledWidth - mc.font.width(pingText) - 8;
+            graphics.drawString(mc.font, Component.literal(pingText), pingX, y, 0xFFFFFFFF, true);
+        }
+
+        graphics.pose().popMatrix();
+    }
+
+    private String getPingText() {
+        ServerData currentServer = mc.getCurrentServer();
+        if (currentServer != null && currentServer.ping > 0L) {
+            return "Ping: " + currentServer.ping + "ms";
+        }
+
+        if (mc.player != null && mc.getConnection() != null) {
+            PlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUUID());
+            if (playerInfo != null) {
+                int latency = playerInfo.getLatency();
+                if (latency > 0) {
+                    return "Ping: " + latency + "ms";
+                }
+            }
+        }
+
+        return "Ping: local";
     }
 }

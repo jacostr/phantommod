@@ -10,14 +10,25 @@ package com.phantom.module;
 
 import com.phantom.config.ConfigManager;
 import com.phantom.module.impl.movement.AlwaysSprint;
+import com.phantom.module.impl.combat.AutoClicker;
+import com.phantom.module.impl.combat.BlockHit;
+import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.movement.SpeedBridge;
+import com.phantom.module.impl.combat.JumpReset;
+import com.phantom.module.impl.combat.RightClicker;
+import com.phantom.module.impl.combat.WTap;
 import com.phantom.module.impl.player.AutoTools;
+import com.phantom.module.impl.player.AntiAFK;
+import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.FullBright;
 import com.phantom.module.impl.render.HudModule;
+import com.phantom.module.impl.render.Indicators;
+import com.phantom.module.impl.render.ReachDisplay;
 import com.phantom.module.impl.combat.AutoBlock;
 import com.phantom.module.impl.combat.Reach;
+import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Velocity;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.AimAssist;
@@ -39,6 +50,7 @@ public class ModuleManager {
         modules.add(new AlwaysSprint());
         modules.add(new FullBright());
         modules.add(new ESP());
+        modules.add(new Indicators());
         modules.add(new SpeedBridge());
         modules.add(new AutoTools());
         modules.add(new NoFall());
@@ -46,9 +58,19 @@ public class ModuleManager {
         modules.add(new Velocity());
         modules.add(new Criticals());
         modules.add(new AimAssist());
+        modules.add(new AutoClicker());
         modules.add(new AutoBlock());
+        modules.add(new BlockHit());
+        modules.add(new HitSelect());
+        modules.add(new RightClicker());
+        modules.add(new JumpReset());
+        modules.add(new Triggerbot());
+        modules.add(new WTap());
         modules.add(new Scaffold());
         modules.add(new NoJumpDelay());
+        modules.add(new AntiAFK());
+        modules.add(new FastPlace());
+        modules.add(new ReachDisplay());
         modules.add(hudModule);
 
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())

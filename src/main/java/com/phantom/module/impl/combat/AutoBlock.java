@@ -36,6 +36,10 @@ public class AutoBlock extends Module {
             releaseOurUse();
             return;
         }
+        if (shouldPauseForBedMining()) {
+            releaseOurUse();
+            return;
+        }
 
         if (!canRaiseShield()) {
             releaseOurUse();
@@ -131,6 +135,10 @@ public class AutoBlock extends Module {
 
     public void applyPresetObvious() {
         setStrength(92);
+    }
+
+    public void applyPresetBlatant() {
+        setStrength(100);
     }
 
     @Override
