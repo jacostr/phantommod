@@ -15,7 +15,6 @@ PhantomMod `v1.0.3` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 - `Reach`
 - `RightClicker`
 - `Triggerbot`
-- `Velocity`
 - `WTap`
 
 ### Movement
