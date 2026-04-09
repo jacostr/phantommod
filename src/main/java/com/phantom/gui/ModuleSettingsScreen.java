@@ -16,8 +16,8 @@ import com.phantom.module.Module;
 
 import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
+import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
-import com.phantom.module.impl.render.ReachDisplay;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
@@ -94,6 +94,13 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, esp::isAnimalsEnabled, esp::setAnimalsEnabled, "Animals");
             y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(net.minecraft.client.gui.components.CycleButton.builder(
+                    (Boolean val) -> net.minecraft.network.chat.Component.literal(val ? "Through Walls: ON" : "Through Walls: OFF"), esp.isThroughWalls())
+                    .withValues(true, false)
+                    .create(centerX - 80, y, 160, ROW_HEIGHT, net.minecraft.network.chat.Component.literal("Through Walls"),
+                            (btn, val) -> esp.setThroughWalls(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
         } else {
             y += 14;
         }
@@ -128,6 +135,14 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
+                            Component.literal("Moving only: " + onOff(reach.isMovingOnly())),
+                            button -> {
+                                reach.setMovingOnly(!reach.isMovingOnly());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
                             Component.literal("Disable in water: " + onOff(reach.isDisableInWater())),
                             button -> {
                                 reach.setDisableInWater(!reach.isDisableInWater());
@@ -152,6 +167,14 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Knockback %", 0.0, 1.0, velocity.getKbPercent(), val -> velocity.setKbPercent(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Hypixel Mode: " + onOff(velocity.isHypixelMode())),
+                            button -> {
+                                velocity.setHypixelMode(!velocity.isHypixelMode());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -187,6 +210,9 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Strength", 0, 100, autoBlock.getStrength(), val -> autoBlock.setStrength((int)val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance %", 0, 100, autoBlock.getChance(), val -> autoBlock.setChance((int)val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -247,6 +273,14 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
+                            Component.literal("Click aim: " + onOff(aim.isClickAim())),
+                            button -> {
+                                aim.setClickAim(!aim.isClickAim());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
                             Component.literal("Aim vertically: " + onOff(aim.isAimVertically())),
                             button -> {
                                 aim.setAimVertically(!aim.isAimVertically());
@@ -258,6 +292,14 @@ public class ModuleSettingsScreen extends Screen {
                             Component.literal("Limit to weapons: " + onOff(aim.isLimitToWeapons())),
                             button -> {
                                 aim.setLimitToWeapons(!aim.isLimitToWeapons());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Visibility check: " + onOff(aim.isVisibilityCheck())),
+                            button -> {
+                                aim.setVisibilityCheck(!aim.isVisibilityCheck());
                                 init();
                             }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
@@ -343,6 +385,13 @@ public class ModuleSettingsScreen extends Screen {
                                 init();
                             }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Pause while breaking: " + onOff(autoClicker.isBreakBlockPause())),
+                            button -> {
+                                autoClicker.setBreakBlockPause(!autoClicker.isBreakBlockPause());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
         if (module instanceof HudModule hudModule) {
@@ -389,6 +438,75 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof SpeedBridge sb) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Auto-off (s)", 0.5, 10.0, sb.getAutoOffDelay(), val -> sb.setAutoOffDelay(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Legit"),
+                            button -> {
+                                sb.applyPresetLegit();
+                                init();
+                            }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Normal"),
+                            button -> {
+                                sb.applyPresetNormal();
+                                init();
+                            }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Obvious"),
+                            button -> {
+                                sb.applyPresetObvious();
+                                init();
+                            }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blatant"),
+                            button -> {
+                                sb.applyPresetBlatant();
+                                init();
+                            }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Delay ticks", 0.0, 4.0, sb.getDelayTicks(), val -> sb.setDelayTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Blocks only: " + onOff(sb.isBlocksOnly())),
+                            button -> {
+                                sb.setBlocksOnly(!sb.isBlocksOnly());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Scaffold scaffold) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Preset: " + scaffold.getPreset().getLabel()),
+                            button -> {
+                                scaffold.cyclePreset();
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("SafeWalk: " + onOff(scaffold.isSafeWalk())),
+                            button -> {
+                                scaffold.setSafeWalk(!scaffold.isSafeWalk());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Tower: " + onOff(scaffold.isTower())),
+                            button -> {
+                                scaffold.setTower(!scaffold.isTower());
+                                init();
+                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Auto-Off Delay", 0.5, 10.0, scaffold.getAutoOffDelay(), val -> scaffold.setAutoOffDelay(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Eagle Delay (ms)", 0.0, 250.0, scaffold.getEagleDelayMs(), scaffold::setEagleDelayMs));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Legit Slowdown", 0.2, 1.0, scaffold.getSlowdown(), scaffold::setSlowdown));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Mistake Chance", 0.0, 0.75, scaffold.getMistakeChance(), scaffold::setMistakeChance));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -504,6 +622,13 @@ public class ModuleSettingsScreen extends Screen {
                                 blockHit.cycleMode();
                                 init();
                             }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(net.minecraft.client.gui.components.CycleButton.builder(
+                            (Boolean val) -> net.minecraft.network.chat.Component.literal(val ? "Visual Animation: ON" : "Visual Animation: OFF"), blockHit.isVisualAnimation())
+                    .withValues(true, false)
+                    .create(centerX - 80, y, 160, ROW_HEIGHT, net.minecraft.network.chat.Component.literal("Visual Animation"),
+                            (btn, val) -> blockHit.setVisualAnimation(val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -628,15 +753,6 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
-        if (module instanceof ReachDisplay reachDisplay) {
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Render background: " + onOff(reachDisplay.isRenderBackground())),
-                            button -> {
-                                reachDisplay.setRenderBackground(!reachDisplay.isRenderBackground());
-                                init();
-                            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
 
         if (module instanceof AntiAFK antiAFK) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Start delay min", 5.0, 300.0, antiAFK.getMinStartDelaySeconds(), antiAFK::setMinStartDelaySeconds));
@@ -848,15 +964,15 @@ public class ModuleSettingsScreen extends Screen {
         int contentHeight = getUsageHeight() + getDescriptionHeight() + TEXT_SPACING + 4;
 
         if (module instanceof ESP) {
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING) + 15;
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING) + 15;
         }
 
         if (module instanceof Reach) {
-            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof Velocity) {
-            contentHeight += 2 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AutoBlock) {
@@ -868,11 +984,11 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof AimAssist) {
-            contentHeight += 15 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 17 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AutoClicker) {
-            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof HudModule) {
@@ -880,7 +996,11 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof SpeedBridge) {
-            contentHeight += ROW_HEIGHT + ROW_SPACING;
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Scaffold) {
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof WTap) {
@@ -891,9 +1011,6 @@ public class ModuleSettingsScreen extends Screen {
             contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
         }
 
-        if (module instanceof ReachDisplay) {
-            contentHeight += ROW_HEIGHT + ROW_SPACING;
-        }
 
         if (module instanceof Indicators) {
             contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
@@ -904,7 +1021,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof BlockHit) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof HitSelect) {

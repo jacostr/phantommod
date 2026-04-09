@@ -13,7 +13,6 @@ import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.combat.WTap;
-import com.phantom.module.impl.render.ReachDisplay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -37,7 +36,6 @@ public class MultiPlayerGameModeMixin {
         Criticals critModule = (Criticals) PhantomMod.getModuleManager().getModuleByName("Criticals");
         BlockHit blockHit = (BlockHit) PhantomMod.getModuleManager().getModuleByName("BlockHit");
         WTap wTapModule = (WTap) PhantomMod.getModuleManager().getModuleByName("WTap");
-        ReachDisplay reachDisplay = (ReachDisplay) PhantomMod.getModuleManager().getModuleByName("Reach Display");
 
         if (hitSelect != null && hitSelect.isEnabled() && hitSelect.shouldCancelAttack(target)) {
             ci.cancel();
@@ -67,10 +65,6 @@ public class MultiPlayerGameModeMixin {
 
         if (blockHit != null && blockHit.isEnabled()) {
             blockHit.onAttack(target);
-        }
-
-        if (reachDisplay != null && reachDisplay.isEnabled()) {
-            reachDisplay.recordHit(target);
         }
     }
 }

@@ -9,27 +9,30 @@
 package com.phantom.module.impl.movement;
 
 import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.mixin.MinecraftClientAccessor;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Properties;
 
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
 
-    private float moveYaw;
-    private double startX;
-    private double startZ;
-
     private long lastPlaceTime;
     private double autoOffDelay = 3.0;
+    private boolean sneakingFromModule;
+    private int delayTicks = 3;
+    private boolean blocksOnly = true;
 
     public SpeedBridge() {
         super(
                 "SpeedBridge Assist",
-                "Re-sneaks at the edge of blocks automatically. Face away from the void, hold right click and place buttons, then hold s, it will sneak for you.\nDetectability: Safe/Subtle",
+                "Re-sneaks at the edge of blocks automatically. Face away from the void, hold right click and place buttons, then hold s, it will sneak for you. Combine with SafeWalk for best results!\nDetectability: Safe/Subtle",
                 ModuleCategory.MOVEMENT,
                 -1);
     }
@@ -41,9 +44,6 @@ public class SpeedBridge extends Module {
             return;
         }
 
-        moveYaw = mc.player.getYRot();
-        startX = mc.player.getX();
-        startZ = mc.player.getZ();
         lastPlaceTime = System.currentTimeMillis();
     }
 
@@ -81,24 +81,17 @@ public class SpeedBridge extends Module {
 
         if (mc.options.keyUse.isDown()) {
             lastPlaceTime = System.currentTimeMillis();
+            applyFastPlace();
         }
 
         if (checkAutoDisable()) return;
 
-        TravelVector travelVector = getTravelVector();
-        if (!isExpectedBridgeInputHeld(travelVector)) {
+        if (!mc.player.onGround()) {
             updateSneakState(false);
             return;
         }
 
-        if (!mc.options.keyUse.isDown()) {
-            updateSneakState(false);
-            return;
-        }
-
-        boolean bridgeStarted = hasBridgeStarted(travelVector);
-        boolean overEdge = isOverEdge(travelVector.x(), travelVector.z());
-        updateSneakState(bridgeStarted && overEdge);
+        updateSneakState(isAtEdge());
     }
 
     private boolean checkAutoDisable() {
@@ -119,7 +112,7 @@ public class SpeedBridge extends Module {
     }
 
     @Override
-    public void loadConfig(java.util.Properties properties) {
+    public void loadConfig(Properties properties) {
         super.loadConfig(properties);
         String v = properties.getProperty("speedbridge.auto_off_delay");
         if (v != null) {
@@ -127,12 +120,60 @@ public class SpeedBridge extends Module {
                 autoOffDelay = Double.parseDouble(v);
             } catch (Exception ignored) {}
         }
+        String delay = properties.getProperty("speedbridge.delay_ticks");
+        if (delay != null) {
+            try {
+                delayTicks = Math.max(0, Math.min(4, Integer.parseInt(delay.trim())));
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        blocksOnly = Boolean.parseBoolean(properties.getProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly)));
     }
 
     @Override
-    public void saveConfig(java.util.Properties properties) {
+    public void saveConfig(Properties properties) {
         super.saveConfig(properties);
         properties.setProperty("speedbridge.auto_off_delay", Double.toString(autoOffDelay));
+        properties.setProperty("speedbridge.delay_ticks", Integer.toString(delayTicks));
+        properties.setProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly));
+    }
+
+    public int getDelayTicks() {
+        return delayTicks;
+    }
+
+    public void setDelayTicks(int delayTicks) {
+        this.delayTicks = Math.max(0, Math.min(4, delayTicks));
+        saveConfig();
+    }
+
+    public boolean isBlocksOnly() {
+        return blocksOnly;
+    }
+
+    public void setBlocksOnly(boolean blocksOnly) {
+        this.blocksOnly = blocksOnly;
+        saveConfig();
+    }
+
+    public void applyPresetLegit() {
+        setDelayTicks(3);
+        setBlocksOnly(true);
+    }
+
+    public void applyPresetNormal() {
+        setDelayTicks(2);
+        setBlocksOnly(true);
+    }
+
+    public void applyPresetObvious() {
+        setDelayTicks(1);
+        setBlocksOnly(true);
+    }
+
+    public void applyPresetBlatant() {
+        setDelayTicks(0);
+        setBlocksOnly(false);
     }
 
     /**
@@ -162,68 +203,54 @@ public class SpeedBridge extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    private TravelVector getTravelVector() {
-        double backwardYawRadians = Math.toRadians(moveYaw);
-        double backwardX = Math.sin(backwardYawRadians);
-        double backwardZ = -Math.cos(backwardYawRadians);
+    private boolean isAtEdge() {
+        Vec3 movement = mc.player.getDeltaMovement();
+        double moveX = movement.x;
+        double moveZ = movement.z;
 
-        double rightYawRadians = Math.toRadians(moveYaw + 90.0F);
-        double rightX = Math.sin(rightYawRadians);
-        double rightZ = -Math.cos(rightYawRadians);
-
-        double moveX = backwardX;
-        double moveZ = backwardZ;
-        boolean holdLeft = mc.options.keyLeft.isDown();
-        boolean holdRight = mc.options.keyRight.isDown();
-
-        if (holdLeft && !holdRight) {
-            moveX -= rightX;
-            moveZ -= rightZ;
-        } else if (holdRight && !holdLeft) {
-            moveX += rightX;
-            moveZ += rightZ;
+        if ((moveX * moveX + moveZ * moveZ) < 1.0E-4) {
+            double yawRadians = Math.toRadians(mc.player.getYRot());
+            moveX = -Math.sin(yawRadians);
+            moveZ = Math.cos(yawRadians);
         }
 
         double length = Math.sqrt(moveX * moveX + moveZ * moveZ);
-        if (length == 0.0D) {
-            return new TravelVector(0.0D, 0.0D, false, false);
+        if (length <= 0.0D) {
+            return false;
         }
 
-        return new TravelVector(moveX / length, moveZ / length, holdLeft, holdRight);
+        BlockPos edgeCheckPos = BlockPos.containing(
+                mc.player.getX() + (moveX / length) * EDGE_CHECK_OFFSET,
+                mc.player.getY() - 1.0D,
+                mc.player.getZ() + (moveZ / length) * EDGE_CHECK_OFFSET);
+        return mc.level.getBlockState(edgeCheckPos).isAir();
     }
 
-    private boolean isOverEdge(double backwardX, double backwardZ) {
-        BlockPos edgeCheckPos = BlockPos.containing(
-                mc.player.getX() + backwardX * EDGE_CHECK_OFFSET,
-                mc.player.getY() - 1.0D,
-                mc.player.getZ() + backwardZ * EDGE_CHECK_OFFSET);
-        return mc.level.getBlockState(edgeCheckPos).isAir();
+    private void applyFastPlace() {
+        if (mc.player == null || mc.options == null || mc.screen != null) {
+            return;
+        }
+
+        if (blocksOnly && !(mc.player.getMainHandItem().getItem() instanceof BlockItem)
+                && !(mc.player.getOffhandItem().getItem() instanceof BlockItem)) {
+            return;
+        }
+
+        MinecraftClientAccessor accessor = (MinecraftClientAccessor) mc;
+        if (accessor.phantom$getRightClickDelay() > delayTicks) {
+            accessor.phantom$setRightClickDelay(delayTicks);
+        }
     }
 
     private void updateSneakState(boolean overEdge) {
         mc.options.keyShift.setDown(overEdge);
-    }
-
-    private boolean isExpectedBridgeInputHeld(TravelVector travelVector) {
-        boolean holdingBack = mc.options.keyDown.isDown();
-        boolean holdingLeft = !travelVector.holdLeft() || mc.options.keyLeft.isDown();
-        boolean holdingRight = !travelVector.holdRight() || mc.options.keyRight.isDown();
-        return holdingBack && holdingLeft && holdingRight;
+        sneakingFromModule = overEdge;
     }
 
     private void releaseSneak() {
-        if (mc.options != null) {
+        if (sneakingFromModule && mc.options != null) {
             mc.options.keyShift.setDown(false);
         }
-    }
-
-    private boolean hasBridgeStarted(TravelVector travelVector) {
-        double deltaX = mc.player.getX() - startX;
-        double deltaZ = mc.player.getZ() - startZ;
-        double travelledBlocks = deltaX * travelVector.x() + deltaZ * travelVector.z();
-        return travelledBlocks >= 0.0D;
-    }
-
-    private record TravelVector(double x, double z, boolean holdLeft, boolean holdRight) {
+        sneakingFromModule = false;
     }
 }

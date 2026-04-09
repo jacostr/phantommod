@@ -20,11 +20,14 @@ import java.util.Properties;
 public class AutoBlock extends Module {
     /** 0 = slow/weak reaction, 100 = fast, long block. */
     private int strength = 50;
+    /** 0 = never block, 100 = always block (if hurt/attacking). */
+    private int chance = 30;
 
     private int lastHurtTime;
     private int reactionWaitTicks;
     private int holdTicksRemaining;
     private boolean weAreHoldingUse;
+    private int lastAttackTime;
 
     public AutoBlock() {
         super("AutoBlock", "Automatically blocks after you hit an entity to significantly reduce incoming damage.\nDetectability: Blatant", ModuleCategory.COMBAT, -1);
@@ -46,11 +49,21 @@ public class AutoBlock extends Module {
             return;
         }
 
+        // Logic for "Sometimes Automatically" (Randomization)
         int hurt = mc.player.hurtTime;
         if (hurt > lastHurtTime) {
-            reactionWaitTicks = computeReactionDelay();
+            if (mc.player.getRandom().nextInt(100) < chance) {
+                reactionWaitTicks = computeReactionDelay();
+            }
         }
         lastHurtTime = hurt;
+
+        // Also block sometimes after attacking (Legit Block-Hitting)
+        if (mc.player.attackAnim > 0 && mc.player.attackAnim < 0.1) { // Just started attacking
+            if (mc.player.getRandom().nextInt(100) < chance) {
+                reactionWaitTicks = computeReactionDelay();
+            }
+        }
 
         if (holdTicksRemaining > 0) {
             holdTicksRemaining--;
@@ -78,6 +91,10 @@ public class AutoBlock extends Module {
         lastHurtTime = 0;
         reactionWaitTicks = 0;
         holdTicksRemaining = 0;
+    }
+
+    public boolean isHoldingUse() {
+        return weAreHoldingUse;
     }
 
     private void releaseOurUse() {
@@ -125,8 +142,18 @@ public class AutoBlock extends Module {
         saveConfig();
     }
 
+    public int getChance() {
+        return chance;
+    }
+
+    public void setChance(int chance) {
+        this.chance = Math.max(0, Math.min(100, chance));
+        saveConfig();
+    }
+
     public void applyPresetLegit() {
-        setStrength(22);
+        setStrength(35);
+        setChance(30);
     }
 
     public void applyPresetNormal() {
@@ -151,11 +178,19 @@ public class AutoBlock extends Module {
             } catch (NumberFormatException ignored) {
             }
         }
+        String c = properties.getProperty("autoblock.chance");
+        if (c != null) {
+            try {
+                chance = Math.max(0, Math.min(100, Integer.parseInt(c.trim())));
+            } catch (NumberFormatException ignored) {
+            }
+        }
     }
 
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
         properties.setProperty("autoblock.strength", Integer.toString(strength));
+        properties.setProperty("autoblock.chance", Integer.toString(chance));
     }
 }

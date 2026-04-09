@@ -9,7 +9,9 @@
     "LivingEntityJumpAccessor",
     "LivingEntityJumpDelayMixin",
     "ClientPacketListenerMixin",
-    "MultiPlayerGameModeMixin"
+    "MultiPlayerGameModeMixin",
+    "ItemInHandRendererMixin",
+    "TitleScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

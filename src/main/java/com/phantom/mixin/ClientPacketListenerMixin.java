@@ -47,14 +47,24 @@ public class ClientPacketListenerMixin {
             if (velocityModule != null && velocityModule.isEnabled()) {
                 double kb = velocityModule.getKbPercent(); // 0.0 = none, 1.0 = full vanilla
 
-                // Scale all three axes uniformly. Scaling Y too looks more natural than
-                // only reducing horizontal knockback, which can feel floaty.
-                net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
-                mc.player.setDeltaMovement(
-                        currentMotion.x() * kb,
-                        currentMotion.y() * kb,
-                        currentMotion.z() * kb
-                );
+                if (velocityModule.isHypixelMode() && !mc.player.onGround()) {
+                    // Hypixel air-KB bypass: Cancel/Reduce horizontal motion while airborne.
+                    // Keep the vertical (Y) motion to look more natural.
+                    net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
+                    mc.player.setDeltaMovement(
+                            0.0,
+                            currentMotion.y(),
+                            0.0
+                    );
+                } else {
+                    // Scale all three axes uniformly for non-airborne or standard mode.
+                    net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
+                    mc.player.setDeltaMovement(
+                            currentMotion.x() * kb,
+                            currentMotion.y() * kb,
+                            currentMotion.z() * kb
+                    );
+                }
             }
         }
     }

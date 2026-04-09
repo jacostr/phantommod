@@ -25,9 +25,12 @@ public class AutoClicker extends Module {
     private boolean onlyWithWeapon = true;
     private boolean requireMouseDown = true;
     private boolean hitEntitiesOnly = true;
+    private boolean breakBlockPause = true;
 
     private long lastClickAt;
     private long nextDelayMs = 100L;
+    private long jitterPhaseUntil;
+    private double jitterOffsetCps;
 
     public AutoClicker() {
         super("AutoClicker",
@@ -41,7 +44,7 @@ public class AutoClicker extends Module {
         if (mc.player == null || mc.gameMode == null || mc.options == null || mc.screen != null) {
             return;
         }
-        if (shouldPauseForBedMining()) {
+        if (breakBlockPause && shouldPauseForBlockBreaking()) {
             return;
         }
 
@@ -81,8 +84,31 @@ public class AutoClicker extends Module {
     }
 
     private void scheduleNextDelay() {
+        long now = System.currentTimeMillis();
+        refreshJitterOffset(now);
+
         double cps = ThreadLocalRandom.current().nextDouble(minCps, Math.max(minCps, maxCps) + 0.0001D);
+        cps += jitterOffsetCps;
+        if (ThreadLocalRandom.current().nextDouble() < 0.12D) {
+            cps += ThreadLocalRandom.current().nextBoolean()
+                    ? ThreadLocalRandom.current().nextDouble(0.2D, 0.65D)
+                    : -ThreadLocalRandom.current().nextDouble(0.35D, 1.1D);
+        }
+        cps = Mth.clamp(cps, 1.0D, 20.0D);
         nextDelayMs = Math.max(1L, Math.round(1000.0D / Math.max(0.1D, cps)));
+    }
+
+    private void refreshJitterOffset(long now) {
+        if (now < jitterPhaseUntil) {
+            return;
+        }
+        jitterPhaseUntil = now + ThreadLocalRandom.current().nextLong(450L, 1250L);
+        jitterOffsetCps = ThreadLocalRandom.current().nextDouble(-0.75D, 0.55D);
+    }
+
+    private boolean shouldPauseForBlockBreaking() {
+        return shouldPauseForBedMining()
+                || (mc.player != null && mc.gameMode != null && mc.gameMode.isDestroying());
     }
 
     private boolean isHoldingWeapon() {
@@ -138,12 +164,22 @@ public class AutoClicker extends Module {
         saveConfig();
     }
 
+    public boolean isBreakBlockPause() {
+        return breakBlockPause;
+    }
+
+    public void setBreakBlockPause(boolean breakBlockPause) {
+        this.breakBlockPause = breakBlockPause;
+        saveConfig();
+    }
+
     public void applyPresetLegit() {
         setMinCps(8.0);
         setMaxCps(11.0);
         setOnlyWithWeapon(true);
         setRequireMouseDown(true);
         setHitEntitiesOnly(true);
+        setBreakBlockPause(true);
     }
 
     public void applyPresetNormal() {
@@ -152,6 +188,7 @@ public class AutoClicker extends Module {
         setOnlyWithWeapon(true);
         setRequireMouseDown(true);
         setHitEntitiesOnly(true);
+        setBreakBlockPause(true);
     }
 
     public void applyPresetObvious() {
@@ -160,6 +197,7 @@ public class AutoClicker extends Module {
         setOnlyWithWeapon(true);
         setRequireMouseDown(true);
         setHitEntitiesOnly(true);
+        setBreakBlockPause(true);
     }
 
     public void applyPresetBlatant() {
@@ -168,6 +206,7 @@ public class AutoClicker extends Module {
         setOnlyWithWeapon(false);
         setRequireMouseDown(false);
         setHitEntitiesOnly(false);
+        setBreakBlockPause(false);
     }
 
     @Override
@@ -194,6 +233,7 @@ public class AutoClicker extends Module {
         onlyWithWeapon = Boolean.parseBoolean(properties.getProperty("autoclicker.only_with_weapon", Boolean.toString(onlyWithWeapon)));
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("autoclicker.require_mouse_down", Boolean.toString(requireMouseDown)));
         hitEntitiesOnly = Boolean.parseBoolean(properties.getProperty("autoclicker.hit_entities_only", Boolean.toString(hitEntitiesOnly)));
+        breakBlockPause = Boolean.parseBoolean(properties.getProperty("autoclicker.break_block_pause", Boolean.toString(breakBlockPause)));
     }
 
     @Override
@@ -204,5 +244,6 @@ public class AutoClicker extends Module {
         properties.setProperty("autoclicker.only_with_weapon", Boolean.toString(onlyWithWeapon));
         properties.setProperty("autoclicker.require_mouse_down", Boolean.toString(requireMouseDown));
         properties.setProperty("autoclicker.hit_entities_only", Boolean.toString(hitEntitiesOnly));
+        properties.setProperty("autoclicker.break_block_pause", Boolean.toString(breakBlockPause));
     }
 }

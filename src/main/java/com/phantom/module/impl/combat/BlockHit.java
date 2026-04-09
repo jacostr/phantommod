@@ -55,6 +55,7 @@ public class BlockHit extends Module {
 
     private double chance = 0.65D;
     private boolean requireMouseDown;
+    private boolean visualAnimation = true;
     private Mode mode = Mode.MANUAL;
 
     private int holdTicksRemaining;
@@ -113,8 +114,13 @@ public class BlockHit extends Module {
         }
 
         if (mode == Mode.AUTO && mc.options.keyAttack.isDown() && isHoldingSword()) {
-            mc.options.keyUse.setDown(true);
-            holdingUse = true;
+            // "Smooth" logic: check if we are about to hit
+            if (mc.player.attackAnim > 0.8) { // About to reset/swing
+                releaseUse();
+            } else {
+                mc.options.keyUse.setDown(true);
+                holdingUse = true;
+            }
             return;
         }
 
@@ -130,6 +136,10 @@ public class BlockHit extends Module {
     private boolean isHoldingSword() {
         String id = mc.player.getMainHandItem().getItem().getDescriptionId().toLowerCase(Locale.ROOT);
         return id.contains("sword");
+    }
+
+    public boolean isHoldingUse() {
+        return holdingUse;
     }
 
     private void releaseUse() {
@@ -154,6 +164,15 @@ public class BlockHit extends Module {
 
     public void setRequireMouseDown(boolean requireMouseDown) {
         this.requireMouseDown = requireMouseDown;
+        saveConfig();
+    }
+
+    public boolean isVisualAnimation() {
+        return visualAnimation;
+    }
+
+    public void setVisualAnimation(boolean visualAnimation) {
+        this.visualAnimation = visualAnimation;
         saveConfig();
     }
 
@@ -215,6 +234,7 @@ public class BlockHit extends Module {
             }
         }
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("blockhit.require_mouse_down", Boolean.toString(requireMouseDown)));
+        visualAnimation = Boolean.parseBoolean(properties.getProperty("blockhit.visual_animation", Boolean.toString(visualAnimation)));
         mode = Mode.fromString(properties.getProperty("blockhit.mode"));
     }
 
@@ -223,6 +243,7 @@ public class BlockHit extends Module {
         super.saveConfig(properties);
         properties.setProperty("blockhit.chance", Double.toString(chance));
         properties.setProperty("blockhit.require_mouse_down", Boolean.toString(requireMouseDown));
+        properties.setProperty("blockhit.visual_animation", Boolean.toString(visualAnimation));
         properties.setProperty("blockhit.mode", mode.name());
     }
 }

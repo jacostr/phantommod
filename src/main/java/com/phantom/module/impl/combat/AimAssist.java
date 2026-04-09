@@ -98,13 +98,17 @@ public class AimAssist extends Module {
     private double fov = 90.0;
     private double distance = 4.5;
     private boolean requireMouseDown = true;
+    private boolean clickAim = true;
     private boolean aimVertically;
     private boolean limitToWeapons = true;
+    private boolean visibilityCheck = true;
     private boolean targetPlayers = true;
     private boolean targetMobs = true;
     private boolean targetAnimals;
     private TargetArea targetArea = TargetArea.CENTER;
     private TargetMode targetMode = TargetMode.YAW;
+    private boolean attackHeldLastTick;
+    private long clickAimWindowUntil;
     
     public AimAssist() {
         super("AimAssist", "Smoothly adjusts your camera toward nearby targets with configurable speed, range, and target mode.\nDetectability: Subtle", ModuleCategory.COMBAT, -1);
@@ -131,10 +135,14 @@ public class AimAssist extends Module {
     public void setDistance(double distance) { this.distance = Math.max(2.5, Math.min(6.0, distance)); saveConfig(); }
     public boolean isRequireMouseDown() { return requireMouseDown; }
     public void setRequireMouseDown(boolean requireMouseDown) { this.requireMouseDown = requireMouseDown; saveConfig(); }
+    public boolean isClickAim() { return clickAim; }
+    public void setClickAim(boolean clickAim) { this.clickAim = clickAim; saveConfig(); }
     public boolean isAimVertically() { return aimVertically; }
     public void setAimVertically(boolean aimVertically) { this.aimVertically = aimVertically; saveConfig(); }
     public boolean isLimitToWeapons() { return limitToWeapons; }
     public void setLimitToWeapons(boolean limitToWeapons) { this.limitToWeapons = limitToWeapons; saveConfig(); }
+    public boolean isVisibilityCheck() { return visibilityCheck; }
+    public void setVisibilityCheck(boolean visibilityCheck) { this.visibilityCheck = visibilityCheck; saveConfig(); }
     public boolean isTargetPlayers() { return targetPlayers; }
     public void setTargetPlayers(boolean targetPlayers) { this.targetPlayers = targetPlayers; saveConfig(); }
     public boolean isTargetMobs() { return targetMobs; }
@@ -152,8 +160,10 @@ public class AimAssist extends Module {
         setFov(70.0);
         setDistance(4.0);
         setRequireMouseDown(true);
+        setClickAim(true);
         setAimVertically(false);
         setLimitToWeapons(true);
+        setVisibilityCheck(true);
         setTargetPlayers(true);
         setTargetMobs(false);
         setTargetAnimals(false);
@@ -165,8 +175,10 @@ public class AimAssist extends Module {
         setFov(90.0);
         setDistance(4.5);
         setRequireMouseDown(true);
+        setClickAim(false);
         setAimVertically(false);
         setLimitToWeapons(true);
+        setVisibilityCheck(true);
         setTargetPlayers(true);
         setTargetMobs(true);
         setTargetAnimals(false);
@@ -178,8 +190,10 @@ public class AimAssist extends Module {
         setFov(180.0);
         setDistance(5.0);
         setRequireMouseDown(true);
+        setClickAim(false);
         setAimVertically(true);
         setLimitToWeapons(true);
+        setVisibilityCheck(false);
         setTargetPlayers(true);
         setTargetMobs(true);
         setTargetAnimals(false);
@@ -191,8 +205,10 @@ public class AimAssist extends Module {
         setFov(360.0);
         setDistance(6.0);
         setRequireMouseDown(false);
+        setClickAim(false);
         setAimVertically(true);
         setLimitToWeapons(false);
+        setVisibilityCheck(false);
         setTargetPlayers(true);
         setTargetMobs(true);
         setTargetAnimals(true);
@@ -200,6 +216,7 @@ public class AimAssist extends Module {
 
     @Override
     public void onTick() {
+        updateClickAimWindow();
     }
 
     @Override
@@ -214,6 +231,7 @@ public class AimAssist extends Module {
         
         if (limitToWeapons && !isHoldingWeapon()) return;
         if (requireMouseDown && !isAttackHeld()) return;
+        if (clickAim && !isWithinClickAimWindow()) return;
 
         Entity target = getBestTarget();
         if (target != null) {
@@ -246,6 +264,9 @@ public class AimAssist extends Module {
         if (!(entity instanceof LivingEntity living) || entity == mc.player || !living.isAlive() || mc.player.distanceTo(entity) > distance) {
             return false;
         }
+        if (visibilityCheck && !mc.player.hasLineOfSight(entity)) {
+            return false;
+        }
         if (isTeammateTarget(entity)) {
             return false;
         }
@@ -272,6 +293,28 @@ public class AimAssist extends Module {
 
     private boolean isAttackHeld() {
         return mc.options.keyAttack.isDown() || (mc.mouseHandler != null && mc.mouseHandler.isLeftPressed());
+    }
+
+    private void updateClickAimWindow() {
+        if (mc.player == null || mc.options == null) {
+            attackHeldLastTick = false;
+            clickAimWindowUntil = 0L;
+            return;
+        }
+
+        boolean attackHeld = isAttackHeld();
+        long now = System.currentTimeMillis();
+        if (attackHeld && !attackHeldLastTick) {
+            clickAimWindowUntil = now + 175L;
+        }
+        if (mc.player.attackAnim > 0.0F && mc.player.attackAnim < 0.18F) {
+            clickAimWindowUntil = now + 175L;
+        }
+        attackHeldLastTick = attackHeld;
+    }
+
+    private boolean isWithinClickAimWindow() {
+        return System.currentTimeMillis() <= clickAimWindowUntil;
     }
 
     private boolean isInFov(Entity entity, double fovLimit) {
@@ -374,8 +417,10 @@ public class AimAssist extends Module {
             try { this.distance = Math.max(2.5, Math.min(6.0, Double.parseDouble(d))); } catch (Exception ignored) {}
         }
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown)));
+        clickAim = Boolean.parseBoolean(properties.getProperty("aim.click_aim", Boolean.toString(clickAim)));
         aimVertically = Boolean.parseBoolean(properties.getProperty("aim.aim_vertically", Boolean.toString(aimVertically)));
         limitToWeapons = Boolean.parseBoolean(properties.getProperty("aim.limit_to_weapons", Boolean.toString(limitToWeapons)));
+        visibilityCheck = Boolean.parseBoolean(properties.getProperty("aim.visibility_check", Boolean.toString(visibilityCheck)));
         targetPlayers = Boolean.parseBoolean(properties.getProperty("aim.target_players", Boolean.toString(targetPlayers)));
         targetMobs = Boolean.parseBoolean(properties.getProperty("aim.target_mobs", Boolean.toString(targetMobs)));
         targetAnimals = Boolean.parseBoolean(properties.getProperty("aim.target_animals", Boolean.toString(targetAnimals)));
@@ -391,8 +436,10 @@ public class AimAssist extends Module {
         properties.setProperty("aim.fov", Double.toString(fov));
         properties.setProperty("aim.distance", Double.toString(distance));
         properties.setProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown));
+        properties.setProperty("aim.click_aim", Boolean.toString(clickAim));
         properties.setProperty("aim.aim_vertically", Boolean.toString(aimVertically));
         properties.setProperty("aim.limit_to_weapons", Boolean.toString(limitToWeapons));
+        properties.setProperty("aim.visibility_check", Boolean.toString(visibilityCheck));
         properties.setProperty("aim.target_players", Boolean.toString(targetPlayers));
         properties.setProperty("aim.target_mobs", Boolean.toString(targetMobs));
         properties.setProperty("aim.target_animals", Boolean.toString(targetAnimals));

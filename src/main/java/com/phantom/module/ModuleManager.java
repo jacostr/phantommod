@@ -22,10 +22,11 @@ import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
+import com.phantom.module.impl.player.AntiBot;
+import com.phantom.module.impl.movement.SafeWalk;
 import com.phantom.module.impl.render.FullBright;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Indicators;
-import com.phantom.module.impl.render.ReachDisplay;
 import com.phantom.module.impl.combat.AutoBlock;
 import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
@@ -70,7 +71,8 @@ public class ModuleManager {
         modules.add(new NoJumpDelay());
         modules.add(new AntiAFK());
         modules.add(new FastPlace());
-        modules.add(new ReachDisplay());
+        modules.add(new AntiBot());
+        modules.add(new SafeWalk());
         modules.add(hudModule);
 
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())

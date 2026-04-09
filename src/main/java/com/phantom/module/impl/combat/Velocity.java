@@ -17,6 +17,7 @@ import java.util.Properties;
 
 public class Velocity extends Module {
     private double kbPercent = 0.0; // 0.0 = 0% kb (None), 1.0 = 100% (Vanilla)
+    private boolean hypixelMode = false;
 
     public Velocity() {
         super("Velocity", "Reduces incoming knockback according to your percentage.\nDetectability: Blatant/Subtle", ModuleCategory.COMBAT, -1);
@@ -38,6 +39,15 @@ public class Velocity extends Module {
 
     public void setKbPercent(double kbPercent) {
         this.kbPercent = Math.max(0.0, Math.min(1.0, kbPercent));
+        saveConfig();
+    }
+
+    public boolean isHypixelMode() {
+        return hypixelMode;
+    }
+
+    public void setHypixelMode(boolean hypixelMode) {
+        this.hypixelMode = hypixelMode;
         saveConfig();
     }
 
@@ -66,11 +76,13 @@ public class Velocity extends Module {
                 kbPercent = Math.max(0.0, Math.min(1.0, Double.parseDouble(v.trim())));
             } catch (NumberFormatException ignored) {}
         }
+        hypixelMode = Boolean.parseBoolean(properties.getProperty("velocity.hypixel", Boolean.toString(hypixelMode)));
     }
 
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
         properties.setProperty("velocity.kb", Double.toString(kbPercent));
+        properties.setProperty("velocity.hypixel", Boolean.toString(hypixelMode));
     }
 }

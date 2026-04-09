@@ -1,12 +1,3 @@
-/*
- * ESP.java — Through-wall entity highlighting with configurable filters (Player module).
- *
- * Uses both glowing-tag and LINES render type to draw coloured boxes around nearby
- * players, mobs, and animals. Each type can be toggled independently in settings.
- * Scans entities within a 192-block radius using getEntitiesOfClass() to include
- * entities behind walls that vanilla culling would normally hide.
- * Detectability: Safe — purely client-side visual; the server never sees it.
- */
 package com.phantom.module.impl.render;
 
 import com.phantom.gui.ModuleSettingsScreen;
@@ -15,69 +6,41 @@ import com.phantom.module.ModuleCategory;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.player.AbstractClientPlayer;
+import com.phantom.module.impl.player.AntiBot;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.AgeableMob;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.animal.Animal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 public class ESP extends Module {
     private static final double WALL_ESP_RANGE = 192.0D;
 
-    private final Set<Integer> highlightedEntities = new HashSet<>();
-
     private boolean playersEnabled = true;
-    private boolean mobsEnabled = true;
-    private boolean animalsEnabled = true;
+    private boolean mobsEnabled = false;
+    private boolean animalsEnabled = false;
+    private boolean throughWalls = true;
 
     public ESP() {
-        // ESP sits in the Player tab — it's a visual/QoL aid, not combat automation.
-        // Default hotkey Y toggles the whole module; per-type filters are in settings.
-        super("ESP", "Draw Box around nearby players, mobs, and animals with boxes that stay visible through blocks.\nDetectability: Safe",
+        super("ESP", "Vape Style: White hitboxes when visible, BedWars team colors when behind walls.\nDetectability: Safe",
                 ModuleCategory.PLAYER, GLFW.GLFW_KEY_Y);
     }
 
     @Override
     public void onTick() {
-        if (mc.level == null || mc.player == null) {
-            clearHighlights();
-            return;
-        }
-
-        // Collect matching entities once, reuse the list to avoid double-querying.
-        var targets = mc.level.getEntitiesOfClass(
-                Entity.class,
-                mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
-                this::shouldHighlight);
-
-        Set<Integer> nextHighlighted = new HashSet<>();
-        for (Entity entity : targets) {
-            entity.setGlowingTag(true);
-            nextHighlighted.add(entity.getId());
-        }
-
-        // Strip glow from entities that no longer match the filter.
-        for (Integer entityId : highlightedEntities) {
-            if (!nextHighlighted.contains(entityId)) {
-                Entity entity = mc.level.getEntity(entityId);
-                if (entity != null) {
-                    entity.setGlowingTag(false);
-                }
-            }
-        }
-
-        highlightedEntities.clear();
-        highlightedEntities.addAll(nextHighlighted);
+        // We don't need onTick for glowing effect anymore
     }
 
     @Override
@@ -87,18 +50,18 @@ public class ESP extends Module {
         }
 
         Vec3 cameraPos = mc.gameRenderer.getMainCamera().position();
-
-        // FIXED: use LINES render type — it's always drawn regardless of depth,
-        // so boxes appear through walls without needing any depth-test tricks.
         var vertexConsumer = context.consumers().getBuffer(RenderTypes.lines());
 
-        // FIXED: query by range instead of entitiesForRendering() so entities
-        // behind walls (which vanilla culls) are still included.
         for (Entity entity : mc.level.getEntitiesOfClass(
                 Entity.class,
                 mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
                 this::shouldHighlight)) {
+            
             AABB box = entity.getBoundingBox().inflate(0.05D);
+            boolean visible = mc.player.hasLineOfSight(entity);
+            if (!visible && !throughWalls) continue;
+
+            int color = visible ? 0xFFFFFFFF : getBedWarsColor(entity);
 
             ShapeRenderer.renderShape(
                     context.matrices(),
@@ -107,14 +70,37 @@ public class ESP extends Module {
                     -cameraPos.x,
                     -cameraPos.y,
                     -cameraPos.z,
-                    getColor(entity),
+                    color,
                     1.0F);
         }
     }
 
+    private int getBedWarsColor(Entity entity) {
+        if (!(entity instanceof Player player)) {
+            return getColor(entity);
+        }
+
+        Integer armorColor = getArmorColor(player);
+        if (armorColor != null) {
+            return 0xFF000000 | armorColor; // Ensure opaque
+        }
+
+        return getColor(entity);
+    }
+
+    private Integer getArmorColor(Player player) {
+        int[] armorSlots = {36, 37, 38, 39};
+        for (int slot : armorSlots) {
+            ItemStack stack = player.getInventory().getItem(slot);
+            if (stack.isEmpty()) continue;
+            DyedItemColor dyed = stack.get(DataComponents.DYED_COLOR);
+            if (dyed != null) return dyed.rgb();
+        }
+        return null;
+    }
+
     @Override
     public void onDisable() {
-        clearHighlights();
     }
 
     @Override
@@ -154,12 +140,22 @@ public class ESP extends Module {
         saveConfig();
     }
 
+    public boolean isThroughWalls() {
+        return throughWalls;
+    }
+
+    public void setThroughWalls(boolean throughWalls) {
+        this.throughWalls = throughWalls;
+        saveConfig();
+    }
+
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
         playersEnabled = Boolean.parseBoolean(properties.getProperty("esp.players", Boolean.toString(playersEnabled)));
         mobsEnabled = Boolean.parseBoolean(properties.getProperty("esp.mobs", Boolean.toString(mobsEnabled)));
         animalsEnabled = Boolean.parseBoolean(properties.getProperty("esp.animals", Boolean.toString(animalsEnabled)));
+        throughWalls = Boolean.parseBoolean(properties.getProperty("esp.through_walls", Boolean.toString(throughWalls)));
     }
 
     @Override
@@ -168,6 +164,7 @@ public class ESP extends Module {
         properties.setProperty("esp.players", Boolean.toString(playersEnabled));
         properties.setProperty("esp.mobs", Boolean.toString(mobsEnabled));
         properties.setProperty("esp.animals", Boolean.toString(animalsEnabled));
+        properties.setProperty("esp.through_walls", Boolean.toString(throughWalls));
     }
 
     private boolean shouldHighlight(Entity entity) {
@@ -175,6 +172,9 @@ public class ESP extends Module {
             return false;
 
         if (entity instanceof LivingEntity living && !living.isAlive())
+            return false;
+
+        if (AntiBot.isBot(entity))
             return false;
 
         if (playersEnabled && entity instanceof AbstractClientPlayer)
@@ -195,16 +195,5 @@ public class ESP extends Module {
         if (entity instanceof Mob)
             return 0xFFFF5555; // red
         return 0xFFFFFF55; // yellow fallback
-    }
-
-    private void clearHighlights() {
-        if (mc.level != null) {
-            for (Integer id : highlightedEntities) {
-                Entity e = mc.level.getEntity(id);
-                if (e != null)
-                    e.setGlowingTag(false);
-            }
-        }
-        highlightedEntities.clear();
     }
 }

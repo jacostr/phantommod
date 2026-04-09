@@ -31,6 +31,7 @@ public class Reach extends Module {
     private double entityReach = 3.5;
     private double blockReach  = 5.0;
     private boolean onlyWhileSprinting = true;
+    private boolean movingOnly = false;
     private boolean disableInWater = true;
 
     private static final double EPSILON = 1e-9;
@@ -122,6 +123,9 @@ public class Reach extends Module {
         if (onlyWhileSprinting && !mc.player.isSprinting()) {
             return false;
         }
+        if (movingOnly && mc.player.getDeltaMovement().horizontalDistanceSqr() < 1.0E-4D) {
+            return false;
+        }
         return !disableInWater || (!mc.player.isInWater() && !mc.player.isInLava());
     }
 
@@ -157,6 +161,18 @@ public class Reach extends Module {
         saveConfig();
     }
 
+    public boolean isMovingOnly() {
+        return movingOnly;
+    }
+
+    public void setMovingOnly(boolean movingOnly) {
+        this.movingOnly = movingOnly;
+        if (isEnabled()) {
+            updateReach();
+        }
+        saveConfig();
+    }
+
     public boolean isDisableInWater() {
         return disableInWater;
     }
@@ -177,24 +193,28 @@ public class Reach extends Module {
     public void applyPresetLegit() {
         setEntityReach(3.1);
         setBlockReach(4.7);
+        setMovingOnly(true);
     }
 
     /** Exact vanilla values — effectively disables the bonus. */
     public void applyPresetNormal() {
         setEntityReach(3.0);
         setBlockReach(4.5);
+        setMovingOnly(false);
     }
 
     /** Noticeable. Works on unprotected servers, flagged on Hypixel. */
     public void applyPresetObvious() {
         setEntityReach(4.5);
         setBlockReach(6.5);
+        setMovingOnly(false);
     }
 
     /** Very long. Singleplayer / unprotected servers only. */
     public void applyPresetBlatant() {
         setEntityReach(6.5);
         setBlockReach(9.0);
+        setMovingOnly(false);
     }
 
     // -------------------------------------------------------------------------
@@ -228,6 +248,8 @@ public class Reach extends Module {
         }
         onlyWhileSprinting = Boolean.parseBoolean(properties.getProperty("reach.only_while_sprinting",
                 Boolean.toString(onlyWhileSprinting)));
+        movingOnly = Boolean.parseBoolean(properties.getProperty("reach.moving_only",
+                Boolean.toString(movingOnly)));
         disableInWater = Boolean.parseBoolean(properties.getProperty("reach.disable_in_water",
                 Boolean.toString(disableInWater)));
     }
@@ -238,6 +260,7 @@ public class Reach extends Module {
         properties.setProperty("reach.entity", Double.toString(entityReach));
         properties.setProperty("reach.block",  Double.toString(blockReach));
         properties.setProperty("reach.only_while_sprinting", Boolean.toString(onlyWhileSprinting));
+        properties.setProperty("reach.moving_only", Boolean.toString(movingOnly));
         properties.setProperty("reach.disable_in_water", Boolean.toString(disableInWater));
     }
 }
