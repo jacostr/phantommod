@@ -106,6 +106,8 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, esp::isTrappedChestsEnabled, esp::setTrappedChestsEnabled, "Trapped Chests");
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chest Range", 8.0, 128.0, esp.getChestRange(), val -> esp.setChestRange(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
         } else {
             y += 14;
         }
@@ -904,7 +906,7 @@ public class ModuleSettingsScreen extends Screen {
         int contentHeight = getUsageHeight() + getDescriptionHeight() + TEXT_SPACING + 4;
 
         if (module instanceof ESP) {
-            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING) + 15;
+            contentHeight += 8 * (ROW_HEIGHT + ROW_SPACING) + 40;
         }
 
         if (module instanceof Reach) {

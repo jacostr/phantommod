@@ -39,7 +39,7 @@ import java.util.Properties;
 
 public class ESP extends Module {
     private static final double WALL_ESP_RANGE = 192.0D;
-    private static final double CHEST_ESP_RANGE = 64.0D;
+    private double chestRange = 64.0;
 
     // Entity ESP toggles
     private boolean playersEnabled = true;
@@ -175,13 +175,13 @@ public class ESP extends Module {
         if (mc.level == null || mc.player == null) return result;
 
         BlockPos playerPos = mc.player.blockPosition();
-        int range = (int) CHEST_ESP_RANGE;
+        int range = (int) chestRange;
 
         BlockPos min = playerPos.offset(-range, -range, -range);
         BlockPos max = playerPos.offset( range,  range,  range);
 
         for (BlockPos pos : BlockPos.betweenClosed(min, max)) {
-            if (pos.distSqr(playerPos) > CHEST_ESP_RANGE * CHEST_ESP_RANGE) continue;
+            if (pos.distSqr(playerPos) > chestRange * chestRange) continue;
 
             BlockEntity be = mc.level.getBlockEntity(pos);
             if (be == null) continue;
@@ -307,6 +307,9 @@ public class ESP extends Module {
     public boolean isTrappedChestsEnabled()     { return trappedChestsEnabled; }
     public void setTrappedChestsEnabled(boolean v){ trappedChestsEnabled = v; saveConfig(); }
 
+    public double getChestRange()           { return chestRange; }
+    public void setChestRange(double v)     { chestRange = Math.max(8.0, Math.min(128.0, v)); saveConfig(); }
+
     // ── Config persistence ────────────────────────────────────────────────────
 
     @Override
@@ -319,6 +322,7 @@ public class ESP extends Module {
         chestsEnabled        = Boolean.parseBoolean(properties.getProperty("esp.chests",          Boolean.toString(chestsEnabled)));
         enderChestsEnabled   = Boolean.parseBoolean(properties.getProperty("esp.ender_chests",    Boolean.toString(enderChestsEnabled)));
         trappedChestsEnabled = Boolean.parseBoolean(properties.getProperty("esp.trapped_chests",  Boolean.toString(trappedChestsEnabled)));
+        try { chestRange = Double.parseDouble(properties.getProperty("esp.chest_range", Double.toString(chestRange))); } catch (NumberFormatException ignored) {}
     }
 
     @Override
@@ -331,5 +335,6 @@ public class ESP extends Module {
         properties.setProperty("esp.chests",         Boolean.toString(chestsEnabled));
         properties.setProperty("esp.ender_chests",   Boolean.toString(enderChestsEnabled));
         properties.setProperty("esp.trapped_chests", Boolean.toString(trappedChestsEnabled));
+        properties.setProperty("esp.chest_range",     Double.toString(chestRange));
     }
 }
