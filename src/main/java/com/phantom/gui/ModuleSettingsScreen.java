@@ -99,6 +99,13 @@ public class ModuleSettingsScreen extends Screen {
                     .create(centerX - 80, y, 160, ROW_HEIGHT, net.minecraft.network.chat.Component.literal("Through Walls"),
                             (btn, val) -> esp.setThroughWalls(val)));
             y += ROW_HEIGHT + ROW_SPACING;
+
+            addFilterRow(centerX, y, esp::isChestsEnabled, esp::setChestsEnabled, "Chests");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isEnderChestsEnabled, esp::setEnderChestsEnabled, "Ender Chests");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isTrappedChestsEnabled, esp::setTrappedChestsEnabled, "Trapped Chests");
+            y += ROW_HEIGHT + ROW_SPACING;
         } else {
             y += 14;
         }
@@ -897,7 +904,7 @@ public class ModuleSettingsScreen extends Screen {
         int contentHeight = getUsageHeight() + getDescriptionHeight() + TEXT_SPACING + 4;
 
         if (module instanceof ESP) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING) + 15;
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING) + 15;
         }
 
         if (module instanceof Reach) {
