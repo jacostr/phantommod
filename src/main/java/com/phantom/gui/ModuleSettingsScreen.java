@@ -15,6 +15,7 @@ package com.phantom.gui;
 import com.phantom.module.Module;
 
 import com.phantom.module.impl.player.AntiAFK;
+import com.phantom.module.impl.player.AutoXPThrow;
 import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
@@ -696,6 +697,11 @@ public class ModuleSettingsScreen extends Screen {
         }
 
 
+        if (module instanceof AutoXPThrow autoXP) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Throws per tick", 1.0, 20.0, autoXP.getThrowsPerTick(), val -> autoXP.setThrowsPerTick((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
         if (module instanceof AntiAFK antiAFK) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Start delay min", 5.0, 300.0, antiAFK.getMinStartDelaySeconds(), antiAFK::setMinStartDelaySeconds));
             y += ROW_HEIGHT + ROW_SPACING;
@@ -968,6 +974,10 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof JumpReset) {
             contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AutoXPThrow) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AntiAFK) {

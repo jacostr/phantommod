@@ -37,6 +37,7 @@ import com.phantom.module.impl.movement.Scaffold;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
+import com.phantom.module.impl.player.AutoXPThrow;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -71,6 +72,7 @@ public class ModuleManager {
         modules.add(new FastPlace());
         modules.add(new AntiBot());
         modules.add(new SafeWalk());
+        modules.add(new AutoXPThrow());
         modules.add(hudModule);
 
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())
