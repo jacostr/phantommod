@@ -11,6 +11,8 @@ package com.phantom.gui;
 
 import com.phantom.PhantomMod;
 import com.phantom.config.ProfileManager;
+import com.phantom.gui.NotificationManager;
+import com.phantom.gui.ProfileScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.ModuleManager;
@@ -34,16 +36,15 @@ public class ClickGUIScreen extends Screen {
     /** Pixels from top: tabs + search box. */
     private static final int LIST_TOP = 52;
 
-    private final ModuleManager moduleManager;
+
     private ModuleCategory selectedCategory = ModuleCategory.COMBAT;
     private int scrollOffset;
     private int maxScroll;
     private String searchText = "";
     private boolean rebuildingSearch;
 
-    public ClickGUIScreen(ModuleManager moduleManager) {
+    public ClickGUIScreen() {
         super(Component.literal("Phantom Mod"));
-        this.moduleManager = moduleManager;
     }
 
     @Override
@@ -55,7 +56,7 @@ public class ClickGUIScreen extends Screen {
         rebuildingSearch = true;
         this.clearWidgets();
         
-        int tabWidth = 80;
+        int tabWidth = 65;
         int totalTabsWidth = ModuleCategory.values().length * tabWidth;
         int startX = (this.width - totalTabsWidth) / 2;
 
@@ -91,50 +92,35 @@ public class ClickGUIScreen extends Screen {
         int profileX = 6;
         int profileY = LIST_TOP + 18;
         this.addRenderableWidget(Button.builder(
-                        Component.literal("Legit"),
-                        button -> {
-                            ProfileManager.applyLegit(moduleManager);
-                            NotificationManager.push("Loaded Legit profile");
-                            rebuildUI();
-                        })
+                        Component.literal("Profiles"),
+                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager())))
                 .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
                 .build());
-        profileY += ROW_HEIGHT + 4;
 
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Obvious"),
-                        button -> {
-                            ProfileManager.applyObvious(moduleManager);
-                            NotificationManager.push("Loaded Obvious profile");
-                            rebuildUI();
-                        })
-                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
-                .build());
-        profileY += ROW_HEIGHT + 4;
+        int btnY = this.height - 24;
+        this.addRenderableWidget(Button.builder(Component.literal("Disable All"), button -> {
+            PhantomMod.getModuleManager().getModules().forEach(m -> { if (m.isEnabled()) m.toggle(); });
+            NotificationManager.push("All modules disabled.");
+            rebuildUI();
+        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
 
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Custom"),
-                        button -> {
-                            boolean loaded = ProfileManager.loadCustom(moduleManager);
-                            NotificationManager.push(loaded ? "Loaded Custom profile" : "No Custom profile saved");
-                            rebuildUI();
-                        })
-                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
-                .build());
-        profileY += ROW_HEIGHT + 4;
+        btnY -= 24;
+        this.addRenderableWidget(Button.builder(Component.literal("Reset Binds"), button -> {
+            PhantomMod.getModuleManager().getModules().forEach(m -> m.setKey(-1));
+            NotificationManager.push("All keybinds cleared.");
+            rebuildUI();
+        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
 
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Save Custom"),
-                        button -> {
-                            ProfileManager.saveCustom(moduleManager);
-                            NotificationManager.push("Saved Custom profile");
-                            rebuildUI();
-                        })
-                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
-                .build());
+        btnY -= 24;
+        this.addRenderableWidget(Button.builder(Component.literal("Reset Settings"), button -> {
+            PhantomMod.resetConfig();
+            NotificationManager.push("Settings reset to default.");
+            rebuildUI();
+        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
+
 
         String q = searchText.trim().toLowerCase(Locale.ROOT);
-        List<Module> modules = moduleManager.getModules().stream()
+        List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());
@@ -186,7 +172,7 @@ public class ClickGUIScreen extends Screen {
 
         int rowY = LIST_TOP - scrollOffset;
         String q = searchText.trim().toLowerCase(Locale.ROOT);
-        List<Module> modules = moduleManager.getModules().stream()
+        List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());

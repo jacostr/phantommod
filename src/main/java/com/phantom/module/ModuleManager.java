@@ -13,16 +13,22 @@ import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.combat.AutoClicker;
 import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.HitSelect;
+import com.phantom.module.impl.combat.NoHitDelay;
+import com.phantom.module.impl.combat.SilentAura;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.combat.JumpReset;
 import com.phantom.module.impl.combat.RightClicker;
 import com.phantom.module.impl.combat.Velocity;
 import com.phantom.module.impl.combat.WTap;
+import com.phantom.module.impl.combat.WeaponCycler;
+import com.phantom.module.impl.combat.WaterClutch;
 import com.phantom.module.impl.player.AutoTools;
+import com.phantom.module.impl.player.AutoTotem;
 import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
+import com.phantom.module.impl.render.HealthBar;
 import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.impl.movement.SafeWalk;
 import com.phantom.module.impl.render.FullBright;
@@ -34,10 +40,16 @@ import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.AimAssist;
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
+import com.phantom.module.impl.smp.BedESP;
+import com.phantom.module.impl.smp.ChestESP;
+import com.phantom.module.impl.smp.OreESP;
+import com.phantom.module.impl.smp.ShulkerESP;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
 import com.phantom.module.impl.player.AutoXPThrow;
+import com.phantom.module.impl.smp.AutoGapple;
+import com.phantom.module.impl.smp.OreFinder;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,32 +60,48 @@ public class ModuleManager {
 
     public ModuleManager() {
         HudModule hudModule = new HudModule();
-        modules.add(new AlwaysSprint());
-        modules.add(new FullBright());
-        modules.add(new ESP());
-        modules.add(new Indicators());
-        modules.add(new SpeedBridge());
-        modules.add(new AutoTools());
-        modules.add(new NoFall());
-        modules.add(new Reach());
-        modules.add(new Criticals());
+        // Combat
         modules.add(new AimAssist());
         modules.add(new AutoClicker());
+        modules.add(new WaterClutch());
         modules.add(new BlockHit());
+        modules.add(new Criticals());
         modules.add(new HitSelect());
-        modules.add(new RightClicker());
         modules.add(new JumpReset());
+        modules.add(new NoHitDelay());
+        modules.add(new Reach());
+        modules.add(new RightClicker());
+        modules.add(new SilentAura());
         modules.add(new Triggerbot());
-        modules.add(new WTap());
         modules.add(new Velocity());
-        modules.add(new Scaffold());
+        modules.add(new WTap());
+        modules.add(new WeaponCycler());
+        // Movement
+        modules.add(new AlwaysSprint());
         modules.add(new NoJumpDelay());
-        modules.add(new AntiAFK());
-        modules.add(new FastPlace());
-        modules.add(new AntiBot());
         modules.add(new SafeWalk());
-        modules.add(new AutoXPThrow());
+        modules.add(new Scaffold());
+        modules.add(new SpeedBridge());
+        // Player
+        modules.add(new AntiAFK());
+        modules.add(new AntiBot());
+        modules.add(new AutoTotem());
+        modules.add(new AutoTools());
+        modules.add(new ESP());
+        modules.add(new FastPlace());
+        modules.add(new FullBright());
+        modules.add(new HealthBar());
         modules.add(hudModule);
+        modules.add(new Indicators());
+        modules.add(new NoFall());
+        // SMP
+        modules.add(new AutoXPThrow());
+        modules.add(new AutoGapple());
+        modules.add(new BedESP());
+        modules.add(new ChestESP());
+        modules.add(new OreESP());
+        modules.add(new OreFinder());
+        modules.add(new ShulkerESP());
 
         modules.sort(Comparator.comparing((Module module) -> module.getCategory().ordinal())
                 .thenComparing(Module::getName));

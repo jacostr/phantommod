@@ -78,7 +78,7 @@ public class RightClicker extends Module {
     public RightClicker() {
         super("RightClicker",
                 "Automates right-clicking for scaffolding, bridging, and throwable spam.\nDetectability: Moderate to Blatant",
-                ModuleCategory.COMBAT,
+                ModuleCategory.MOVEMENT,
                 -1);
     }
 

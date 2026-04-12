@@ -2,14 +2,16 @@
  * AutoTools.java — Automatically selects the best tool or weapon from the hotbar (Player module).
  *
  * Each tick, reads mc.hitResult. For blocks, compares getDestroySpeed() across all hotbar
- * slots and switches to the fastest. For entities, scores by weapon type
- * (sword > mace > axe > trident).
+ * slots and switches to the fastest. For entities, scores by weapon type with configurable
+ * priority (sword-first vs axe-first).
  * Detectability: Safe — tool swapping is normal player behaviour.
  */
 package com.phantom.module.impl.player;
 
+import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -17,10 +19,23 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 
 import java.util.Locale;
+import java.util.Properties;
 
 public class AutoTools extends Module {
+    public enum AttackPriority {
+        SWORD_FIRST("Sword → Axe"),
+        AXE_FIRST("Axe → Sword");
+
+        private final String label;
+        AttackPriority(String label) { this.label = label; }
+        public String getLabel() { return label; }
+        public AttackPriority next() { return this == SWORD_FIRST ? AXE_FIRST : SWORD_FIRST; }
+    }
+
+    private AttackPriority attackPriority = AttackPriority.SWORD_FIRST;
+
     public AutoTools() {
-        super("AutoTools", "Automatically switches to the best tool for mining a block.\nDetectability: Safe", ModuleCategory.PLAYER, -1);
+        super("AutoTools", "Automatically switches to the best tool for mining or weapon for attacking.\nDetectability: Safe", ModuleCategory.PLAYER, -1);
     }
 
     @Override
@@ -65,18 +80,20 @@ public class AutoTools extends Module {
         int bestSlot = -1;
         float bestScore = Float.NEGATIVE_INFINITY;
 
+        float swordBase = attackPriority == AttackPriority.SWORD_FIRST ? 1000.0F : 500.0F;
+        float axeBase = attackPriority == AttackPriority.AXE_FIRST ? 1000.0F : 500.0F;
+
         for (int slot = 0; slot < 9; slot++) {
             var stack = mc.player.getInventory().getItem(slot);
             if (stack.isEmpty()) continue;
 
             float score = 0.0F;
-            // Using string check for 1.21.11 mapping stability
             String itemName = stack.getItem().toString().toLowerCase(Locale.ROOT);
 
             if (itemName.contains("sword")) {
-                score += 1000.0F;
+                score += swordBase;
             } else if (itemName.contains("_axe")) { // Matches iron_axe but not pickaxe
-                score += 500.0F;
+                score += axeBase;
             } else if (itemName.contains("trident")) {
                 score += 300.0F;
             } else if (itemName.contains("mace")) {
@@ -106,5 +123,26 @@ public class AutoTools extends Module {
         }
 
         return speed;
+    }
+
+    public AttackPriority getAttackPriority() { return attackPriority; }
+    public void cycleAttackPriority() { attackPriority = attackPriority.next(); saveConfig(); }
+
+    @Override public boolean hasConfigurableSettings() { return true; }
+    @Override public Screen createSettingsScreen(Screen parent) { return new ModuleSettingsScreen(parent, this); }
+
+    @Override
+    public void loadConfig(Properties properties) {
+        super.loadConfig(properties);
+        String p = properties.getProperty("autotools.attack_priority");
+        if (p != null) {
+            try { attackPriority = AttackPriority.valueOf(p.trim()); } catch (IllegalArgumentException ignored) {}
+        }
+    }
+
+    @Override
+    public void saveConfig(Properties properties) {
+        super.saveConfig(properties);
+        properties.setProperty("autotools.attack_priority", attackPriority.name());
     }
 }

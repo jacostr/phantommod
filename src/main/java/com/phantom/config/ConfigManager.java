@@ -79,14 +79,18 @@ public final class ConfigManager {
 
     public static void apply(ModuleManager moduleManager, Properties properties, boolean saveAsMainConfig) {
         for (Module module : moduleManager.getModules()) {
-            module.setEnabledSilently(false);
-        }
-        for (Module module : moduleManager.getModules()) {
+            boolean wasEnabled = module.isEnabled();
+            // loadConfig updates the 'enabled' field and other settings
             module.loadConfig(properties);
+            boolean shouldBeEnabled = module.isEnabled();
+
+            if (wasEnabled != shouldBeEnabled) {
+                // Revert state temporarily to correctly trigger the lifecycle hook via setEnabledSilently
+                module.initializeEnabledSilently(wasEnabled);
+                module.setEnabledSilently(shouldBeEnabled);
+            }
         }
-        for (Module module : moduleManager.getModules()) {
-            module.applyLoadedEnableState();
-        }
+
         if (saveAsMainConfig) {
             writeMainFile(properties);
         }

@@ -205,9 +205,9 @@ public abstract class Module {
      */
     public void applyLoadedEnableState() {
         if (enabled) {
-            onEnable();
+            if (!isEnabled()) onEnable();
         } else {
-            onDisable();
+            if (isEnabled()) onDisable();
         }
     }
 

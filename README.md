@@ -1,6 +1,6 @@
 # PhantomMod
 
-PhantomMod `v1.0.3` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, configurable module settings, saved hotkeys, toast notifications, saved profiles, and a small HUD overlay.
+PhantomMod `v1.0.4` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, configurable module settings, saved hotkeys, toast notifications, saved profiles, and a small HUD overlay.
 
 ## Included Modules
 
@@ -12,9 +12,12 @@ PhantomMod `v1.0.3` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 - `Criticals`
 - `HitSelect`
 - `JumpReset`
+- `NoHitDelay`
 - `Reach`
 - `RightClicker`
+- `SilentAura`
 - `Triggerbot`
+- `Velocity`
 - `WTap`
 
 ### Movement
@@ -28,14 +31,25 @@ PhantomMod `v1.0.3` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 - `AntiAFK`
 - `AntiBot`
 - `AutoTools`
+- `AutoTotem`
 - `FastPlace`
+- `Freecam`
+- `NameChanger`
 - `NoFall`
 
 ### Render
 - `ESP`
 - `FullBright`
+- `HealthBar`
 - `HUD`
 - `Indicators`
+
+### SMP
+- `AutoXPThrow`
+- `BedESP`
+- `ChestESP`
+- `OreESP`
+- `ShulkerESP`
 
 ## Controls
 
@@ -51,7 +65,7 @@ If you used an older PhantomMod build before this release, Minecraft may keep th
 
 PhantomMod stores its settings in `phantom-memory.properties` inside your Minecraft config directory. Module enabled state, hotkeys, and per-module settings are all persisted there.
 
-Custom profiles are stored in `config/phantom-profiles/` and can be loaded back into the main config.
+Custom profiles are stored in `config/phantom-profiles/` and can be managed from the "Profiles" menu in the ClickGUI.
 
 ## Installation
 
@@ -79,14 +93,12 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v1.0.3 Notes
+## v1.0.4 Notes
 
-- Built for Minecraft `1.21.11`
-- Requires Fabric Loader `0.16.10+`
-- Tested with Fabric API `0.140.0+1.21.11`
-- Settings are saved automatically to `phantom-memory.properties`
-- `Velocity` is included in the module registry and available from the ClickGUI
-- ESP hidden targets use a dedicated see-through line render pass for through-wall boxes
+- Added the "SMP" tab for survival-oriented utilities.
+- Added a 4-slot configurable Profile management UI to replace the legacy profiles.
+- Integrated `SilentAura` and `NoHitDelay` into the combat modules.
+- Refactored `ESP` to split out specific block ESPs into the SMP category (Chest, Ore, Bed, Shulker).
 
 ## Project Notes
 

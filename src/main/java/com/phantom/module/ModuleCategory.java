@@ -1,9 +1,9 @@
 /*
  * ModuleCategory.java — Enum for sorting modules into UI tabs.
  *
- * Defines the main categories (Combat, Movement, Player) used by the ClickGUI
+ * Defines the main categories (Combat, Movement, Player, SMP) used by the ClickGUI
  * and ModuleManager. The "Render" category was merged into "Player" to optimize
- * screen space.
+ * screen space. SMP holds server-survival utilities (ESP for blocks, XP throwing, etc.).
  */
 package com.phantom.module;
 
@@ -13,15 +13,15 @@ package com.phantom.module;
  * <ul>
  *   <li>{@link #COMBAT}   — PvP automation: reach, aim, crits, block-hit, trigger logic.</li>
  *   <li>{@link #MOVEMENT} — Traversal helpers: sprint, W-tap, scaffold, speedbridge, no-jump-delay.</li>
- *   <li>{@link #PLAYER}   — Everything else: QoL, visuals, HUD, tools, fall protection, zoom, ESP.</li>
+ *   <li>{@link #PLAYER}   — QoL, visuals, HUD, tools, fall protection, entity ESP.</li>
+ *   <li>{@link #SMP}      — Survival multiplayer utilities: ore/chest/bed/shulker ESP, XP throwing.</li>
  * </ul>
- *
- * RENDER was merged into PLAYER to keep the tab bar from overflowing the screen width.
  */
 public enum ModuleCategory {
     COMBAT("Combat"),
     MOVEMENT("Movement"),
-    PLAYER("Player");
+    PLAYER("Player"),
+    SMP("SMP");
 
     private final String label;
 

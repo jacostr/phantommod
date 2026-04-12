@@ -1,4 +1,4 @@
-# PhantomMod v1.0.3 — Technical Reference
+# PhantomMod v1.0.4 — Technical Reference
 
 > A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 
@@ -19,6 +19,7 @@
    - [Movement](#movement)
    - [Player](#player)
    - [Render](#render)
+   - [SMP](#smp)
 6. [Design Decisions & Bypass Reasoning](#design-decisions--bypass-reasoning)
 7. [Build & Installation](#build--installation)
 
@@ -84,8 +85,10 @@ PhantomMod/
 │   │       │   ├── Criticals.java   ← Spoofed mini-jump critical hits
 │   │       │   ├── HitSelect.java   ← Attack timing / selective hit gating
 │   │       │   ├── JumpReset.java   ← Jump reset assist after taking hits
+│   │       │   ├── NoHitDelay.java  ← Attack cooldown removal/reduction
 │   │       │   ├── Reach.java       ← Extended entity/block reach
 │   │       │   ├── RightClicker.java← Right click automation
+│   │       │   ├── SilentAura.java  ← Stealth combat module without rotations
 │   │       │   ├── Triggerbot.java  ← Auto attack when crosshair is on target
 │   │       │   ├── Velocity.java    ← Knockback percentage reduction
 │   │       │   └── WTap.java        ← Sprint reset on attack
@@ -99,10 +102,11 @@ PhantomMod/
 │   │       │   ├── AntiAFK.java     ← Idle movement / input prevention
 │   │       │   ├── AntiBot.java     ← Client-side bot filtering helper
 │   │       │   ├── AutoTools.java   ← Auto tool/weapon swap
+│   │       │   ├── AutoTotem.java   ← Auto offhand totem equip
 │   │       │   ├── FastPlace.java   ← Reduced right-click place delay
+│   │       │   ├── Freecam.java     ← Detached spectator-like camera
+│   │       │   ├── NameChanger.java ← Client-side name text override
 │   │       │   └── NoFall.java      ← Fall damage prevention
-│   │       └── render/
-│   │           ├── ESP.java         ← Through-wall entity highlighting
 │   │           ├── FullBright.java  ← Gamma override for night vision
 │   │           ├── HudModule.java   ← Corner info overlay
 │   │           └── Indicators.java  ← On-screen target / state indicators
@@ -166,6 +170,8 @@ Module names are normalized to lowercase snake_case (e.g. `"AimAssist"` → `"ai
 ### Config System
 
 **`phantom-memory.properties`** is a standard Java `Properties` file stored in `.minecraft/config/`. It holds every module's enabled state, hotkey, and custom slider values in flat key=value format.
+
+**ProfileManager** manages 4 custom profiles (`slot_0.properties` through `slot_3.properties` in `config/phantom-profiles/`) with user-editable names persisted in `phantom-profile-names.properties`.
 
 **`ConfigManager`** has two static methods:
 - `load(ModuleManager)` — reads the file and calls `module.loadConfig()` for each module
@@ -250,6 +256,16 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 - **Detectability:** Blatant — the server sees positional packets immediately before every attack. The `Chance %` slider randomizes whether crits fire, making the pattern less consistent.
 - **Settings:** `Crit Chance` (0.0–1.0)
 
+#### `NoHitDelay`
+- **How it works:** Uses `player.resetAttackStrengthTicker()` to remove the 1.9+ attack cooldown, allowing 1.8-style spam clicking.
+- **Detectability:** Blatant — attack cadence patterns matching 1.8 on a 1.9+ server are easily flagged.
+- **Settings:** Configurable hit chance (0% to 100%), tick delay override, and server-specific presets (Vanilla/Hypixel/Mineplex/Blatant).
+
+#### `SilentAura`
+- **How it works:** Replaces normal Aura by keeping the client camera completely stationary. Targets entities using `gameMode.attack()` directly. No rotation packets are sent making it much harder to detect visually or heuristically.
+- **Detectability:** Blatant on strict configurations — attacking entities outside FOV or without moving look direction can be flagged.
+- **Settings:** Attack CPS bounds, attack radius, target prioritizing (Yaw/Distance/Health), and entity filtering options.
+
 #### `Reach`
 - **How it works:** Uses Minecraft's built-in `Attributes` system (`ENTITY_INTERACTION_RANGE`, `BLOCK_INTERACTION_RANGE`) with `AttributeModifier` UUIDs that are added on enable and removed on disable.
 - **Detectability:** Blatant — servers log hit distances. Values above ~3.5 blocks are flagged immediately on Hypixel.
@@ -298,9 +314,13 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 ### Render
 
 #### `ESP`
-- **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Visible targets use the normal line pass; hidden targets use a dedicated no-depth line render type so the boxes stay visible through walls.
+- **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Targets use a dedicated no-depth line render type so the boxes stay visible through walls.
 - **Detectability:** Safe — purely client-side visual; the server never sees it.
 - **Settings:** Toggle players / mobs / animals independently, plus `Through Walls`.
+
+#### `HealthBar`
+- **How it works:** Draws a small health monitor UI close to the center of the crosshair via `GuiGraphics.drawString`. Colors smoothly interpolate across a gradient depending on remaining health.
+- **Detectability:** Safe — HUD visual only.
 
 #### `FullBright`
 - **How it works:** Saves `mc.options.gamma` on enable, sets it to `16.0` (well above the normal max of 1.0, which forces full ambient light rendering), restores on disable.
@@ -309,6 +329,18 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 #### `HudModule`
 - **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current Ping from `mc.getConnection()`, and blocks-per-second.
 - **Detectability:** Safe — HUD is client-side only.
+
+---
+
+### SMP
+
+#### Block ESPs (`ChestESP`, `OreESP`, `BedESP`, `ShulkerESP`)
+- **How it works:** Separated from entity ESP into survival-specific categories. Iterates chunks based on range using varying timers (e.g. 1-second delay for block iteration to avoid lag) and renders wireframes.
+- **Detectability:** Safe — client-side rendering.
+
+#### `AutoXPThrow`
+- **How it works:** Bypasses normal right-click delay by aggressively interacting via packet/controller logic while XP bottles are held. Switch speed handles auto-inventory cycling.
+- **Detectability:** Moderate — rapid slot interaction can generate irregular inventory packets.
 
 ---
 

@@ -13,6 +13,7 @@ import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.combat.WTap;
+import com.phantom.module.impl.combat.WeaponCycler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -34,8 +35,6 @@ public class MultiPlayerGameModeMixin {
         Minecraft mc = Minecraft.getInstance();
         HitSelect hitSelect = (HitSelect) PhantomMod.getModuleManager().getModuleByName("HitSelect");
         Criticals critModule = (Criticals) PhantomMod.getModuleManager().getModuleByName("Criticals");
-        BlockHit blockHit = (BlockHit) PhantomMod.getModuleManager().getModuleByName("BlockHit");
-        WTap wTapModule = (WTap) PhantomMod.getModuleManager().getModuleByName("WTap");
 
         if (hitSelect != null && hitSelect.isEnabled() && hitSelect.shouldCancelAttack(target)) {
             ci.cancel();
@@ -58,6 +57,13 @@ public class MultiPlayerGameModeMixin {
                 }
             }
         }
+    }
+
+    @Inject(method = "attack", at = @At("TAIL"))
+    private void onPostAttack(Player player, Entity target, CallbackInfo ci) {
+        WTap wTapModule = (WTap) PhantomMod.getModuleManager().getModuleByName("WTap");
+        BlockHit blockHit = (BlockHit) PhantomMod.getModuleManager().getModuleByName("BlockHit");
+        WeaponCycler weaponCycler = (WeaponCycler) PhantomMod.getModuleManager().getModuleByName("WeaponCycler");
 
         if (wTapModule != null && wTapModule.isEnabled()) {
             wTapModule.onAttack(target);
@@ -65,6 +71,10 @@ public class MultiPlayerGameModeMixin {
 
         if (blockHit != null && blockHit.isEnabled()) {
             blockHit.onAttack(target);
+        }
+
+        if (weaponCycler != null && weaponCycler.isEnabled()) {
+            weaponCycler.onAttack(target);
         }
     }
 }

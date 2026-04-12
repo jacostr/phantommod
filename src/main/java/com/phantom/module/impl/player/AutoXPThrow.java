@@ -16,8 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.inventory.ClickType;
 import org.lwjgl.glfw.GLFW;
-
-import java.lang.reflect.Field;
+import com.phantom.util.InventoryUtil;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -27,39 +26,9 @@ public class AutoXPThrow extends Module {
     private int throwsPerTick = 5;
     private final List<Integer> pendingSlots = new ArrayList<>();
     private int previousSlot = 0;
-
-    // Cached reflection field for Inventory.selected
-    private static Field selectedField = null;
-
-    static {
-        try {
-            for (Field f : net.minecraft.world.entity.player.Inventory.class.getDeclaredFields()) {
-                if (f.getType() == int.class && f.getName().equals("selected")) {
-                    f.setAccessible(true);
-                    selectedField = f;
-                    break;
-                }
-            }
-            // Fallback: try obfuscated field name used in some mappings
-            if (selectedField == null) {
-                for (Field f : net.minecraft.world.entity.player.Inventory.class.getDeclaredFields()) {
-                    // The selected slot field is the only int that starts at 0 and is hotbar-related
-                    // Try all int fields and pick the first accessible one named with common patterns
-                    if (f.getType() == int.class) {
-                        f.setAccessible(true);
-                        selectedField = f;
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            selectedField = null;
-        }
-    }
-
     public AutoXPThrow() {
         super("AutoXPThrow", "Throws all Experience Bottles from your inventory at a configurable speed.\nDetectability: Moderate",
-                ModuleCategory.PLAYER, GLFW.GLFW_KEY_UNKNOWN);
+                ModuleCategory.SMP, GLFW.GLFW_KEY_UNKNOWN);
     }
 
     @Override
@@ -148,22 +117,11 @@ public class AutoXPThrow extends Module {
     }
 
     private int getSelected() {
-        if (mc.player == null) return 0;
-        if (selectedField != null) {
-            try {
-                return selectedField.getInt(mc.player.getInventory());
-            } catch (Exception ignored) {}
-        }
-        return 0;
+        return InventoryUtil.getSelectedSlot();
     }
 
     private void setSelected(int slot) {
-        if (mc.player == null) return;
-        if (selectedField != null) {
-            try {
-                selectedField.setInt(mc.player.getInventory(), slot);
-            } catch (Exception ignored) {}
-        }
+        InventoryUtil.setSelectedSlot(slot);
     }
 
     public int getThrowsPerTick()       { return throwsPerTick; }

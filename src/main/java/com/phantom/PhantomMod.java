@@ -43,14 +43,18 @@ public final class PhantomMod implements ClientModInitializer {
             moduleManager.onTick();
 
             if (guiKey.consumeClick()) {
-                client.setScreen(new ClickGUIScreen(moduleManager));
+                client.setScreen(new ClickGUIScreen());
             }
         });
 
-        WorldRenderEvents.AFTER_ENTITIES.register(moduleManager::onRender);
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+            if (moduleManager != null) moduleManager.onRender(context);
+        });
 
         HudRenderCallback.EVENT.register((graphics, tickDelta) -> {
-            moduleManager.onHudRender(graphics);
+            if (moduleManager != null) {
+                moduleManager.onHudRender(graphics);
+            }
             NotificationManager.render(graphics);
         });
     }
@@ -66,5 +70,18 @@ public final class PhantomMod implements ClientModInitializer {
 
     public static ModuleManager getModuleManager() {
         return moduleManager;
+    }
+
+    public static void resetConfig() {
+        if (moduleManager != null) {
+            moduleManager.getModules().forEach(m -> {
+                if (m.isEnabled()) m.disableSilently();
+            });
+        }
+        java.io.File file = new java.io.File(net.minecraft.client.Minecraft.getInstance().gameDirectory, "config/phantom-memory.properties");
+        if (file.exists()) {
+            file.delete();
+        }
+        moduleManager = new ModuleManager();
     }
 }

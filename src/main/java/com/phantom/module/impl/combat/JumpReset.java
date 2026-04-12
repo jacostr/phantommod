@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class JumpReset extends Module {
     private double chance = 1.0D;
     private double accuracy = 0.8D;
+    private double jumpChancePercent = 100.0D;
     private boolean onlyWhenTargeting = true;
     private boolean waterCheck = true;
 
@@ -77,6 +78,11 @@ public class JumpReset extends Module {
             return false;
         }
 
+        // Jump chance % — additional roll to decide if the jump actually fires
+        if (ThreadLocalRandom.current().nextDouble() * 100.0 > jumpChancePercent) {
+            return false;
+        }
+
         if (onlyWhenTargeting) {
             Entity focused = mc.crosshairPickEntity;
             if (!(focused instanceof LivingEntity living) || !living.isAlive()) {
@@ -130,6 +136,15 @@ public class JumpReset extends Module {
         saveConfig();
     }
 
+    public double getJumpChancePercent() {
+        return jumpChancePercent;
+    }
+
+    public void setJumpChancePercent(double v) {
+        this.jumpChancePercent = Mth.clamp(v, 0.0D, 100.0D);
+        saveConfig();
+    }
+
     @Override
     public boolean hasConfigurableSettings() {
         return true;
@@ -159,6 +174,10 @@ public class JumpReset extends Module {
         }
         onlyWhenTargeting = Boolean.parseBoolean(properties.getProperty("jumpreset.only_when_targeting", Boolean.toString(onlyWhenTargeting)));
         waterCheck = Boolean.parseBoolean(properties.getProperty("jumpreset.water_check", Boolean.toString(waterCheck)));
+        String jcp = properties.getProperty("jumpreset.jump_chance_percent");
+        if (jcp != null) {
+            try { jumpChancePercent = Mth.clamp(Double.parseDouble(jcp.trim()), 0.0D, 100.0D); } catch (NumberFormatException ignored) {}
+        }
     }
 
     @Override
@@ -168,5 +187,6 @@ public class JumpReset extends Module {
         properties.setProperty("jumpreset.accuracy", Double.toString(accuracy));
         properties.setProperty("jumpreset.only_when_targeting", Boolean.toString(onlyWhenTargeting));
         properties.setProperty("jumpreset.water_check", Boolean.toString(waterCheck));
+        properties.setProperty("jumpreset.jump_chance_percent", Double.toString(jumpChancePercent));
     }
 }
