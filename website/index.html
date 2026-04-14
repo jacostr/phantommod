@@ -1,195 +1,199 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PhantomMod</title>
-    <meta name="description" content="PhantomMod v1.0.5 for Minecraft 1.21.11. Download the release, browse modules, and get setup fast.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhantomMod</title>
+<meta name="description" content="PhantomMod v1.0.5 for Minecraft 1.21.11. Download the release, browse modules, and get setup fast.">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="sky-glow"></div>
-    <div class="page-shell">
-        <header class="site-header">
-            <a class="brand" href="#top" aria-label="PhantomMod home">
-                <span class="brand-mark">P</span>
-                <span class="brand-text">
-                    <strong>PhantomMod</strong>
-                    <small>v1.0.5</small>
-                </span>
-            </a>
+<div class="blob1"></div>
+<div class="blob2"></div>
+<div class="shell">
 
-            <nav class="site-nav">
-                <a href="#download">Download</a>
-                <a href="#modules">Modules</a>
-                <a href="#survival">Features</a>
-                <a href="#install">Install</a>
-            </nav>
-        </header>
-
-        <main id="top">
-            <section class="hero">
-                <div class="hero-copy block-panel">
-                    <p class="eyebrow">Fabric 1.21.11 Client Mod</p>
-                    <h1>Built like a stealth hub dropped into a Minecraft world.</h1>
-                    <p class="hero-text">
-                        PhantomMod v1.0.5 focuses on fast toggles, cleaner profiles, a stronger ClickGUI,
-                        and a HUD flow that feels easier to live with in-game.
-                    </p>
-
-                    <div class="hero-actions">
-                        <a class="button button-primary" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Download Release</a>
-                        <a class="button button-secondary" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">View GitHub</a>
-                    </div>
-
-                    <div class="hero-stats">
-                        <article>
-                            <span>Version</span>
-                            <strong>v1.0.5</strong>
-                        </article>
-                        <article>
-                            <span>Minecraft</span>
-                            <strong>1.21.11</strong>
-                        </article>
-                        <article>
-                            <span>Stack</span>
-                            <strong>Fabric + Java 21</strong>
-                        </article>
-                    </div>
-                </div>
-
-                <aside class="hero-panel">
-                    <div class="terminal-card">
-                        <div class="terminal-top">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                        <div class="terminal-body">
-                            <div class="code-line"><span class="code-key">release</span><span class="code-value">v1.0.5</span></div>
-                            <div class="code-line"><span class="code-key">status</span><span class="code-value">release ready</span></div>
-                            <div class="code-line"><span class="code-key">ui</span><span class="code-value">profiles + hud button</span></div>
-                            <div class="code-line"><span class="code-key">profiles</span><span class="code-value">overwrite confirm</span></div>
-                            <div class="code-line"><span class="code-key">movement</span><span class="code-value">simple scaffold</span></div>
-                            <div class="code-line"><span class="code-key">visuals</span><span class="code-value">minecraft-inspired site refresh</span></div>
-                        </div>
-                    </div>
-                </aside>
-            </section>
-
-            <section class="world-strip" id="download">
-                <article class="world-card grass-card">
-                    <p class="strip-tag">Spawn Point</p>
-                    <h2>Jump straight into the release.</h2>
-                    <p>Grab the latest jar, drop it into your mods folder, and launch with Fabric.</p>
-                    <a class="text-link" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Open GitHub Releases</a>
-                </article>
-
-                <article class="world-card stone-card">
-                    <p class="strip-tag">Source</p>
-                    <h2>Browse the full project.</h2>
-                    <p>Check the codebase, read docs, or prep the next release directly from the repository.</p>
-                    <a class="text-link" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">Open Repository</a>
-                </article>
-            </section>
-
-            <section class="section" id="modules">
-                <div class="section-heading">
-                    <p class="eyebrow">Module Biomes</p>
-                    <h2>Built around the way players actually swap modes mid-session.</h2>
-                </div>
-
-                <div class="module-grid">
-                    <article class="module-card">
-                        <span class="module-tag">Combat</span>
-                        <h3>AimAssist, Triggerbot, Velocity, WTap</h3>
-                        <p>Core fight modules tuned for quick toggling, presets, and profile-driven setups.</p>
-                    </article>
-
-                    <article class="module-card">
-                        <span class="module-tag">Movement</span>
-                        <h3>Scaffold, SafeWalk, SpeedBridge, NoJumpDelay</h3>
-                        <p>Movement helpers focused on simple activation and less setup friction inside the ClickGUI.</p>
-                    </article>
-
-                    <article class="module-card">
-                        <span class="module-tag">Player</span>
-                        <h3>AutoTools, AutoTotem, AntiBot, FastPlace</h3>
-                        <p>Quality-of-life tools for inventory flow, survival utility, and cleaner general play.</p>
-                    </article>
-
-                    <article class="module-card">
-                        <span class="module-tag">Visuals</span>
-                        <h3>ESP, FullBright, HUD, Indicators</h3>
-                        <p>Client-side overlays and visibility tools with HUD settings moved into a dedicated corner button.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="section" id="survival">
-                <div class="section-heading">
-                    <p class="eyebrow">What Changed</p>
-                    <h2>v1.0.5 sharpens the things you touch the most.</h2>
-                </div>
-
-                <div class="feature-lane">
-                    <article class="feature-block dirt">
-                        <h3>Profiles Feel Safer</h3>
-                        <p>Saving over an existing slot now asks for confirmation instead of replacing it immediately.</p>
-                    </article>
-                    <article class="feature-block moss">
-                        <h3>HUD Flow Is Cleaner</h3>
-                        <p>HUD settings are now in their own bottom-right button instead of cluttering the normal module list.</p>
-                    </article>
-                    <article class="feature-block slate">
-                        <h3>Module Browsing Is Cleaner</h3>
-                        <p>The ClickGUI now feels more streamlined with the HUD controls pulled out into their own corner button.</p>
-                    </article>
-                    <article class="feature-block gold">
-                        <h3>Scaffold Was Simplified</h3>
-                        <p>The scaffold module was stripped back to regular synced placement without extra settings noise.</p>
-                    </article>
-                </div>
-            </section>
-
-            <section class="section" id="install">
-                <div class="section-heading">
-                    <p class="eyebrow">Install Route</p>
-                    <h2>Five quick steps and you are in-game.</h2>
-                </div>
-
-                <div class="install-grid">
-                    <ol class="install-path block-panel">
-                        <li>Install Fabric Loader for Minecraft <strong>1.21.11</strong>.</li>
-                        <li>Install the matching Fabric API build.</li>
-                        <li>Download the PhantomMod release jar.</li>
-                        <li>Move it into <code>.minecraft/mods</code>.</li>
-                        <li>Launch Minecraft using the Fabric profile.</li>
-                    </ol>
-
-                    <aside class="seed-card">
-                        <p class="seed-tag">Quick Note</p>
-                        <h3>Designed for a cleaner release handoff.</h3>
-                        <p>The current build, docs, and website all match the v1.0.5 release state.</p>
-                        <div class="hero-actions">
-                            <a class="button button-primary" href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Get Build</a>
-                            <a class="button button-secondary" href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">Source</a>
-                        </div>
-                    </aside>
-                </div>
-            </section>
-        </main>
-
-        <footer class="site-footer">
-            <p>PhantomMod v1.0.5 • Minecraft 1.21.11 • Fabric client mod</p>
-            <div class="footer-links">
-                <a href="https://github.com/jacostr/phantomod/releases/tag/Minecraft" target="_blank" rel="noreferrer">Download</a>
-                <a href="https://github.com/jacostr/phantomod" target="_blank" rel="noreferrer">GitHub</a>
-            </div>
-        </footer>
+  <header>
+    <div class="brand">
+     <!--  <div class="brand-icon">P</div>     LOGO in top right corner  --> 
+      <span class="brand-name">PhantomMod</span>
+      <span class="brand-ver">v1.0.5</span>
     </div>
+    <nav>
+      <a href="#download">Download</a>
+      <a href="#modules">Modules</a>
+      <a href="#changes">Changes</a>
+      <a href="#install">Install</a>
+    </nav>
+  </header>
+
+  <section class="hero" id="top">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Fabric 1.21.11 Client Mod</div>
+      <h1>The <em>free</em> MC ghost client of the future.</h1>
+      <p class="hero-sub">PhantomMod v1.0.5 focuses on less delay, profiles, a nicer ClickGUI, and new modules.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="https://github.com/jacostr/phantommod/releases/tag/V1.0.5" target="_blank" rel="noreferrer">Download latest</a>
+        <a class="btn btn-secondary" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">View GitHub</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="stat-label">Version</span><span class="stat-val">v1.0.5</span></div>
+        <div class="stat"><span class="stat-label">Minecraft</span><span class="stat-val">1.21.11</span></div>
+        <div class="stat"><span class="stat-label">Stack</span><span class="stat-val">Fabric + Java 21</span></div>
+      </div>
+    </div>
+    <div class="terminal">
+      <div class="term-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="term-title">phantommod for Minecraft</span>
+      </div>
+      <div class="term-body">
+        <div class="tline"><span class="tk">release</span><span class="tv green">v1.0.5</span></div>
+        <div class="tline"><span class="tk">status</span><span class="tv green">release ready</span></div>
+        <div class="tline"><span class="tk">loader</span><span class="tv">Fabric 1.21.11</span></div>
+        <div class="tline"><span class="tk">build</span><span class="tv green">stable</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sec-divider" id="download">
+    <span class="sec-divider-label">Download</span>
+    <div class="sec-divider-line"></div>
+  </div>
+
+  <div class="download-grid section">
+    <div class="dl-card">
+      <div class="dl-card-tag">Spawn Point</div>
+      <h3>Jump straight into the release.</h3>
+      <p>Grab the latest jar, drop it into your mods folder, and launch with Fabric. That's it.</p>
+      <a class="dl-link" href="https://github.com/jacostr/phantommod/releases/tag/V1.0.5" target="_blank" rel="noreferrer">Open GitHub Releases</a>
+    </div>
+    <div class="dl-card">
+      <div class="dl-card-tag">Source</div>
+      <h3>Browse the full project.</h3>
+      <p>Check the codebase, read docs, or prep the next release directly from the repository.</p>
+      <a class="dl-link" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">Open Repository</a>
+    </div>
+  </div>
+
+  <div class="sec-divider" id="modules">
+    <span class="sec-divider-label">Modules</span>
+    <div class="sec-divider-line"></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-eyebrow">Module Biomes</div>
+      <h2>Built for players who swap modes mid-session.</h2>
+    </div>
+    <div class="module-grid">
+      <div class="mod-card">
+        <span class="mod-badge combat">Combat</span>
+        <h4>AimAssist, Triggerbot, Velocity, WTap</h4>
+        <p>Core fight modules tuned for quick toggling, presets, and profile-driven setups.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge movement">Movement</span>
+        <h4>Scaffold, SafeWalk, SpeedBridge, NoJumpDelay</h4>
+        <p>Movement helpers focused on simple activation and less setup friction inside the ClickGUI.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge player">Player</span>
+        <h4>AutoTools, AutoTotem, AntiBot, FastPlace</h4>
+        <p>Quality-of-life tools for inventory flow, survival utility, and cleaner general play.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge visuals">Visuals</span>
+        <h4>ESP, FullBright, HUD, Indicators</h4>
+        <p>Client-side overlays and visibility tools with HUD settings in a dedicated corner button.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider" id="changes">
+    <span class="sec-divider-label">What Changed</span>
+    <div class="sec-divider-line"></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head">
+      <div class="sec-eyebrow">v1.0.5 Changelog</div>
+      <h2>Sharpening the things you touch most.</h2>
+    </div>
+    <div class="changes-list">
+      <div class="change-item">
+        <div class="change-num">01</div>
+        <h4>Profiles Feel Safer</h4>
+        <p>Saving over an existing slot now asks for confirmation instead of replacing it immediately.</p>
+      </div>
+      <div class="change-item">
+        <div class="change-num">02</div>
+        <h4>HUD Flow Is Cleaner</h4>
+        <p>HUD settings are now in their own bottom-right button instead of cluttering the normal module list.</p>
+      </div>
+      <div class="change-item">
+        <div class="change-num">03</div>
+        <h4>Module Browsing Improved</h4>
+        <p>The ClickGUI is more streamlined with HUD controls pulled into their own corner button.</p>
+      </div>
+      <div class="change-item">
+        <div class="change-num">04</div>
+        <h4>Scaffold Was Simplified</h4>
+        <p>Stripped back to regular synced placement without the extra settings noise.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec-divider" id="install">
+    <span class="sec-divider-label">Install</span>
+    <div class="sec-divider-line"></div>
+  </div>
+
+  <div class="install-grid section">
+    <div class="install-steps">
+      <h3>Install Route — 5 Steps</h3>
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-text">Install Fabric Loader for Minecraft <strong>1.21.11</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-text">Install the matching <strong>Fabric API</strong> build</div>
+      </div>
+      <div class="step">
+        <div class="step-n">3</div>
+        <div class="step-text">Download the <strong>PhantomMod release jar</strong></div>
+      </div>
+      <div class="step">
+        <div class="step-n">4</div>
+        <div class="step-text">Move it into <code>.minecraft/mods</code></div>
+      </div>
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-text">Launch Minecraft using the <strong>Fabric profile</strong></div>
+      </div>
+    </div>
+    <div class="install-note">
+      <div class="install-note-tag">Quick Note</div>
+      <h3>Designed for a clean release handoff.</h3>
+      <p>The current build and website all match the v1.0.5 release state.</p>
+      <div class="note-btns">
+        <a class="btn btn-primary" href="https://github.com/jacostr/phantommod/releases/tag/V1.0.5" target="_blank" rel="noreferrer">Download Mod</a>
+        <a class="btn btn-secondary" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">View Source</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>PhantomMod v1.0.5 · Minecraft 1.21.11 · Fabric client mod</span>
+    <div class="footer-links">
+      <a href="https://github.com/jacostr/phantommod/releases/tag/V1.0.5" target="_blank" rel="noreferrer">Download</a>
+      <a href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">GitHub</a>
+    </div>
+  </footer>
+
+</div>
 </body>
 </html>
