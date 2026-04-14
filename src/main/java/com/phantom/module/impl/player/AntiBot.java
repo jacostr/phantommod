@@ -5,54 +5,52 @@ import com.phantom.module.ModuleCategory;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 public class AntiBot extends Module {
-    private static final Set<UUID> botUuids = new HashSet<>();
 
     public AntiBot() {
-        super("AntiBot", "Filters out Hypixel Watchdog bots and NPCs.\nDetectability: Safe", 
+        super("AntiBot",
+                "Filters out bots and NPCs from ESP and combat modules.\n" +
+                        "Uses tab-list presence and UUID version checks.\n" +
+                        "Detectability: Safe",
                 ModuleCategory.PLAYER, -1);
     }
 
-    @Override
-    public void onTick() {
-        if (mc.level == null) {
-            botUuids.clear();
-            return;
-        }
-
-        // Periodic cleanup or logic if needed. 
-        // For now, we use the isBot method called from other modules.
-    }
-
+    /**
+     * Returns true if the entity is considered a bot or NPC and should be
+     * ignored by targeting modules (ESP, KillAura, AimAssist, etc.).
+     *
+     * Two checks, in order of reliability:
+     *
+     * 1. Tab-list check — on Hypixel (and most servers), every real connected
+     * player has a PlayerInfo entry. Bots/NPCs injected server-side almost
+     * never do. This alone catches the vast majority of cases.
+     *
+     * 2. UUID version check — real Minecraft accounts use version-4 (random)
+     * UUIDs. Hypixel NPCs and many bot frameworks use version-2 or version-3
+     * UUIDs. Any non-v4 UUID is a strong signal the entity is not a real player.
+     */
     public static boolean isBot(Entity entity) {
-        if (!(entity instanceof Player player)) return false;
-        
-        // Hypixel Watchdog Bot Checks:
-        // 1. Check if they are in the tab list (Watchdog bots usually aren't)
-        if (mc.getConnection() != null && mc.getConnection().getPlayerInfo(player.getUUID()) == null) {
+        if (!(entity instanceof Player player))
+            return false;
+
+        // Never flag the local player themselves
+        if (player == mc.player)
+            return false;
+
+        // Check 1: not in the server's tab list
+        if (mc.getConnection() != null
+                && mc.getConnection().getPlayerInfo(player.getUUID()) == null) {
             return true;
         }
 
-        // 2. Custom name check (Watchdog bots often have random strings or very specific patterns)
-        String name = player.getName().getString();
-        if (name.contains("Watchdog") || name.isEmpty()) {
-            return true;
-        }
-
-        // 3. ID Check (Hypixel NPCs often have high entity IDs)
-        if (player.getId() >= 1000000) {
+        // Check 2: UUID is not version 4 (not a real Mojang account UUID)
+        UUID uuid = player.getUUID();
+        if (uuid.version() != 4) {
             return true;
         }
 
         return false;
-    }
-
-    @Override
-    public void onDisable() {
-        botUuids.clear();
     }
 }

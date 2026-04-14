@@ -16,13 +16,20 @@ import java.util.Properties;
 public class WaterClutch extends Module {
 
     private enum State {
-        WAITING, SWAP_BUCKET, PLACE, RELEASE_PLACE, PICKUP, RELEASE_PICKUP, SWAP_BACK
+        WAITING,
+        SWAP_BUCKET, // switch hotbar to water bucket slot
+        LOOK_DOWN, // smoothly rotate camera to 90 degrees, then start holding right-click
+        WAIT_PLACED, // holding right-click — watch for bucket to become empty (water placed)
+        WAIT_REFILLED, // still holding — watch for bucket to refill (water picked up)
+        SWAP_BACK // release right-click, restore slot + pitch
     }
 
     private State currentState = State.WAITING;
     private int oldSlot = -1;
     private int waterSlot = -1;
-    private int waitTicks = 0;
+    private int safetyTicks = 0; // counts up while waiting for refill; cancel at 30
+    private int landedTicks = 0; // ticks with near-zero y velocity while sequence is active
+    private int freefallTicks = 0; // consecutive ticks of genuine freefall before triggering
 
     // Camera
     private float originalPitch = 0f;
@@ -30,17 +37,20 @@ public class WaterClutch extends Module {
 
     // Fire duration tracking
     private int fireTicks = 0;
-    private static final int FIRE_DURATION_THRESHOLD = 30;
 
     // Settings
     private boolean extinguish = true;
     private boolean clutch = true;
-    private int triggerHeight = 8; // blocks above ground to trigger
-    private int pickupDelay = 4; // ticks between place and pickup
+    private int triggerHeight = 8; // blocks above ground to trigger fall clutch
+    private int fireDurationThreshold = 30; // ticks on fire before extinguishing (~1.5s)
 
     public WaterClutch() {
         super("WaterClutch",
-                "Automatically uses a water bucket to extinguish fire (after 1.5s) or save you from a fall.\nDetectability: Blatant",
+                "Automatically uses a water bucket to extinguish fire or save you from a fall.\n" +
+                        "Keep a water bucket anywhere in your hotbar. When triggered: smoothly looks\n" +
+                        "straight down, holds right-click until water is placed, keeps holding until\n" +
+                        "the bucket refills, then swaps back to your previous slot.\n" +
+                        "Detectability: Blatant",
                 ModuleCategory.COMBAT, -1);
     }
 
@@ -49,15 +59,16 @@ public class WaterClutch extends Module {
         if (mc.player == null || mc.level == null || mc.gameMode == null)
             return;
 
+        // Track fire ticks
         if (mc.player.isOnFire())
             fireTicks++;
         else
             fireTicks = 0;
 
-        // Smooth camera restoration
+        // Smooth camera restoration after finishing
         if (restoringPitch) {
-            float current = mc.player.getXRot();
-            float next = current + (originalPitch - current) * 0.4f;
+            float cur = mc.player.getXRot();
+            float next = cur + (originalPitch - cur) * 0.4f;
             if (Math.abs(next - originalPitch) < 1.0f) {
                 mc.player.setXRot(originalPitch);
                 restoringPitch = false;
@@ -67,6 +78,19 @@ public class WaterClutch extends Module {
         }
 
         if (currentState == State.WAITING) {
+            // Track how long we've been in genuine freefall (fast downward velocity, not on
+            // ground)
+            // -0.4 threshold: a normal jump's downward velocity only briefly dips to ~-0.35
+            // at the very bottom of the arc, so this cleanly prevents jump-hops from
+            // accumulating freefallTicks while still counting real falls immediately.
+            boolean genuinelyFalling = !mc.player.onGround()
+                    && !mc.player.isFallFlying()
+                    && mc.player.getDeltaMovement().y < -0.4;
+            if (genuinelyFalling)
+                freefallTicks++;
+            else
+                freefallTicks = 0;
+
             boolean triggerClutch = clutch && shouldClutch();
             boolean triggerExtinguish = extinguish && shouldExtinguish();
             if (triggerClutch || triggerExtinguish) {
@@ -80,59 +104,83 @@ public class WaterClutch extends Module {
             return;
         }
 
-        if (waitTicks > 0) {
-            waitTicks--;
-            if (currentState == State.PLACE) {
-                float current = mc.player.getXRot();
-                mc.player.setXRot(current + (90.0f - current) * 0.5f);
+        // Safety: if we're active but the player has landed (y velocity near 0 for 20
+        // ticks = 1s),
+        // something went wrong — release control and reset
+        if (currentState != State.WAITING) {
+            if (Math.abs(mc.player.getDeltaMovement().y) < 0.08) {
+                landedTicks++;
+                if (landedTicks >= 20) {
+                    mc.options.keyUse.setDown(false);
+                    if (oldSlot != -1)
+                        InventoryUtil.setSelectedSlot(oldSlot);
+                    restoringPitch = true;
+                    reset();
+                    return;
+                }
+            } else {
+                landedTicks = 0;
             }
-            return;
         }
 
         switch (currentState) {
+
             case SWAP_BUCKET:
                 InventoryUtil.setSelectedSlot(waterSlot);
-                currentState = State.PLACE;
-                // Wait longer the higher up we are so water lands closer to ground
-                waitTicks = calcPlaceDelay();
+                currentState = State.LOOK_DOWN;
                 break;
 
-            case PLACE:
+            case LOOK_DOWN: {
+                // Each tick lerp 50% of remaining angle toward 90 — smooth and fast
+                float cur = mc.player.getXRot();
+                float diff = 90.0f - cur;
+                mc.player.setXRot(cur + diff * 0.5f);
+                // Once within 10 degrees of straight down, snap and start holding right-click
+                if (Math.abs(diff) <= 10.0f) {
+                    mc.player.setXRot(90.0f);
+                    mc.options.keyUse.setDown(true);
+                    currentState = State.WAIT_PLACED;
+                }
+                break;
+            }
+
+            case WAIT_PLACED: {
+                // Hold right-click, look straight down.
+                // No timeout here — player could be falling from any height.
+                // Watch for WATER_BUCKET -> BUCKET (bucket emptied = water placed).
                 mc.player.setXRot(90.0f);
-                ItemStack heldPlace = mc.player.getMainHandItem();
-                if (heldPlace.getItem() == Items.WATER_BUCKET) {
-                    mc.options.keyUse.setDown(true);
-                    currentState = State.RELEASE_PLACE;
-                    waitTicks = 1;
-                } else {
+                ItemStack held = mc.player.getMainHandItem();
+                if (held.getItem() == Items.BUCKET) {
+                    safetyTicks = 0;
+                    currentState = State.WAIT_REFILLED;
+                }
+                break;
+            }
+
+            case WAIT_REFILLED: {
+                // Water is on the ground. Still holding right-click looking straight down.
+                // Minecraft scoops it back up automatically.
+                // Watch for BUCKET -> WATER_BUCKET (refilled = picked up).
+                safetyTicks++;
+                if (safetyTicks >= 30) {
+                    // 1.5s timeout — give control back
+                    mc.options.keyUse.setDown(false);
+                    if (oldSlot != -1)
+                        InventoryUtil.setSelectedSlot(oldSlot);
+                    restoringPitch = true;
+                    reset();
+                    break;
+                }
+                ItemStack held = mc.player.getMainHandItem();
+                if (held.getItem() == Items.WATER_BUCKET) {
                     currentState = State.SWAP_BACK;
                 }
                 break;
-
-            case RELEASE_PLACE:
-                mc.options.keyUse.setDown(false);
-                currentState = State.PICKUP;
-                waitTicks = pickupDelay;
-                break;
-
-            case PICKUP:
-                ItemStack heldPickup = mc.player.getMainHandItem();
-                if (heldPickup.getItem() == Items.BUCKET) {
-                    mc.options.keyUse.setDown(true);
-                    currentState = State.RELEASE_PICKUP;
-                    waitTicks = 1;
-                } else {
-                    currentState = State.SWAP_BACK;
-                }
-                break;
-
-            case RELEASE_PICKUP:
-                mc.options.keyUse.setDown(false);
-                currentState = State.SWAP_BACK;
-                waitTicks = 1;
-                break;
+            }
 
             case SWAP_BACK:
+                // Done — release right-click, restore previous slot and camera pitch
+                mc.options.keyUse.setDown(false);
                 if (oldSlot != -1)
                     InventoryUtil.setSelectedSlot(oldSlot);
                 restoringPitch = true;
@@ -140,32 +188,31 @@ public class WaterClutch extends Module {
                 break;
 
             default:
+                mc.options.keyUse.setDown(false);
                 reset();
                 break;
         }
     }
 
     /**
-     * Waits longer the higher up the player is so the water
-     * lands near the ground rather than too high up.
-     * 1 tick per 2 blocks above ground, capped at 14 ticks.
+     * Exact distance (blocks, fractional) from the player's feet to the nearest
+     * solid block surface below. Uses the raw Y coordinate rather than the floored
+     * blockPosition so the reading is never off by up to 1 block.
      */
-    private int calcPlaceDelay() {
-        int blocksAbove = getBlocksAboveGround();
-        return Math.min(14, Math.max(1, blocksAbove / 2));
-    }
-
-    private int getBlocksAboveGround() {
-        BlockPos pos = mc.player.blockPosition();
-        for (int i = 1; i <= 64; i++) {
-            if (mc.level.getBlockState(pos.below(i)).isSolid())
-                return i;
+    private double getExactBlocksAboveGround() {
+        double feetY = mc.player.getY();
+        BlockPos pos = BlockPos.containing(mc.player.getX(), feetY - 0.01, mc.player.getZ());
+        for (int i = 0; i <= 64; i++) {
+            BlockPos check = pos.below(i);
+            if (mc.level.getBlockState(check).isSolid()) {
+                return feetY - (check.getY() + 1.0);
+            }
         }
-        return 64;
+        return 64.0;
     }
 
     private boolean shouldExtinguish() {
-        return fireTicks >= FIRE_DURATION_THRESHOLD
+        return fireTicks >= fireDurationThreshold
                 && mc.level.dimension() != Level.NETHER
                 && !mc.player.hasEffect(MobEffects.FIRE_RESISTANCE);
     }
@@ -173,11 +220,40 @@ public class WaterClutch extends Module {
     private boolean shouldClutch() {
         if (mc.level.dimension() == Level.NETHER)
             return false;
+        if (mc.player.onGround())
+            return false;
         if (mc.player.isFallFlying())
             return false;
-        if (mc.player.getDeltaMovement().y >= -0.1)
+        if (mc.player.isInWater() || mc.player.isInLava())
             return false;
-        return getBlocksAboveGround() >= triggerHeight;
+        // Require real downward velocity — not a hop peak
+        if (mc.player.getDeltaMovement().y >= -0.3)
+            return false;
+        // 3 ticks of confirmed freefall rules out 1-2 tick parkour gaps without
+        // burning precious trigger window on longer falls.
+        if (freefallTicks < 3)
+            return false;
+
+        // Lookahead: simulate player Y in 4 ticks (swap + look-down lerp + place lag)
+        // and check if THAT position is within the trigger threshold. This means the
+        // sequence fires early enough that water actually lands before the player does.
+        double vy = mc.player.getDeltaMovement().y;
+        double predictedY = mc.player.getY();
+        for (int t = 0; t < 4; t++) {
+            vy = (vy - 0.08) * 0.98; // Minecraft gravity + air drag
+            predictedY += vy;
+        }
+        BlockPos predictedPos = BlockPos.containing(mc.player.getX(), predictedY - 0.01, mc.player.getZ());
+        double predictedDist = 64.0;
+        for (int i = 0; i <= 64; i++) {
+            BlockPos check = predictedPos.below(i);
+            if (mc.level.getBlockState(check).isSolid()) {
+                predictedDist = predictedY - (check.getY() + 1.0);
+                break;
+            }
+        }
+
+        return predictedDist <= triggerHeight || getExactBlocksAboveGround() <= triggerHeight;
     }
 
     private int findWaterBucket() {
@@ -193,7 +269,9 @@ public class WaterClutch extends Module {
         currentState = State.WAITING;
         oldSlot = -1;
         waterSlot = -1;
-        waitTicks = 0;
+        safetyTicks = 0;
+        freefallTicks = 0;
+        landedTicks = 0;
     }
 
     @Override
@@ -204,6 +282,7 @@ public class WaterClutch extends Module {
             mc.player.setXRot(originalPitch);
         restoringPitch = false;
         fireTicks = 0;
+        freefallTicks = 0;
         reset();
     }
 
@@ -235,12 +314,12 @@ public class WaterClutch extends Module {
         saveConfig();
     }
 
-    public int getPickupDelay() {
-        return pickupDelay;
+    public int getFireDurationThreshold() {
+        return fireDurationThreshold;
     }
 
-    public void setPickupDelay(int v) {
-        pickupDelay = Math.max(1, Math.min(20, v));
+    public void setFireDurationThreshold(int v) {
+        fireDurationThreshold = Math.max(1, Math.min(100, v));
         saveConfig();
     }
 
@@ -264,7 +343,7 @@ public class WaterClutch extends Module {
         } catch (Exception ignored) {
         }
         try {
-            pickupDelay = Integer.parseInt(p.getProperty("waterclutch.pickup_delay", "4"));
+            fireDurationThreshold = Integer.parseInt(p.getProperty("waterclutch.fire_threshold", "30"));
         } catch (Exception ignored) {
         }
     }
@@ -275,6 +354,6 @@ public class WaterClutch extends Module {
         p.setProperty("waterclutch.extinguish", Boolean.toString(extinguish));
         p.setProperty("waterclutch.clutch", Boolean.toString(clutch));
         p.setProperty("waterclutch.trigger_height", Integer.toString(triggerHeight));
-        p.setProperty("waterclutch.pickup_delay", Integer.toString(pickupDelay));
+        p.setProperty("waterclutch.fire_threshold", Integer.toString(fireDurationThreshold));
     }
 }

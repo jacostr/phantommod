@@ -52,7 +52,7 @@ public class WeaponCycler extends Module {
         try {
             AutoTools autoTools = PhantomMod.getModuleManager().getModuleByClass(AutoTools.class);
             if (autoTools != null && autoTools.isEnabled()) {
-                autoTools.setEnabled(false);
+                autoTools.toggle(); // use toggle() so onDisable() fires correctly
             }
         } catch (Exception ignored) {
         }

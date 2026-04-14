@@ -10,12 +10,11 @@
 package com.phantom.gui;
 
 import com.phantom.PhantomMod;
-import com.phantom.config.ProfileManager;
 import com.phantom.gui.NotificationManager;
 import com.phantom.gui.ProfileScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
-import com.phantom.module.ModuleManager;
+import com.phantom.module.impl.render.HudModule;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -118,9 +117,19 @@ public class ClickGUIScreen extends Screen {
             rebuildUI();
         }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
 
+        HudModule hudModule = PhantomMod.getModuleManager().getModuleByClass(HudModule.class);
+        if (hudModule != null) {
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("HUD Settings"),
+                            button -> this.minecraft.setScreen(hudModule.createSettingsScreen(this)))
+                    .bounds(this.width - PROFILE_WIDTH - 6, this.height - 24, PROFILE_WIDTH, ROW_HEIGHT)
+                    .build());
+        }
+
 
         String q = searchText.trim().toLowerCase(Locale.ROOT);
         List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
+                .filter(module -> !(module instanceof HudModule))
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());
@@ -173,6 +182,7 @@ public class ClickGUIScreen extends Screen {
         int rowY = LIST_TOP - scrollOffset;
         String q = searchText.trim().toLowerCase(Locale.ROOT);
         List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
+                .filter(module -> !(module instanceof HudModule))
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());

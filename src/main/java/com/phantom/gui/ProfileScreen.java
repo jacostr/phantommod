@@ -17,9 +17,12 @@ import net.minecraft.network.chat.Component;
 public class ProfileScreen extends Screen {
     private static final int ROW_HEIGHT = 24;
     private static final int ROW_SPACING = 8;
+    private static final long SAVE_CONFIRM_WINDOW_MS = 2500L;
 
     private final Screen parent;
     private final ModuleManager moduleManager;
+    private int pendingOverwriteSlot = -1;
+    private long pendingOverwriteUntil;
 
     public ProfileScreen(Screen parent, ModuleManager moduleManager) {
         super(Component.literal("Profiles"));
@@ -47,23 +50,21 @@ public class ProfileScreen extends Screen {
 
             // Save button
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Save"),
-                    button -> {
-                        ProfileManager.saveSlot(currentSlot, moduleManager);
-                        NotificationManager.push("Saved " + ProfileManager.getProfileName(currentSlot));
-                    }).bounds(centerX + 28, y, 44, ROW_HEIGHT).build());
+                    Component.literal(getSaveLabel(currentSlot)),
+                    button -> handleSave(currentSlot)).bounds(centerX + 28, y, 52, ROW_HEIGHT).build());
 
             // Load button
             this.addRenderableWidget(Button.builder(
                     Component.literal("Load"),
                     button -> {
+                        clearPendingOverwrite();
                         boolean loaded = ProfileManager.loadSlot(currentSlot, moduleManager);
                         if (loaded) {
                             NotificationManager.push("Loaded " + ProfileManager.getProfileName(currentSlot));
                         } else {
                             NotificationManager.push("No saved data for " + ProfileManager.getProfileName(currentSlot));
                         }
-                    }).bounds(centerX + 76, y, 44, ROW_HEIGHT).build());
+                    }).bounds(centerX + 84, y, 52, ROW_HEIGHT).build());
         }
 
         // Back button
@@ -79,10 +80,53 @@ public class ProfileScreen extends Screen {
         graphics.fill(0, 0, this.width, this.height, 0x90101010);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 24, 0xFFA8E6A3);
         super.render(graphics, mouseX, mouseY, delta);
+        NotificationManager.render(graphics, 10, this.height - 52);
+    }
+
+    @Override
+    public void tick() {
+        if (pendingOverwriteSlot != -1 && System.currentTimeMillis() > pendingOverwriteUntil) {
+            clearPendingOverwrite();
+        }
     }
 
     @Override
     public boolean isPauseScreen() {
         return false;
+    }
+
+    private void handleSave(int slot) {
+        String profileName = ProfileManager.getProfileName(slot);
+        boolean hasExistingSave = ProfileManager.hasSavedSlot(slot);
+        boolean confirmingOverwrite = pendingOverwriteSlot == slot
+                && System.currentTimeMillis() <= pendingOverwriteUntil;
+
+        if (hasExistingSave && !confirmingOverwrite) {
+            pendingOverwriteSlot = slot;
+            pendingOverwriteUntil = System.currentTimeMillis() + SAVE_CONFIRM_WINDOW_MS;
+            NotificationManager.push("Press Save again to overwrite " + profileName);
+            init();
+            return;
+        }
+
+        ProfileManager.saveSlot(slot, moduleManager);
+        clearPendingOverwrite();
+        NotificationManager.push("Saved " + profileName);
+        init();
+    }
+
+    private void clearPendingOverwrite() {
+        if (pendingOverwriteSlot == -1) {
+            return;
+        }
+        pendingOverwriteSlot = -1;
+        pendingOverwriteUntil = 0L;
+        init();
+    }
+
+    private String getSaveLabel(int slot) {
+        boolean waitingForConfirm = pendingOverwriteSlot == slot
+                && System.currentTimeMillis() <= pendingOverwriteUntil;
+        return waitingForConfirm ? "Sure?" : "Save";
     }
 }

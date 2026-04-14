@@ -28,7 +28,6 @@ import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
-import com.phantom.module.impl.render.HealthBar;
 import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.impl.movement.SafeWalk;
 import com.phantom.module.impl.render.FullBright;
@@ -48,7 +47,6 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
 import com.phantom.module.impl.player.AutoXPThrow;
-import com.phantom.module.impl.smp.AutoGapple;
 import com.phantom.module.impl.smp.OreFinder;
 
 import java.util.ArrayList;
@@ -90,13 +88,11 @@ public class ModuleManager {
         modules.add(new ESP());
         modules.add(new FastPlace());
         modules.add(new FullBright());
-        modules.add(new HealthBar());
         modules.add(hudModule);
         modules.add(new Indicators());
         modules.add(new NoFall());
         // SMP
         modules.add(new AutoXPThrow());
-        modules.add(new AutoGapple());
         modules.add(new BedESP());
         modules.add(new ChestESP());
         modules.add(new OreESP());

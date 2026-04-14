@@ -85,7 +85,7 @@ public class HitSelect extends Module {
 
     public HitSelect() {
         super("HitSelect",
-                "Interrupts attacks to gain combat advantages like reduced knockback or easier crit timing.\nDetectability: Moderate",
+                "Interrupts attacks to gain combat advantages like reduced knockback or easier crit timing. \n lower chance + PAUSE mode is significantly safer on hypixel.\nDetectability: Moderate",
                 ModuleCategory.COMBAT,
                 -1);
     }
@@ -132,15 +132,30 @@ public class HitSelect extends Module {
         }
 
         return switch (preference) {
-            case KB_REDUCTION -> mc.player.hurtTime > 0;
+            // KB_REDUCTION: wait for the target's hurt animation to expire before hitting
+            // again so our next hit sends full knockback. Cancel while target is still
+            // in their invincibility window (hurtTime > 0).
+            case KB_REDUCTION -> {
+                if (target instanceof net.minecraft.world.entity.LivingEntity living) {
+                    yield living.hurtTime > 0;
+                }
+                yield false;
+            }
+            // CRITICAL_HITS: cancel while on the ground — wait until we are falling
+            // (not on ground) so the next hit registers as a critical.
             case CRITICAL_HITS -> mc.player.onGround();
         };
     }
 
     private int computePauseTicks() {
+        // PAUSE mode: stop attacking entirely for N ticks after being hit.
+        // ACTIVE mode: shorter window — just enough to re-check the condition each
+        // tick.
+        // KB_REDUCTION needs fewer ticks (target hurtTime is 10, we just wait for it).
+        // CRITICAL_HITS needs slightly more to reliably catch a falling window.
         return switch (mode) {
-            case PAUSE -> preference == Preference.KB_REDUCTION ? 4 : 5;
-            case ACTIVE -> preference == Preference.KB_REDUCTION ? 2 : 3;
+            case PAUSE -> preference == Preference.KB_REDUCTION ? 4 : 6;
+            case ACTIVE -> preference == Preference.KB_REDUCTION ? 2 : 4;
         };
     }
 

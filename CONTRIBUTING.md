@@ -1,4 +1,4 @@
-# PhantomMod v1.0.4 — Technical Reference
+# PhantomMod v1.0.5 — Technical Reference
 
 > A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 
@@ -18,7 +18,7 @@
    - [Combat](#combat)
    - [Movement](#movement)
    - [Player](#player)
-   - [Render](#render)
+   - [Visuals In Player](#visuals-in-player)
    - [SMP](#smp)
 6. [Design Decisions & Bypass Reasoning](#design-decisions--bypass-reasoning)
 7. [Build & Installation](#build--installation)
@@ -60,11 +60,13 @@ PhantomMod/
 ├── src/main/java/com/phantom/
 │   ├── PhantomMod.java              ← Fabric mod entrypoint
 │   ├── config/
-│   │   └── ConfigManager.java       ← Reads/writes phantom-memory.properties
+│   │   ├── ConfigManager.java       ← Reads/writes phantom-memory.properties
+│   │   └── ProfileManager.java      ← Manages named profile slots
 │   ├── gui/
 │   │   ├── ClickGUIScreen.java      ← Main module toggle overlay (M)
 │   │   ├── ModuleSettingsScreen.java← Per-module settings with sliders/buttons
 │   │   ├── NotificationManager.java ← Toast-style on-screen popups
+│   │   ├── ProfileScreen.java       ← Save/load UI for 4 profile slots
 │   │   └── widget/
 │   │       └── PhantomSlider.java   ← Reusable slider widget
 │   ├── mixin/
@@ -74,7 +76,7 @@ PhantomMod/
 │   │   └── MultiPlayerGameModeMixin.java    ← Attack hook (Criticals module)
 │   ├── module/
 │   │   ├── Module.java              ← Abstract base class for every module
-│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER, RENDER
+│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER, SMP
 │   │   ├── ModuleManager.java       ← Registry; dispatches tick/render/keybind events
 │   │   └── impl/
 │   │       ├── combat/
@@ -104,12 +106,19 @@ PhantomMod/
 │   │       │   ├── AutoTools.java   ← Auto tool/weapon swap
 │   │       │   ├── AutoTotem.java   ← Auto offhand totem equip
 │   │       │   ├── FastPlace.java   ← Reduced right-click place delay
-│   │       │   ├── Freecam.java     ← Detached spectator-like camera
-│   │       │   ├── NameChanger.java ← Client-side name text override
 │   │       │   └── NoFall.java      ← Fall damage prevention
-│   │           ├── FullBright.java  ← Gamma override for night vision
-│   │           ├── HudModule.java   ← Corner info overlay
-│   │           └── Indicators.java  ← On-screen target / state indicators
+│   │       ├── render/
+│   │       │   ├── ESP.java         ← Entity ESP overlay
+│   │       │   ├── FullBright.java  ← Gamma override for night vision
+│   │       │   ├── HudModule.java   ← Corner info overlay
+│   │       │   └── Indicators.java  ← On-screen target / state indicators
+│   │       └── smp/
+│   │           ├── AutoXPThrow.java ← Fast XP bottle usage helper
+│   │           ├── BedESP.java      ← Bed block ESP
+│   │           ├── ChestESP.java    ← Chest block ESP
+│   │           ├── OreESP.java      ← Ore block ESP
+│   │           ├── OreFinder.java   ← Ore search helper
+│   │           └── ShulkerESP.java  ← Shulker box ESP
 ├── src/main/resources/
 │   ├── fabric.mod.json              ← Mod metadata, entrypoint declaration
 │   └── phantom.mixins.json          ← Mixin registration file
@@ -157,7 +166,7 @@ Module names are normalized to lowercase snake_case (e.g. `"AimAssist"` → `"ai
 **Enable/disable flow:**  
 `toggle()` → `setEnabled(bool)` → calls `onEnable()`/`onDisable()` + fires a `NotificationManager` toast + auto-saves config.
 
-**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`, `RENDER`) that controls which tab a module appears under in the ClickGUI.
+**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`, `SMP`) that controls which tab a module appears under in the ClickGUI.
 
 **`ModuleManager`** is the registry. It:
 - Constructs all module instances at startup
@@ -211,7 +220,8 @@ All mixins are declared in **`phantom.mixins.json`**.
 
 #### `ClickGUIScreen`
 The main overlay opened with M. Renders:
-- Category tabs (Combat / Movement / Player / Render) at the top
+- Category tabs (Combat / Movement / Player / SMP) at the top
+- A dedicated `HUD Settings` button in the bottom-right corner
 - A search box to quickly filter modules by name
 - Module rows with enable/disable buttons and a `≡` hamburger icon to open settings
 
@@ -222,6 +232,8 @@ Opened when clicking the `≡` icon on any module. Dynamically renders:
 - "How to use" text from `module.getUsageGuide()`
 - Module-specific widgets (sliders, toggle buttons) using `instanceof` pattern matching
 - Hotkey binding row with `Set hotkey` / `Clear Hotkey`
+
+Modules without configurable options, such as the simplified `Scaffold`, do not expose a settings screen in the ClickGUI.
 
 **Why instanceof pattern matching?**  
 It avoids needing a separate `SettingsProvider` interface or abstract factory per module. The screen knows about each module type and renders widgets accordingly. This is simpler for a small project — if modules grew to 50+, a provider pattern would scale better.
@@ -289,8 +301,9 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 - **Detectability:** Subtle — noticeable if the server measures jump frequency over time.
 
 #### `Scaffold`
-- **How it works:** Detects when the block below the player's feet is air. Temporarily adjusts pitch downward to target `BlockPos.below()`, triggers a use-item action to place a block, then restores pitch.
-- **Detectability:** Blatant — the impossible downward-look angles during placement are obvious to NCP-style checks.
+- **How it works:** Detects when the block below the player's feet is air, finds a hotbar block, switches to it with the synced inventory helper, places against a neighboring face, then switches back.
+- **Detectability:** Blatant — automated under-feet placement is still easy for anti-cheat to pattern.
+- **Settings:** None. `Scaffold` is intentionally kept as a plain regular scaffold in `v1.0.5`.
 
 #### `SpeedBridge`
 - **How it works:** Captures a bridge direction yaw on enable. Every tick, computes two vectors: backwards (away from bridge edge) and lateral. Checks if a block exists one step behind the player's feet. If the player is hanging over air, virtually holds `keyShift` (sneak) to prevent falling. When the block stack empties, `findNextBlockSlot()` scans the hotbar for the next `BlockItem` and calls `setSelectedSlot()`.
@@ -311,24 +324,24 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 
 ---
 
-### Render
+### Visuals In Player
 
 #### `ESP`
 - **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Targets use a dedicated no-depth line render type so the boxes stay visible through walls.
 - **Detectability:** Safe — purely client-side visual; the server never sees it.
 - **Settings:** Toggle players / mobs / animals independently, plus `Through Walls`.
 
-#### `HealthBar`
-- **How it works:** Draws a small health monitor UI close to the center of the crosshair via `GuiGraphics.drawString`. Colors smoothly interpolate across a gradient depending on remaining health.
-- **Detectability:** Safe — HUD visual only.
-
 #### `FullBright`
 - **How it works:** Saves `mc.options.gamma` on enable, sets it to `16.0` (well above the normal max of 1.0, which forces full ambient light rendering), restores on disable.
 - **Detectability:** Safe — gamma is a client-only graphics option.
 
 #### `HudModule`
-- **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current Ping from `mc.getConnection()`, and blocks-per-second.
+- **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current Ping from `mc.getConnection()`, and CPS.
 - **Detectability:** Safe — HUD is client-side only.
+
+#### `ProfileScreen`
+- **How it works:** Manages 4 saved config slots with editable names, explicit save/load actions, and overwrite confirmation before replacing an existing slot.
+- **Detectability:** Safe — client-side GUI only.
 
 ---
 
@@ -367,7 +380,7 @@ Zero external dependencies. Java's built-in `Properties` gives us `load()`, `sto
 
 ### Requirements
 - Java 21
-- Minecraft Java 1.21.1 with Fabric Loader installed
+- Minecraft Java 1.21.11 with Fabric Loader installed
 - Fabric API in your mods folder
 
 ### Build

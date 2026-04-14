@@ -90,6 +90,11 @@ public final class ProfileManager {
         return true;
     }
 
+    public static boolean hasSavedSlot(int slot) {
+        if (slot < 0 || slot >= SLOT_COUNT) return false;
+        return Files.exists(getSlotFilePath(slot));
+    }
+
     // Legacy compatibility: migrate old "custom" profile to slot 0 on first access
     static {
         Path legacyPath = FabricLoader.getInstance().getConfigDir()
@@ -106,5 +111,11 @@ public final class ProfileManager {
 
     private static Path getNameFilePath() {
         return FabricLoader.getInstance().getConfigDir().resolve("phantom-profile-names.properties");
+    }
+
+    private static Path getSlotFilePath(int slot) {
+        return FabricLoader.getInstance().getConfigDir()
+                .resolve("phantom-profiles")
+                .resolve("slot_" + slot + ".properties");
     }
 }

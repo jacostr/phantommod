@@ -53,6 +53,10 @@ public final class NotificationManager {
      * stacked vertically from y=12 downward with 18px per entry.</p>
      */
     public static void render(GuiGraphics graphics) {
+        render(graphics, 10, 12);
+    }
+
+    public static void render(GuiGraphics graphics, int startX, int startY) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.options.hideGui || mc.font == null) {
             return;
@@ -60,7 +64,7 @@ public final class NotificationManager {
 
         long now = System.currentTimeMillis();
         Iterator<Notification> iterator = NOTIFICATIONS.iterator();
-        int y = 12;
+        int y = startY;
 
         while (iterator.hasNext()) {
             Notification notification = iterator.next();
@@ -70,7 +74,7 @@ public final class NotificationManager {
             }
 
             int textWidth = mc.font.width(notification.message());
-            int x = 10;
+            int x = startX;
             graphics.fill(x - 5, y - 5, x + textWidth + 8, y + 13, 0xD0101010);
             graphics.drawString(mc.font, notification.message(), x, y, 0xFFFFFFFF, true);
             y += 18;

@@ -707,6 +707,14 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
 
             this.addRenderableWidget(Button.builder(
+                    Component.literal("Show CPS: " + onOff(hudModule.isShowCps())),
+                    button -> {
+                        hudModule.setShowCps(!hudModule.isShowCps());
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
                     Component.literal("FPS/Ping Side: " + hudModule.getStatsSide().getLabel()),
                     button -> {
                         hudModule.cycleStatsSide();
@@ -753,28 +761,6 @@ public class ModuleSettingsScreen extends Screen {
                         sb.setBlocksOnly(!sb.isBlocksOnly());
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof Scaffold scaffold) {
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("SafeWalk: " + onOff(scaffold.isSafeWalk())),
-                    button -> {
-                        scaffold.setSafeWalk(!scaffold.isSafeWalk());
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("Tower: " + onOff(scaffold.isTower())),
-                    button -> {
-                        scaffold.setTower(!scaffold.isTower());
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Auto-Off Delay", 0.5, 10.0,
-                    scaffold.getAutoOffDelay(), val -> scaffold.setAutoOffDelay(val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -838,11 +824,13 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, wc::isExtinguish, wc::setExtinguish, "Fire Extinguish");
             y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Trigger Height", 1.0, 64.0,
-                    wc.getTriggerHeight(), val -> wc.setTriggerHeight((int) val)));
+            this.addRenderableWidget(
+                    new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Trigger Height (blocks)", 1.0, 64.0,
+                            wc.getTriggerHeight(), val -> wc.setTriggerHeight((int) val)));
             y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Pickup Delay", 1.0, 20.0,
-                    wc.getPickupDelay(), val -> wc.setPickupDelay((int) val)));
+            this.addRenderableWidget(
+                    new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Fire Delay (ticks)", 1.0, 100.0,
+                            wc.getFireDurationThreshold(), val -> wc.setFireDurationThreshold((int) val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1353,15 +1341,12 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof HudModule) {
-            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof SpeedBridge) {
             contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
-
-        if (module instanceof Scaffold)
-            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
 
         if (module instanceof WTap) {
             contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
