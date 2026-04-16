@@ -12,6 +12,7 @@ import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.projectile.Projectile;
@@ -77,6 +78,10 @@ public class Indicators extends Module {
     private boolean showFireballs = true;
     private double radiusScale = 1.0D;
     private boolean showDistance = true;
+    private boolean onlyWhenApproaching = false;
+    private boolean renderItem = true;
+
+    private final java.util.Map<Integer, Vec3> lastPositions = new java.util.HashMap<>();
 
     public Indicators() {
         super("Indicators",
@@ -114,8 +119,15 @@ public class Indicators extends Module {
                 continue;
             }
 
+            if (onlyWhenApproaching && !isApproaching(projectile)) {
+                continue;
+            }
+
             entries.add(new IndicatorEntry(projectile, kind, threatLevel));
         }
+        
+        // Clean up stale positions
+        lastPositions.keySet().removeIf(id -> mc.level.getEntity(id) == null);
 
         entries.sort(Comparator.comparingDouble(entry -> mc.player.distanceTo(entry.projectile)));
 
@@ -144,6 +156,28 @@ public class Indicators extends Module {
         graphics.fill(x - width / 2, y - 8, x + width / 2, y + 8, 0x90000000);
         graphics.renderOutline(x - width / 2, y - 8, width, 16, color);
         graphics.drawCenteredString(mc.font, Component.literal(label), x, y - 4, color);
+
+        if (renderItem) {
+            ItemStack stack = entry.kind.getIconStack();
+            if (stack != null) {
+                graphics.pose().pushMatrix();
+                graphics.pose().translate(x - width / 2 - 18, y - 8);
+                graphics.renderFakeItem(stack, 0, 0);
+                graphics.pose().popMatrix();
+            }
+        }
+    }
+
+    private boolean isApproaching(Projectile projectile) {
+        Vec3 currentPos = projectile.position();
+        Vec3 lastPos = lastPositions.get(projectile.getId());
+        lastPositions.put(projectile.getId(), currentPos);
+
+        if (lastPos == null) return true;
+
+        double distNow = mc.player.distanceTo(projectile);
+        double distThen = (float)Math.sqrt(lastPos.distanceToSqr(mc.player.position()));
+        return distNow < distThen;
     }
 
     private boolean matchesAlertType(ThreatLevel threatLevel) {
@@ -290,6 +324,12 @@ public class Indicators extends Module {
         saveConfig();
     }
 
+    public boolean isOnlyWhenApproaching() { return onlyWhenApproaching; }
+    public void setOnlyWhenApproaching(boolean v) { this.onlyWhenApproaching = v; saveConfig(); }
+
+    public boolean isRenderItem() { return renderItem; }
+    public void setRenderItem(boolean v) { this.renderItem = v; saveConfig(); }
+
     @Override
     public boolean hasConfigurableSettings() {
         return true;
@@ -321,6 +361,8 @@ public class Indicators extends Module {
             }
         }
         showDistance = Boolean.parseBoolean(properties.getProperty("indicators.show_distance", Boolean.toString(showDistance)));
+        onlyWhenApproaching = Boolean.parseBoolean(properties.getProperty("indicators.only_when_approaching", Boolean.toString(onlyWhenApproaching)));
+        renderItem = Boolean.parseBoolean(properties.getProperty("indicators.render_item", Boolean.toString(renderItem)));
     }
 
     @Override
@@ -336,6 +378,8 @@ public class Indicators extends Module {
         properties.setProperty("indicators.show_fireballs", Boolean.toString(showFireballs));
         properties.setProperty("indicators.radius_scale", Double.toString(radiusScale));
         properties.setProperty("indicators.show_distance", Boolean.toString(showDistance));
+        properties.setProperty("indicators.only_when_approaching", Boolean.toString(onlyWhenApproaching));
+        properties.setProperty("indicators.render_item", Boolean.toString(renderItem));
     }
 
     private enum ThreatLevel {
@@ -385,6 +429,17 @@ public class Indicators extends Module {
                 return FIREBALL;
             }
             return null;
+        }
+
+        public ItemStack getIconStack() {
+            return switch (this) {
+                case ARROW -> new ItemStack(net.minecraft.world.item.Items.ARROW);
+                case PEARL -> new ItemStack(net.minecraft.world.item.Items.ENDER_PEARL);
+                case POTION -> new ItemStack(net.minecraft.world.item.Items.SPLASH_POTION);
+                case EGG -> new ItemStack(net.minecraft.world.item.Items.EGG);
+                case SNOWBALL -> new ItemStack(net.minecraft.world.item.Items.SNOWBALL);
+                case FIREBALL -> new ItemStack(net.minecraft.world.item.Items.FIRE_CHARGE);
+            };
         }
     }
 }

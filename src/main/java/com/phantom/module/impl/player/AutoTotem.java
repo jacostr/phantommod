@@ -33,9 +33,11 @@ public class AutoTotem extends Module {
     public void onTick() {
         if (mc.player == null || mc.gameMode == null || mc.screen != null) return;
 
-        // Check if offhand already has a totem
+        // Check if offhand already has a totem.
+        // Also check getCount() > 0 — after a totem pops, the slot can briefly
+        // hold a stale non-empty stack before the server syncs, causing a false early exit.
         ItemStack offhand = mc.player.getOffhandItem();
-        if (!offhand.isEmpty() && offhand.getItem() == Items.TOTEM_OF_UNDYING) return;
+        if (!offhand.isEmpty() && offhand.getCount() > 0 && offhand.getItem() == Items.TOTEM_OF_UNDYING) return;
 
         // Check health threshold
         if (!alwaysEquip && mc.player.getHealth() > healthThreshold) return;

@@ -11,6 +11,7 @@ package com.phantom.module;
 import com.phantom.config.ConfigManager;
 import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.combat.AutoClicker;
+import com.phantom.module.impl.combat.BowAimbot;
 import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.HitSelect;
 import com.phantom.module.impl.combat.NoHitDelay;
@@ -29,10 +30,15 @@ import com.phantom.module.impl.player.FastPlace;
 import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.player.AntiBot;
+import com.phantom.module.impl.player.LatencyAlerts;
 import com.phantom.module.impl.movement.SafeWalk;
+import com.phantom.module.impl.render.Arrows;
 import com.phantom.module.impl.render.FullBright;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Indicators;
+import com.phantom.module.impl.render.Health;
+import com.phantom.module.impl.render.TNTTimer;
+import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Criticals;
@@ -60,6 +66,7 @@ public class ModuleManager {
         HudModule hudModule = new HudModule();
         // Combat
         modules.add(new AimAssist());
+        modules.add(new BowAimbot());
         modules.add(new AutoClicker());
         modules.add(new WaterClutch());
         modules.add(new BlockHit());
@@ -85,11 +92,16 @@ public class ModuleManager {
         modules.add(new AntiBot());
         modules.add(new AutoTotem());
         modules.add(new AutoTools());
+        modules.add(new Arrows());
         modules.add(new ESP());
         modules.add(new FastPlace());
         modules.add(new FullBright());
         modules.add(hudModule);
         modules.add(new Indicators());
+        modules.add(new LatencyAlerts());
+        modules.add(new Health());
+        modules.add(new TNTTimer());
+        modules.add(new Trajectories());
         modules.add(new NoFall());
         // SMP
         modules.add(new AutoXPThrow());

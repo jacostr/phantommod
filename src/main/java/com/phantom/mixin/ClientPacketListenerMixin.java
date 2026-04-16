@@ -44,25 +44,26 @@ public class ClientPacketListenerMixin {
         // Only affect the local player's own knockback packets, not other entities.
         if (mc.player != null && packet.getId() == mc.player.getId()) {
             Velocity velocityModule = (Velocity) PhantomMod.getModuleManager().getModuleByName("Velocity");
-            if (velocityModule != null && velocityModule.isEnabled()) {
-                double kb = velocityModule.getKbPercent(); // 0.0 = none, 1.0 = full vanilla
+            if (velocityModule != null && velocityModule.isEnabled() && velocityModule.shouldApplyVelocity()) {
+                double horizontal = velocityModule.getHorizontalPercent();
+                double vertical = velocityModule.getVerticalPercent();
 
                 if (velocityModule.isHypixelMode() && !mc.player.onGround()) {
                     // Hypixel air-KB bypass: Cancel/Reduce horizontal motion while airborne.
                     // Keep the vertical (Y) motion to look more natural.
                     net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
                     mc.player.setDeltaMovement(
-                            0.0,
-                            currentMotion.y(),
-                            0.0
+                            currentMotion.x() * Math.min(horizontal, 0.2),
+                            currentMotion.y() * vertical,
+                            currentMotion.z() * Math.min(horizontal, 0.2)
                     );
                 } else {
                     // Scale all three axes uniformly for non-airborne or standard mode.
                     net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
                     mc.player.setDeltaMovement(
-                            currentMotion.x() * kb,
-                            currentMotion.y() * kb,
-                            currentMotion.z() * kb
+                            currentMotion.x() * horizontal,
+                            currentMotion.y() * vertical,
+                            currentMotion.z() * horizontal
                     );
                 }
             }

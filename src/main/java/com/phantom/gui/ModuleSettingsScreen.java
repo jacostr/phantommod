@@ -15,23 +15,32 @@ package com.phantom.gui;
 import com.phantom.module.Module;
 
 import com.phantom.module.impl.player.AntiAFK;
+import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.impl.player.AutoTotem;
 import com.phantom.module.impl.player.AutoTools;
 import com.phantom.module.impl.player.AutoXPThrow;
 import com.phantom.module.impl.player.FastPlace;
+import com.phantom.module.impl.player.LatencyAlerts;
 
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
+import com.phantom.module.impl.movement.AlwaysSprint;
+import com.phantom.module.impl.render.Arrows;
 import com.phantom.module.impl.render.HealthBar;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
+import com.phantom.module.impl.render.Health;
+import com.phantom.module.impl.render.TNTTimer;
+import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.smp.BedESP;
 import com.phantom.module.impl.smp.ChestESP;
 import com.phantom.module.impl.smp.OreESP;
 import com.phantom.module.impl.smp.ShulkerESP;
+import com.phantom.module.impl.smp.OreFinder;
 import com.phantom.gui.widget.PhantomSlider;
 import com.phantom.module.impl.combat.AimAssist;
+import com.phantom.module.impl.combat.BowAimbot;
 import com.phantom.module.impl.combat.AutoClicker;
 import com.phantom.module.impl.combat.BlockHit;
 import com.phantom.module.impl.combat.Criticals;
@@ -114,15 +123,33 @@ public class ModuleSettingsScreen extends Screen {
                             net.minecraft.network.chat.Component.literal("Through Walls"),
                             (btn, val) -> esp.setThroughWalls(val)));
             y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                    net.minecraft.network.chat.Component.literal("Box Color: " + esp.getFallbackColor().getLabel()),
+                    button -> {
+                        esp.cycleFallbackColor();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
         } else {
             y += 14;
         }
 
         if (module instanceof Velocity vel) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "KB Percent", 0.0, 1.0,
-                    vel.getKbPercent(), val -> vel.setKbPercent(val)));
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Horizontal KB", 0.0, 1.0,
+                    vel.getHorizontalPercent(), val -> vel.setHorizontalPercent(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Vertical KB", 0.0, 1.0,
+                    vel.getVerticalPercent(), val -> vel.setVerticalPercent(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0,
+                    vel.getChance(), val -> vel.setChance(val)));
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, vel::isHypixelMode, vel::setHypixelMode, "Hypixel Mode");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, vel::isOnlyWhileTargeting, vel::setOnlyWhileTargeting, "Only While Targeting");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, vel::isDisableWhileHoldingS, vel::setDisableWhileHoldingS, "Disable While S");
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(Component.literal("Legit (90%)"), b -> {
                 vel.applyPresetLegit();
@@ -764,6 +791,17 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
+        if (module instanceof AlwaysSprint as) {
+            addFilterRow(centerX, y, as::isAllowUsingItem, as::setAllowUsingItem, "Sprint using items");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, as::isAllowBackwards, as::setAllowBackwards, "Sprint backwards");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, as::isAllowSideways, as::setAllowSideways, "Sprint sideways");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, as::isAllowInInventory, as::setAllowInInventory, "Sprint in inventory");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
         if (module instanceof WTap wTap) {
             this.addRenderableWidget(Button.builder(
                     Component.literal("Legit"),
@@ -794,16 +832,29 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0,
                     wTap.getChance(), wTap::setChance));
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Trigger delay", 0.0, 250.0,
+                    wTap.getTriggerDelayMs(), val -> wTap.setTriggerDelayMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Release delay", 0.0, 250.0,
                     wTap.getReleaseDelayMs(), val -> wTap.setReleaseDelayMs((int) Math.round(val))));
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Re-press delay", 0.0, 250.0,
                     wTap.getRepressDelayMs(), val -> wTap.setRepressDelayMs((int) Math.round(val))));
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Cooldown", 0.0, 1000.0,
+                    wTap.getCooldownMs(), val -> wTap.setCooldownMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(
                     Component.literal("Select hits: " + onOff(wTap.isSelectHits())),
                     button -> {
                         wTap.setSelectHits(!wTap.isSelectHits());
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Players only: " + onOff(wTap.isPlayersOnly())),
+                    button -> {
+                        wTap.setPlayersOnly(!wTap.isPlayersOnly());
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
@@ -899,6 +950,13 @@ public class ModuleSettingsScreen extends Screen {
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Target: " + triggerbot.getTargetMode().getLabel()),
+                    button -> {
+                        triggerbot.cycleTargetMode();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
         if (module instanceof BlockHit blockHit) {
@@ -958,47 +1016,69 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof HitSelect hitSelect) {
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Legit"),
-                    button -> {
-                        hitSelect.applyPresetLegit();
-                        init();
-                    }).bounds(centerX - 120, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("Normal"),
-                    button -> {
-                        hitSelect.applyPresetNormal();
-                        init();
-                    }).bounds(centerX - 58, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("Obvious"),
-                    button -> {
-                        hitSelect.applyPresetObvious();
-                        init();
-                    }).bounds(centerX + 4, y, 58, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("Blatant"),
-                    button -> {
-                        hitSelect.applyPresetBlatant();
-                        init();
-                    }).bounds(centerX + 66, y, 58, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0,
-                    hitSelect.getChance(), hitSelect::setChance));
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(
                     Component.literal("Mode: " + hitSelect.getMode().getLabel()),
                     button -> {
                         hitSelect.cycleMode();
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Pause Duration", 0.0, 1000.0,
+                    (double)hitSelect.getPauseDurationMs(), val -> hitSelect.setPauseDurationMs((int)Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Wait First Hit", 0.0, 1000.0,
+                    (double)hitSelect.getWaitForFirstHitMs(), val -> hitSelect.setWaitForFirstHitMs((int)Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Combat Rate %", 0.0, 100.0,
+                    hitSelect.getInCombatCancelRate(), hitSelect::setInCombatCancelRate));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Missed Rate %", 0.0, 100.0,
+                    hitSelect.getMissedSwingsCancelRate(), hitSelect::setMissedSwingsCancelRate));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            addFilterRow(centerX, y, hitSelect::isDisableDuringKnockback, hitSelect::setDisableDuringKnockback, "KB Disable");
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            addFilterRow(centerX, y, hitSelect::isOnlyWhileDamaged, hitSelect::setOnlyWhileDamaged, "Damaged Only");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof BowAimbot bowAim) {
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Preference: " + hitSelect.getPreference().getLabel()),
-                    button -> {
-                        hitSelect.cyclePreference();
+                    Component.literal("Preset: " + bowAim.getPreset().getName()),
+                    btn -> {
+                        bowAim.cyclePreset();
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Smoothing", 1.0, 10.0,
+                    bowAim.getSmoothing(), bowAim::setSmoothing));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "FOV", 1.0, 360.0,
+                    bowAim.getFov(), bowAim::setFov));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Distance", 10.0, 100.0,
+                    bowAim.getMaxDistance(), bowAim::setMaxDistance));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isPredictMovement, bowAim::setPredictMovement, "Predict Movement");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isVerticalCorrection, bowAim::setVerticalCorrection, "Vertical Correction");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isPlayersOnly, bowAim::setPlayersOnly, "Players Only");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isVisibilityCheck, bowAim::setVisibilityCheck, "Visibility Check");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isRequireMouseDown, bowAim::setRequireMouseDown, "Require Mouse Down");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isTeamCheck, bowAim::setTeamCheck, "Team Check");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isOnlyFullDraw, bowAim::setOnlyFullDraw, "Only Full Draw");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, bowAim::isLegitJitter, bowAim::setLegitJitter, "Legit Jitter");
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1046,6 +1126,12 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Accuracy timing", 0.0, 1.0,
                     jumpReset.getAccuracy(), jumpReset::setAccuracy));
             y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max delay ticks", 0.0, 6.0,
+                    jumpReset.getMaxDelayTicks(), val -> jumpReset.setMaxDelayTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Cooldown ticks", 0.0, 20.0,
+                    jumpReset.getCooldownTicks(), val -> jumpReset.setCooldownTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(
                     Component.literal("Only when targeting: " + onOff(jumpReset.isOnlyWhenTargeting())),
                     button -> {
@@ -1059,6 +1145,69 @@ public class ModuleSettingsScreen extends Screen {
                         jumpReset.setWaterCheck(!jumpReset.isWaterCheck());
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, jumpReset::isRequireMouseDown, jumpReset::setRequireMouseDown, "Require Mouse Down");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, jumpReset::isRequireMovingForward, jumpReset::setRequireMovingForward, "Require Move Fwd");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, jumpReset::isCheckFOV, jumpReset::setCheckFOV, "Check FOV");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof AntiBot antiBot) {
+            addFilterRow(centerX, y, antiBot::isTabListCheck, antiBot::setTabListCheck, "Tab List Check");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, antiBot::isUuidCheck, antiBot::setUuidCheck, "UUID Check");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, antiBot::isInvisibleUnlistedCheck, antiBot::setInvisibleUnlistedCheck, "Invisible Check");
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Join grace ticks", 0.0, 200.0,
+                    antiBot.getJoinGraceTicks(), val -> antiBot.setJoinGraceTicks((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Arrows arrows) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Radius", 30.0, 140.0,
+                    arrows.getRadius(), arrows::setRadius));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, arrows::isShowDistance, arrows::setShowDistance, "Show Distance");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, arrows::isPlayersOnly, arrows::setPlayersOnly, "Players Only");
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Style: " + arrows.getStyleLabel()),
+                    button -> {
+                        arrows.cycleArrowStyle();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, arrows::isOnlyOffScreen, arrows::setOnlyOffScreen, "Off-screen Only");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Health health) {
+            addFilterRow(centerX, y, health::isThroughWalls, health::setThroughWalls, "Through Walls");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, health::isShowInvisible, health::setShowInvisible, "Show Invisible");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, health::isTargetPlayers, health::setTargetPlayers, "Target Players");
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Bar Scale", 0.1, 5.0,
+                    health.getBarScale(), health::setBarScale));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+
+        if (module instanceof LatencyAlerts latencyAlerts) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "High ping ms", 50.0, 1000.0,
+                    latencyAlerts.getHighPingMs(), val -> latencyAlerts.setHighPingMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Spike increase", 10.0, 500.0,
+                    latencyAlerts.getSpikeIncreaseMs(), val -> latencyAlerts.setSpikeIncreaseMs((int) Math.round(val))));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Alert cooldown", 1.0, 60.0,
+                    latencyAlerts.getAlertCooldownSeconds(),
+                    val -> latencyAlerts.setAlertCooldownSeconds((int) Math.round(val))));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1215,12 +1364,73 @@ public class ModuleSettingsScreen extends Screen {
                     indicators.getRadiusScale(), indicators::setRadiusScale));
             y += ROW_HEIGHT + ROW_SPACING;
 
+            addFilterRow(centerX, y, indicators::isShowDistance, indicators::setShowDistance, "Show Distance");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, indicators::isOnlyWhenApproaching, indicators::setOnlyWhenApproaching, "Only Approaching");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, indicators::isRenderItem, indicators::setRenderItem, "Render Item");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof ESP esp) {
+            addFilterRow(centerX, y, esp::isPlayersEnabled, esp::setPlayersEnabled, "Show Players");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isMobsEnabled, esp::setMobsEnabled, "Show Mobs");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isAnimalsEnabled, esp::setAnimalsEnabled, "Show Animals");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, esp::isThroughWalls, esp::setThroughWalls, "Through Walls");
+            y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(
-                    Component.literal("Show distance: " + onOff(indicators.isShowDistance())),
+                    net.minecraft.network.chat.Component.literal("Box Color: " + esp.getFallbackColor().getLabel()),
                     button -> {
-                        indicators.setShowDistance(!indicators.isShowDistance());
+                        esp.cycleFallbackColor();
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Trajectories traj) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max Ticks", 30.0, 200.0,
+                    traj.getMaxTicks(), traj::setMaxTicks));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, traj::isOnlyWhenDrawing, traj::setOnlyWhenDrawing, "Only When Drawing");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof TNTTimer tnt) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Scale", 0.5, 3.0,
+                    tnt.getScale(), tnt::setScale));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof ChestESP chest) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
+                    chest.getRange(), chest::setRange));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof BedESP bed) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
+                    bed.getRange(), bed::setRange));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof ShulkerESP shulker) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
+                    shulker.getRange(), shulker::setRange));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof OreESP ore) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 64.0,
+                    ore.getRange(), ore::setRange));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof OreFinder finder) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 64.0,
+                    finder.getRange(), finder::setRange));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1321,7 +1531,7 @@ public class ModuleSettingsScreen extends Screen {
         int contentHeight = getUsageHeight() + getDescriptionHeight() + TEXT_SPACING + 4;
 
         if (module instanceof ESP) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING) + 40;
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING) + 40;
         }
 
         if (module instanceof Reach) {
@@ -1334,6 +1544,42 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof AimAssist) {
             contentHeight += 17 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof BowAimbot) {
+            contentHeight += 12 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Trajectories) {
+            contentHeight += 2 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof TNTTimer) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof ESP) {
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof ChestESP) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof BedESP) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof ShulkerESP) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof OreESP) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof OreFinder) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AutoClicker) {
@@ -1349,7 +1595,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof WTap) {
-            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 8 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof FastPlace) {
@@ -1357,11 +1603,11 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Indicators) {
-            contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 11 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof Triggerbot) {
-            contentHeight += 8 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 9 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof BlockHit) {
@@ -1369,7 +1615,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof HitSelect) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof RightClicker) {
@@ -1377,7 +1623,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof JumpReset) {
-            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 9 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AutoXPThrow) {
@@ -1389,7 +1635,27 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Velocity) {
+            contentHeight += 7 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AntiBot) {
             contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Arrows) {
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Health) {
+            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof AlwaysSprint) {
+            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof LatencyAlerts) {
+            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof NoHitDelay) {

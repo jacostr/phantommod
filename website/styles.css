@@ -92,6 +92,18 @@ header {
   border: 1px solid rgba(74, 222, 128, 0.2);
   padding: 2px 8px; border-radius: 99px;
   margin-left: 8px;
+  position: relative; overflow: hidden;
+}
+.brand-ver::after {
+  content: '';
+  position: absolute; top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(74, 222, 128, 0.2), transparent);
+  animation: shimmer 3s infinite;
+}
+@keyframes shimmer {
+  0% { left: -100%; }
+  30%, 100% { left: 150%; }
 }
 nav { display: flex; gap: 28px; }
 nav a { font-size: 0.875rem; color: var(--muted); transition: color 0.15s; }

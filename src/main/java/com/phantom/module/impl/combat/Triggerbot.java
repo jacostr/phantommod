@@ -15,6 +15,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 
@@ -23,6 +24,17 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Triggerbot extends Module {
+
+    public enum TargetMode {
+        PLAYERS("Players"),
+        MOBS("Mobs"),
+        BOTH("Both");
+
+        private final String label;
+        TargetMode(String label) { this.label = label; }
+        public String getLabel() { return label; }
+    }
+
     private int extraDelayTicks;
     private boolean requireMouseDown = true;
     private boolean airCrits = true;
@@ -30,6 +42,7 @@ public class Triggerbot extends Module {
     private double targetMissChance = 0.0D;
     private double earlyHitChance = 0.0D;
     private boolean limitItems = true;
+    private TargetMode targetMode = TargetMode.BOTH;
 
     private int readyTicks;
     private int lastAttackGameTick = -1;
@@ -64,6 +77,10 @@ public class Triggerbot extends Module {
 
         Entity entity = entityHitResult.getEntity();
         if (!(entity instanceof LivingEntity living) || entity == mc.player || !living.isAlive()) {
+            readyTicks = 0;
+            return;
+        }
+        if (!isValidTarget(entity)) {
             readyTicks = 0;
             return;
         }
@@ -205,6 +222,29 @@ public class Triggerbot extends Module {
         saveConfig();
     }
 
+    public TargetMode getTargetMode() {
+        return targetMode;
+    }
+
+    public void setTargetMode(TargetMode mode) {
+        this.targetMode = mode;
+        saveConfig();
+    }
+
+    public void cycleTargetMode() {
+        TargetMode[] values = TargetMode.values();
+        targetMode = values[(targetMode.ordinal() + 1) % values.length];
+        saveConfig();
+    }
+
+    private boolean isValidTarget(Entity entity) {
+        return switch (targetMode) {
+            case PLAYERS -> entity instanceof Player;
+            case MOBS -> entity instanceof Mob;
+            case BOTH -> entity instanceof Player || entity instanceof Mob;
+        };
+    }
+
     public void applyPresetLegit() {
         setExtraDelayTicks(1);
         setRequireMouseDown(true);
@@ -286,6 +326,11 @@ public class Triggerbot extends Module {
         }
 
         limitItems = Boolean.parseBoolean(properties.getProperty("triggerbot.limit_items", Boolean.toString(limitItems)));
+        String mode = properties.getProperty("triggerbot.target_mode");
+        if (mode != null) {
+            try { targetMode = TargetMode.valueOf(mode.trim().toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ignored) {}
+        }
     }
 
     @Override
@@ -298,5 +343,6 @@ public class Triggerbot extends Module {
         properties.setProperty("triggerbot.target_miss_chance", Double.toString(targetMissChance));
         properties.setProperty("triggerbot.early_hit_chance", Double.toString(earlyHitChance));
         properties.setProperty("triggerbot.limit_items", Boolean.toString(limitItems));
+        properties.setProperty("triggerbot.target_mode", targetMode.name());
     }
 }

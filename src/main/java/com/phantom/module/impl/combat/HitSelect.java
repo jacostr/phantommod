@@ -1,91 +1,59 @@
 /*
- * HitSelect.java — Interrupts attacks to gain timing advantages.
- *
- * Detectability: Moderate — consistent interruption patterns can still be profiled.
+ * HitSelect.java — Advanced attack interruption for combat advantages.
+ * Ported and enhanced for Fabric 1.21.11.
  */
 package com.phantom.module.impl.combat;
 
 import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import com.phantom.module.impl.player.AntiBot;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class HitSelect extends Module {
     public enum Mode {
-        PAUSE("Pause"),
-        ACTIVE("Active");
+        BURST("Burst"),
+        CRITICALS("Criticals");
 
         private final String label;
-
-        Mode(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public Mode next() {
-            return this == PAUSE ? ACTIVE : PAUSE;
-        }
-
+        Mode(String label) { this.label = label; }
+        public String getLabel() { return label; }
+        public Mode next() { return this == BURST ? CRITICALS : BURST; }
         public static Mode fromString(String value) {
-            if (value == null) {
-                return PAUSE;
-            }
-            try {
-                return Mode.valueOf(value.trim().toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException ignored) {
-                return PAUSE;
-            }
+            if (value == null) return BURST;
+            try { return Mode.valueOf(value.trim().toUpperCase(Locale.ROOT)); }
+            catch (IllegalArgumentException ignored) { return BURST; }
         }
     }
 
-    public enum Preference {
-        KB_REDUCTION("KB reduction"),
-        CRITICAL_HITS("Critical hits");
+    private Mode mode = Mode.BURST;
+    private int pauseDurationMs = 500;
+    private int waitForFirstHitMs = 0;
+    private boolean disableDuringKnockback = false;
+    private boolean onlyWhileDamaged = false;
+    private double inCombatCancelRate = 100.0;
+    private double missedSwingsCancelRate = 0.0;
 
-        private final String label;
-
-        Preference(String label) {
-            this.label = label;
-        }
-
-        public String getLabel() {
-            return label;
-        }
-
-        public Preference next() {
-            return this == KB_REDUCTION ? CRITICAL_HITS : KB_REDUCTION;
-        }
-
-        public static Preference fromString(String value) {
-            if (value == null) {
-                return KB_REDUCTION;
-            }
-            try {
-                return Preference.valueOf(value.trim().toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException ignored) {
-                return KB_REDUCTION;
-            }
-        }
-    }
-
-    private double chance = 0.6D;
-    private Mode mode = Mode.PAUSE;
-    private Preference preference = Preference.KB_REDUCTION;
-
-    private int pauseTicksRemaining;
-    private int lastHurtTime;
+    private Player currentTarget;
+    private final Map<Integer, TargetState> targetStates = new HashMap<>();
+    private int lastSelfHurtTime;
+    private boolean takingKnockback;
+    private long waitFirstStartMs = -1;
+    private boolean waitFirstUnlocked;
 
     public HitSelect() {
         super("HitSelect",
-                "Interrupts attacks to gain combat advantages like reduced knockback or easier crit timing. \n lower chance + PAUSE mode is significantly safer on hypixel.\nDetectability: Moderate",
+                "Advanced attack filter for better combo timing.\nDetectability: Moderate",
                 ModuleCategory.COMBAT,
                 -1);
     }
@@ -93,156 +61,199 @@ public class HitSelect extends Module {
     @Override
     public void onTick() {
         if (mc.player == null) {
-            pauseTicksRemaining = 0;
-            return;
-        }
-        if (shouldPauseForBedMining()) {
-            pauseTicksRemaining = 0;
-            lastHurtTime = mc.player.hurtTime;
+            resetAllState();
             return;
         }
 
-        if (pauseTicksRemaining > 0) {
-            pauseTicksRemaining--;
-        }
-
-        if (mc.player.hurtTime > lastHurtTime && ThreadLocalRandom.current().nextDouble() < chance) {
-            pauseTicksRemaining = computePauseTicks();
-        }
-        lastHurtTime = mc.player.hurtTime;
+        pruneTargetStates();
+        updateSelfDamage();
     }
 
     @Override
     public void onDisable() {
-        pauseTicksRemaining = 0;
-        lastHurtTime = 0;
+        resetAllState();
     }
 
     public boolean shouldCancelAttack(Entity target) {
-        if (mc.player == null || target == null) {
-            return false;
+        if (mc.player == null || target == null) return false;
+
+        // Rate filtering
+        if (target instanceof LivingEntity) {
+            if (!shouldProcessByRate(inCombatCancelRate)) return false;
+        } else {
+            if (!shouldProcessByRate(missedSwingsCancelRate)) return false;
         }
 
-        if (mode == Mode.PAUSE) {
-            return pauseTicksRemaining > 0;
+        if (!(target instanceof Player playerTarget)) return false;
+
+        updateCurrentTarget(playerTarget);
+        TargetState state = getTargetState(playerTarget);
+
+        if (disableDuringKnockback && isTakingKnockback()) return false;
+
+        boolean shouldBlock = false;
+
+        // Wait for first hit logic
+        if (isWaitingForFirstHit()) {
+            shouldBlock = true;
         }
 
-        if (pauseTicksRemaining <= 0) {
-            return false;
-        }
-
-        return switch (preference) {
-            // KB_REDUCTION: wait for the target's hurt animation to expire before hitting
-            // again so our next hit sends full knockback. Cancel while target is still
-            // in their invincibility window (hurtTime > 0).
-            case KB_REDUCTION -> {
-                if (target instanceof net.minecraft.world.entity.LivingEntity living) {
-                    yield living.hurtTime > 0;
-                }
-                yield false;
+        // Mode logic
+        if (!shouldBlock) {
+            if (mode == Mode.BURST) {
+                shouldBlock = isPredictedBurstWindowActive(state);
+            } else if (mode == Mode.CRITICALS) {
+                shouldBlock = isCriticalsBlocked(state);
             }
-            // CRITICAL_HITS: cancel while on the ground — wait until we are falling
-            // (not on ground) so the next hit registers as a critical.
-            case CRITICAL_HITS -> mc.player.onGround();
-        };
+        }
+
+        if (shouldBlock) {
+            return true;
+        }
+
+        // Record valid hit to start burst window if necessary
+        recordPassedValidHit(playerTarget);
+        return false;
     }
 
-    private int computePauseTicks() {
-        // PAUSE mode: stop attacking entirely for N ticks after being hit.
-        // ACTIVE mode: shorter window — just enough to re-check the condition each
-        // tick.
-        // KB_REDUCTION needs fewer ticks (target hurtTime is 10, we just wait for it).
-        // CRITICAL_HITS needs slightly more to reliably catch a falling window.
-        return switch (mode) {
-            case PAUSE -> preference == Preference.KB_REDUCTION ? 4 : 6;
-            case ACTIVE -> preference == Preference.KB_REDUCTION ? 2 : 4;
-        };
+    private boolean isWaitingForFirstHit() {
+        if (waitForFirstHitMs <= 0 || currentTarget == null || waitFirstUnlocked || waitFirstStartMs < 0) {
+            return false;
+        }
+        return System.currentTimeMillis() - waitFirstStartMs < waitForFirstHitMs;
     }
 
-    public double getChance() {
-        return chance;
+    private boolean isCriticalsBlocked(TargetState state) {
+        if (mc.player.onGround()) return false;
+        if (onlyWhileDamaged && !state.firstSelfHitSeen) return false;
+        if (disableDuringKnockback && isTakingKnockback()) return false;
+
+        // Standard critical requirement: falling
+        return mc.player.fallDistance <= 0.0F;
     }
 
-    public void setChance(double chance) {
-        this.chance = Math.max(0.0D, Math.min(1.0D, chance));
-        saveConfig();
+    private boolean isPredictedBurstWindowActive(TargetState state) {
+        if (state.predictedBurstWindowEndMs < 0) return false;
+        long now = System.currentTimeMillis();
+        return now < state.predictedBurstWindowEndMs;
     }
 
-    public Mode getMode() {
-        return mode;
+    private void recordPassedValidHit(Player target) {
+        TargetState state = getTargetState(target);
+        if (!isPredictedBurstWindowActive(state)) {
+            long now = System.currentTimeMillis();
+            state.predictedBurstWindowStartMs = now;
+            state.predictedBurstWindowEndMs = now + pauseDurationMs;
+        }
     }
 
-    public void cycleMode() {
-        mode = mode.next();
-        saveConfig();
+    private void updateCurrentTarget(Player nextTarget) {
+        if (currentTarget != null && currentTarget.getId() == nextTarget.getId()) return;
+
+        currentTarget = nextTarget;
+        waitFirstStartMs = System.currentTimeMillis();
+        waitFirstUnlocked = false;
     }
 
-    public Preference getPreference() {
-        return preference;
+    private void updateSelfDamage() {
+        int hurtTime = mc.player.hurtTime;
+        boolean hurtAgain = hurtTime > lastSelfHurtTime;
+
+        if (hurtAgain) {
+            waitFirstUnlocked = true;
+            takingKnockback = true;
+            if (currentTarget != null) {
+                getTargetState(currentTarget).firstSelfHitSeen = true;
+            }
+        }
+
+        if (takingKnockback && mc.player.onGround() && !hurtAgain) {
+            takingKnockback = false;
+        }
+
+        lastSelfHurtTime = hurtTime;
     }
 
-    public void cyclePreference() {
-        preference = preference.next();
-        saveConfig();
+    private boolean isTakingKnockback() {
+        return takingKnockback || mc.player.hurtTime > 0;
     }
 
-    public void applyPresetLegit() {
-        setChance(0.35);
-        mode = Mode.PAUSE;
-        preference = Preference.KB_REDUCTION;
-        saveConfig();
+    private boolean shouldProcessByRate(double rate) {
+        if (rate <= 0) return false;
+        if (rate >= 100) return true;
+        return ThreadLocalRandom.current().nextDouble() * 100.0 < rate;
     }
 
-    public void applyPresetNormal() {
-        setChance(0.55);
-        mode = Mode.PAUSE;
-        preference = Preference.CRITICAL_HITS;
-        saveConfig();
+    private TargetState getTargetState(Player target) {
+        return targetStates.computeIfAbsent(target.getId(), k -> new TargetState());
     }
 
-    public void applyPresetObvious() {
-        setChance(0.80);
-        mode = Mode.ACTIVE;
-        preference = Preference.KB_REDUCTION;
-        saveConfig();
+    private void pruneTargetStates() {
+        if (mc.level == null) {
+            targetStates.clear();
+            return;
+        }
+        targetStates.entrySet().removeIf(entry -> {
+            Entity en = mc.level.getEntity(entry.getKey());
+            return !(en instanceof Player) || !en.isAlive();
+        });
     }
 
-    public void applyPresetBlatant() {
-        setChance(1.0);
-        mode = Mode.ACTIVE;
-        preference = Preference.CRITICAL_HITS;
-        saveConfig();
+    private void resetAllState() {
+        currentTarget = null;
+        targetStates.clear();
+        lastSelfHurtTime = 0;
+        takingKnockback = false;
+        waitFirstStartMs = -1;
+        waitFirstUnlocked = false;
     }
 
-    @Override
-    public boolean hasConfigurableSettings() {
-        return true;
+    private static class TargetState {
+        boolean firstSelfHitSeen;
+        long predictedBurstWindowStartMs = -1;
+        long predictedBurstWindowEndMs = -1;
     }
 
-    @Override
-    public Screen createSettingsScreen(Screen parent) {
-        return new ModuleSettingsScreen(parent, this);
-    }
+    // Settings accessors
+    public Mode getMode() { return mode; }
+    public void cycleMode() { mode = mode.next(); saveConfig(); }
+    public int getPauseDurationMs() { return pauseDurationMs; }
+    public void setPauseDurationMs(int v) { this.pauseDurationMs = Math.max(0, Math.min(1000, v)); saveConfig(); }
+    public int getWaitForFirstHitMs() { return waitForFirstHitMs; }
+    public void setWaitForFirstHitMs(int v) { this.waitForFirstHitMs = Math.max(0, Math.min(1000, v)); saveConfig(); }
+    public boolean isDisableDuringKnockback() { return disableDuringKnockback; }
+    public void setDisableDuringKnockback(boolean v) { this.disableDuringKnockback = v; saveConfig(); }
+    public boolean isOnlyWhileDamaged() { return onlyWhileDamaged; }
+    public void setOnlyWhileDamaged(boolean v) { this.onlyWhileDamaged = v; saveConfig(); }
+    public double getInCombatCancelRate() { return inCombatCancelRate; }
+    public void setInCombatCancelRate(double v) { this.inCombatCancelRate = Math.max(0, Math.min(100, v)); saveConfig(); }
+    public double getMissedSwingsCancelRate() { return missedSwingsCancelRate; }
+    public void setMissedSwingsCancelRate(double v) { this.missedSwingsCancelRate = Math.max(0, Math.min(100, v)); saveConfig(); }
+
+    @Override public boolean hasConfigurableSettings() { return true; }
+    @Override public Screen createSettingsScreen(Screen parent) { return new ModuleSettingsScreen(parent, this); }
 
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
-        String chanceValue = properties.getProperty("hitselect.chance");
-        if (chanceValue != null) {
-            try {
-                chance = Math.max(0.0D, Math.min(1.0D, Double.parseDouble(chanceValue.trim())));
-            } catch (NumberFormatException ignored) {
-            }
-        }
         mode = Mode.fromString(properties.getProperty("hitselect.mode"));
-        preference = Preference.fromString(properties.getProperty("hitselect.preference"));
+        pauseDurationMs = Integer.parseInt(properties.getProperty("hitselect.pause_duration_ms", "500"));
+        waitForFirstHitMs = Integer.parseInt(properties.getProperty("hitselect.wait_for_first_hit_ms", "0"));
+        disableDuringKnockback = Boolean.parseBoolean(properties.getProperty("hitselect.disable_during_knockback", "false"));
+        onlyWhileDamaged = Boolean.parseBoolean(properties.getProperty("hitselect.only_while_damaged", "false"));
+        inCombatCancelRate = Double.parseDouble(properties.getProperty("hitselect.in_combat_cancel_rate", "100.0"));
+        missedSwingsCancelRate = Double.parseDouble(properties.getProperty("hitselect.missed_swings_cancel_rate", "0.0"));
     }
 
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
-        properties.setProperty("hitselect.chance", Double.toString(chance));
         properties.setProperty("hitselect.mode", mode.name());
-        properties.setProperty("hitselect.preference", preference.name());
+        properties.setProperty("hitselect.pause_duration_ms", Integer.toString(pauseDurationMs));
+        properties.setProperty("hitselect.wait_for_first_hit_ms", Integer.toString(waitForFirstHitMs));
+        properties.setProperty("hitselect.disable_during_knockback", Boolean.toString(disableDuringKnockback));
+        properties.setProperty("hitselect.only_while_damaged", Boolean.toString(onlyWhileDamaged));
+        properties.setProperty("hitselect.in_combat_cancel_rate", Double.toString(inCombatCancelRate));
+        properties.setProperty("hitselect.missed_swings_cancel_rate", Double.toString(missedSwingsCancelRate));
     }
 }

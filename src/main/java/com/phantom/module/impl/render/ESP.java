@@ -26,18 +26,30 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.scores.Team;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
-
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import java.util.List;
 import java.util.Properties;
 
 public class ESP extends Module {
     private static final double WALL_ESP_RANGE = 192.0D;
 
+
+
+    public enum FallbackColor {
+        AQUA(0xFF55FFFF, "Aqua"), RED(0xFFFF5555, "Red"), GREEN(0xFF55FF55, "Green"), 
+        WHITE(0xFFFFFFFF, "White"), YELLOW(0xFFFFFF55, "Yellow"), PURPLE(0xFFFF55FF, "Purple");
+        private final int color;
+        private final String label;
+        FallbackColor(int color, String label) { this.color = color; this.label = label; }
+        public int getColor() { return color; }
+        public String getLabel() { return label; }
+    }
+
     private boolean playersEnabled = true;
     private boolean mobsEnabled = false;
     private boolean animalsEnabled = false;
     private boolean throughWalls = true;
+    private FallbackColor fallbackColor = FallbackColor.AQUA;
 
     public ESP() {
         super("ESP", "Team-colored 3D entity hitboxes with through-wall rendering.\nDetectability: Safe",
@@ -59,7 +71,7 @@ public class ESP extends Module {
                 mc.player.getBoundingBox().inflate(WALL_ESP_RANGE),
                 this::shouldHighlight);
 
-        // Visible pass (normal depth)
+        // Visible pass (normal depth) — hitboxes only, full color
         for (Entity entity : targets) {
             if (!mc.player.hasLineOfSight(entity)) continue;
             var buf = consumers.getBuffer(RenderTypes.lines());
@@ -67,19 +79,22 @@ public class ESP extends Module {
         }
         if (consumers instanceof MultiBufferSource.BufferSource bs) bs.endBatch(RenderTypes.lines());
 
-        // Through-walls pass
+        // Through-walls pass — dimmed hitboxes for entities not in line-of-sight
         if (throughWalls) {
-            GL11.glDepthFunc(GL11.GL_ALWAYS);
+            org.lwjgl.opengl.GL11.glDepthFunc(org.lwjgl.opengl.GL11.GL_ALWAYS);
             try {
                 for (Entity entity : targets) {
+                    if (mc.player.hasLineOfSight(entity)) continue; // already drawn above
                     var buf = consumers.getBuffer(RenderTypes.lines());
                     renderEspShape(context, buf, cameraPos, entity, dimColor(getEspColor(entity)));
                 }
                 if (consumers instanceof MultiBufferSource.BufferSource bs) bs.endBatch(RenderTypes.lines());
             } finally {
-                GL11.glDepthFunc(GL11.GL_LEQUAL);
+                org.lwjgl.opengl.GL11.glDepthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);
             }
         }
+
+        // End visibility passes
     }
 
     private int dimColor(int color) {
@@ -90,8 +105,9 @@ public class ESP extends Module {
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
-    private void renderEspShape(WorldRenderContext context, com.mojang.blaze3d.vertex.VertexConsumer buffer,
+    private void renderEspShape(WorldRenderContext context, VertexConsumer buffer,
             Vec3 cameraPos, Entity entity, int color) {
+        // Always use the team/armor color for the hitbox — never tint it with health.
         ShapeRenderer.renderShape(
                 context.matrices(),
                 buffer,
@@ -103,6 +119,8 @@ public class ESP extends Module {
                 1.0F);
     }
 
+
+
     private int getEspColor(Entity entity) {
         if (!(entity instanceof Player player)) return getColor(entity);
 
@@ -112,7 +130,7 @@ public class ESP extends Module {
         Integer armorColor = getArmorColor(player);
         if (armorColor != null) return 0xFF000000 | armorColor;
 
-        return getColor(entity);
+        return fallbackColor.getColor();
     }
 
     private Integer getScoreboardTeamColor(Player player) {
@@ -162,6 +180,11 @@ public class ESP extends Module {
     public void setAnimalsEnabled(boolean v) { animalsEnabled = v; saveConfig(); }
     public boolean isThroughWalls()          { return throughWalls; }
     public void setThroughWalls(boolean v)   { throughWalls = v; saveConfig(); }
+    public FallbackColor getFallbackColor() { return fallbackColor; }
+    public void cycleFallbackColor() {
+        fallbackColor = FallbackColor.values()[(fallbackColor.ordinal() + 1) % FallbackColor.values().length];
+        saveConfig();
+    }
 
     @Override
     public void loadConfig(Properties properties) {
@@ -170,6 +193,9 @@ public class ESP extends Module {
         mobsEnabled    = Boolean.parseBoolean(properties.getProperty("esp.mobs",          Boolean.toString(mobsEnabled)));
         animalsEnabled = Boolean.parseBoolean(properties.getProperty("esp.animals",       Boolean.toString(animalsEnabled)));
         throughWalls   = Boolean.parseBoolean(properties.getProperty("esp.through_walls", Boolean.toString(throughWalls)));
+        
+        try { fallbackColor = FallbackColor.valueOf(properties.getProperty("esp.fallback_color", fallbackColor.name())); }
+        catch (IllegalArgumentException ignored) {}
     }
 
     @Override
@@ -179,5 +205,6 @@ public class ESP extends Module {
         properties.setProperty("esp.mobs",          Boolean.toString(mobsEnabled));
         properties.setProperty("esp.animals",       Boolean.toString(animalsEnabled));
         properties.setProperty("esp.through_walls", Boolean.toString(throughWalls));
+        properties.setProperty("esp.fallback_color", fallbackColor.name());
     }
 }

@@ -1,6 +1,9 @@
 # PhantomMod
 
-PhantomMod `v1.0.5` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
+| **Latest Version** | v1.0.6 | **Release Ready** |
+| **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
+
+PhantomMod `v1.0.6` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
 
 ## Included Modules
 
@@ -32,13 +35,17 @@ PhantomMod `v1.0.5` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 ### Player
 - `AntiAFK`
 - `AntiBot`
+- `Arrows`
 - `AutoTools`
 - `AutoTotem`
 - `ESP`
 - `FastPlace`
+- `Freecam`
 - `FullBright`
 - `HUD`
 - `Indicators`
+- `LatencyAlerts`
+- `Health`
 - `NoFall`
 
 ### SMP
@@ -91,14 +98,22 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v1.0.5 Notes
+## v1.0.6 Notes
 
-- Removed `HealthBar` from the live module registry.
-- Removed `AutoGapple` from the live module registry.
-- Moved HUD settings access to a dedicated bottom-right button in the ClickGUI.
-- Added save-overwrite confirmation for profile slots.
-- Adjusted profile-screen save notifications so they no longer cover the slot controls.
-- Simplified `Scaffold` into a plain synced scaffold with no settings screen.
+- **Health Module Refactor**: Replaced `Nametags` and old `HealthBar` with a dedicated `Health` module featuring billboarded, scaling vertical bars.
+- **Optimization**: Simplified `ESP` to strictly handle entity hitboxes, improving performance.
+- **Triggerbot Update**: Added target mode (Players, Mobs, or Both).
+- **Cleanup**: Removed `Tracers`, `AutoGapple`, and simplified `Scaffold`.
+- **UI/UX**: Moved HUD settings to a dedicated bottom-right button and added profile overwrite confirmations.
+
+### Visuals
+- **Health**: Vertical indicators with billboarded scaling bars (replaces old Nametags).
+- **ESP**: High-performance entity highlighting (hitboxes).
+- **Arrows**: Directional indicators for nearby threats.
+- **FullBright**: Gamma override for night vision.
+- **HUD**: Configurable corner info display.
+- **Indicators**: Visual state and target markers.
+- **LatencyAlerts**: Ping spike notifications.
 
 ## Project Notes
 

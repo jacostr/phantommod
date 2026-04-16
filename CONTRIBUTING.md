@@ -1,4 +1,4 @@
-# PhantomMod v1.0.5 — Technical Reference
+# PhantomMod v1.0.6 — Technical Reference
 
 > A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 
@@ -106,12 +106,16 @@ PhantomMod/
 │   │       │   ├── AutoTools.java   ← Auto tool/weapon swap
 │   │       │   ├── AutoTotem.java   ← Auto offhand totem equip
 │   │       │   ├── FastPlace.java   ← Reduced right-click place delay
+│   │       │   ├── Freecam.java     ← Camera detach free-flying
 │   │       │   └── NoFall.java      ← Fall damage prevention
 │   │       ├── render/
+│   │       │   ├── Arrows.java      ← Directional arrow indicators
 │   │       │   ├── ESP.java         ← Entity ESP overlay
 │   │       │   ├── FullBright.java  ← Gamma override for night vision
 │   │       │   ├── HudModule.java   ← Corner info overlay
-│   │       │   └── Indicators.java  ← On-screen target / state indicators
+│   │       │   ├── Indicators.java  ← On-screen target / state indicators
+│   │       │   ├── LatencyAlerts.java ← Ping spike notifications
+│   │       │   └── Health.java      ← Entity health indicators (scalable bars)
 │   │       └── smp/
 │   │           ├── AutoXPThrow.java ← Fast XP bottle usage helper
 │   │           ├── BedESP.java      ← Bed block ESP
@@ -303,7 +307,7 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 #### `Scaffold`
 - **How it works:** Detects when the block below the player's feet is air, finds a hotbar block, switches to it with the synced inventory helper, places against a neighboring face, then switches back.
 - **Detectability:** Blatant — automated under-feet placement is still easy for anti-cheat to pattern.
-- **Settings:** None. `Scaffold` is intentionally kept as a plain regular scaffold in `v1.0.5`.
+- **Settings:** None. `Scaffold` is intentionally kept as a plain regular scaffold in `v1.0.6`.
 
 #### `SpeedBridge`
 - **How it works:** Captures a bridge direction yaw on enable. Every tick, computes two vectors: backwards (away from bridge edge) and lateral. Checks if a block exists one step behind the player's feet. If the player is hanging over air, virtually holds `keyShift` (sneak) to prevent falling. When the block stack empties, `findNextBlockSlot()` scans the hotbar for the next `BlockItem` and calls `setSelectedSlot()`.
@@ -329,7 +333,24 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 #### `ESP`
 - **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Targets use a dedicated no-depth line render type so the boxes stay visible through walls.
 - **Detectability:** Safe — purely client-side visual; the server never sees it.
-- **Settings:** Toggle players / mobs / animals independently, plus `Through Walls`.
+- **Settings:** Toggle players / mobs / animals independently, and `Through Walls`.
+
+#### `Health`
+- **How it works:** Renders vertical health indicators beside entities during the 3D world render pass. Uses billboarded quads (or thick lines) that face the camera. The scale can be adjusted via a slider to control the physical width of the bar.
+- **Detectability:** Safe — purely client-side visual.
+- **Settings:** `Through Walls`, `Show Invisible`, and `Bar Scale` slider (0.5–10.0).
+
+#### `Arrows`
+- **How it works:** Renders directional arrow indicators pointing toward nearby entities or projectiles, with configurable radius and distance display.
+- **Detectability:** Safe — purely client-side visual.
+
+#### `LatencyAlerts`
+- **How it works:** Monitors ping from `mc.getConnection()` and fires toast notifications when ping exceeds a threshold or spikes.
+- **Detectability:** Safe — client-side only.
+
+#### `Freecam`
+- **How it works:** On enable, saves the player's position and freezes movement input. Polls `KeyMapping.isDown()` on WASD/Jump/Shift to move a virtual camera position each tick. The player body stays frozen at the original position.
+- **Detectability:** Safe — the server doesn't receive movement packets while the player is "frozen".
 
 #### `FullBright`
 - **How it works:** Saves `mc.options.gamma` on enable, sets it to `16.0` (well above the normal max of 1.0, which forces full ambient light rendering), restores on disable.
