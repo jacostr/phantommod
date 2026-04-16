@@ -77,8 +77,10 @@ public class BowAimbot extends Module {
     @Override
     public void onTick() {
         if (mc.player == null || mc.level == null) return;
+        if (mc.screen != null) return;
         if (!isHoldingBow()) return;
         if (requireMouseDown && !isRightClickDown()) return;
+        if (!mc.player.isUsingItem()) return;
         if (onlyFullDraw && mc.player.getTicksUsingItem() < 20) return;
 
         Entity target = getBestTarget();
@@ -132,33 +134,10 @@ public class BowAimbot extends Module {
         if (!(entity instanceof LivingEntity living) || entity == mc.player || !living.isAlive()) return false;
         if (entity.isSpectator()) return false;
         if (playersOnly && !(entity instanceof Player)) return false;
-        if (teamCheck && isTeammate(entity)) return false;
+        if (teamCheck && isTeammateTarget(entity)) return false;
         if (AntiBot.isBot(entity)) return false;
         if (visibilityCheck && !mc.player.hasLineOfSight(entity)) return false;
         return true;
-    }
-
-    private boolean isTeammate(Entity entity) {
-        if (!(entity instanceof Player player)) return false;
-        if (mc.player == null) return false;
-
-        // 1. Vanilla alliance check
-        if (mc.player.isAlliedTo(player)) return true;
-
-        // 2. Scoreboard team check
-        net.minecraft.world.scores.Team myTeam = mc.player.getTeam();
-        net.minecraft.world.scores.Team otherTeam = player.getTeam();
-
-        if (myTeam != null && otherTeam != null) {
-            // Check if they are on the exact same named team
-            if (myTeam.getName().equals(otherTeam.getName())) return true;
-
-            // Check if they share the same display color (common on Hypixel)
-            return myTeam.getColor() != net.minecraft.ChatFormatting.RESET && 
-                   myTeam.getColor() == otherTeam.getColor();
-        }
-
-        return false;
     }
 
     private void aimAt(Entity target) {
@@ -197,7 +176,7 @@ public class BowAimbot extends Module {
             targetPitch += (random.nextFloat() - 0.5f) * 0.75f;
         }
 
-        smoothAim(targetYaw, targetPitch);
+        smoothAim(targetYaw, Mth.clamp(targetPitch, -90.0f, 90.0f));
     }
 
     private SimulationResult simulateForBestPitch(double hDist, double diffY, float velocity) {
@@ -266,11 +245,13 @@ public class BowAimbot extends Module {
         float diffYaw = Mth.wrapDegrees(targetYaw - currentYaw);
         float diffPitch = targetPitch - currentPitch;
 
-        float stepYaw = (float) (diffYaw / smoothing);
-        float stepPitch = (float) (diffPitch / smoothing);
+        double clampedSmoothing = Math.max(1.0, smoothing);
+        float stepYaw = (float) (diffYaw / clampedSmoothing);
+        float stepPitch = (float) (diffPitch / clampedSmoothing);
 
         mc.player.setYRot(currentYaw + stepYaw);
-        mc.player.setXRot(currentPitch + stepPitch);
+        mc.player.setYHeadRot(mc.player.getYRot());
+        mc.player.setXRot(Mth.clamp(currentPitch + stepPitch, -90.0f, 90.0f));
     }
 
     @Override
@@ -282,10 +263,14 @@ public class BowAimbot extends Module {
     @Override
     public void loadConfig(Properties props) {
         super.loadConfig(props);
-        preset = AimbotPreset.valueOf(props.getProperty("bowaim.preset", "MEDIUM"));
-        fov = Double.parseDouble(props.getProperty("bowaim.fov", Double.toString(preset.getFov())));
-        smoothing = Double.parseDouble(props.getProperty("bowaim.smoothing", Double.toString(preset.getSmoothing())));
-        maxDistance = Double.parseDouble(props.getProperty("bowaim.maxdist", Double.toString(preset.getDistance())));
+        try {
+            preset = AimbotPreset.valueOf(props.getProperty("bowaim.preset", "MEDIUM"));
+        } catch (IllegalArgumentException ignored) {
+            preset = AimbotPreset.MEDIUM;
+        }
+        fov = parseDouble(props, "bowaim.fov", preset.getFov(), 1.0, 360.0);
+        smoothing = parseDouble(props, "bowaim.smoothing", preset.getSmoothing(), 1.0, 10.0);
+        maxDistance = parseDouble(props, "bowaim.maxdist", preset.getDistance(), 10.0, 100.0);
         predictMovement = Boolean.parseBoolean(props.getProperty("bowaim.predict", "true"));
         verticalCorrection = Boolean.parseBoolean(props.getProperty("bowaim.vertical", "true"));
         playersOnly = Boolean.parseBoolean(props.getProperty("bowaim.players", "true"));
@@ -314,11 +299,11 @@ public class BowAimbot extends Module {
     }
 
     public double getFov() { return fov; }
-    public void setFov(double v) { fov = v; saveConfig(); }
+    public void setFov(double v) { fov = Mth.clamp(v, 1.0, 360.0); saveConfig(); }
     public double getSmoothing() { return smoothing; }
-    public void setSmoothing(double v) { smoothing = v; saveConfig(); }
+    public void setSmoothing(double v) { smoothing = Mth.clamp(v, 1.0, 10.0); saveConfig(); }
     public double getMaxDistance() { return maxDistance; }
-    public void setMaxDistance(double v) { maxDistance = v; saveConfig(); }
+    public void setMaxDistance(double v) { maxDistance = Mth.clamp(v, 10.0, 100.0); saveConfig(); }
     public boolean isPredictMovement() { return predictMovement; }
     public void setPredictMovement(boolean v) { predictMovement = v; saveConfig(); }
     public boolean isVerticalCorrection() { return verticalCorrection; }
@@ -343,5 +328,13 @@ public class BowAimbot extends Module {
         this.smoothing = preset.getSmoothing();
         this.maxDistance = preset.getDistance();
         saveConfig();
+    }
+
+    private double parseDouble(Properties props, String key, double fallback, double min, double max) {
+        try {
+            return Mth.clamp(Double.parseDouble(props.getProperty(key, Double.toString(fallback))), min, max);
+        } catch (NumberFormatException ignored) {
+            return fallback;
+        }
     }
 }

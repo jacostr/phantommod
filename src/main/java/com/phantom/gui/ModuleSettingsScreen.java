@@ -26,7 +26,6 @@ import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.movement.AlwaysSprint;
 import com.phantom.module.impl.render.Arrows;
-import com.phantom.module.impl.render.HealthBar;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
@@ -62,6 +61,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.FormattedCharSequence;
 import org.lwjgl.glfw.GLFW;
+
 
 import java.util.List;
 import java.util.Locale;
@@ -231,26 +231,6 @@ public class ModuleSettingsScreen extends Screen {
                     at.getHealthThreshold(), val -> at.setHealthThreshold(val)));
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, at::isAlwaysEquip, at::setAlwaysEquip, "Always Equip");
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof HealthBar hb) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Offset X", -200, 200,
-                    hb.getOffsetX(), val -> hb.setOffsetX((int) val)));
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Offset Y", -200, 200,
-                    hb.getOffsetY(), val -> hb.setOffsetY((int) val)));
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, hb::isShowAbsorption, hb::setShowAbsorption, "Show Absorption");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, hb::isShowSelf, hb::setShowSelf, "Show Self");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, hb::isOpponentHealthTags, hb::setOpponentHealthTags, "Above Heads");
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(Component.literal("Color: " + hb.getColorMode().getLabel()), b -> {
-                hb.cycleColorMode();
-                init();
-            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1186,6 +1166,8 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Health health) {
+            addFilterRow(centerX, y, health::isShowBar, health::setShowBar, "Show Bar");
+            y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, health::isThroughWalls, health::setThroughWalls, "Through Walls");
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, health::isShowInvisible, health::setShowInvisible, "Show Invisible");
@@ -1194,6 +1176,18 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Bar Scale", 0.1, 5.0,
                     health.getBarScale(), health::setBarScale));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, health::isShowAboveHeads, health::setShowAboveHeads, "Above Heads");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, health::isNametagHealth, health::setNametagHealth, "Name Tag Health");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, health::isShowAbsorption, health::setShowAbsorption, "Show Absorption");
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Tag Scale", 0.5, 4.0,
+                    health.getTagScale(), val -> health.setTagScale((float) val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Distance", 16.0, 160.0,
+                    health.getMaxDistance(), health::setMaxDistance));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1647,7 +1641,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Health) {
-            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AlwaysSprint) {
@@ -1668,10 +1662,6 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof AutoTotem) {
             contentHeight += 2 * (ROW_HEIGHT + ROW_SPACING);
-        }
-
-        if (module instanceof HealthBar) {
-            contentHeight += 6 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AutoTools) {
