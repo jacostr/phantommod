@@ -12,6 +12,8 @@ import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.util.Mth;
 
 import java.util.Locale;
@@ -58,7 +60,8 @@ public class NoHitDelay extends Module {
     private int delayTicks = 0;
     private Preset preset = Preset.BLATANT;
 
-    private int tickCounter;
+    private int cooldownTicksRemaining;
+    private boolean swingHandled;
 
     public NoHitDelay() {
         super("NoHitDelay",
@@ -69,20 +72,54 @@ public class NoHitDelay extends Module {
 
     @Override
     public void onTick() {
-        if (mc.player == null) return;
+        if (mc.player == null || mc.options == null || mc.screen != null) {
+            return;
+        }
 
-        if (ThreadLocalRandom.current().nextDouble() > chance) return;
+        if (cooldownTicksRemaining > 0) {
+            cooldownTicksRemaining--;
+        }
 
-        tickCounter++;
-        if (tickCounter > delayTicks) {
-            tickCounter = 0;
+        boolean swingActive = mc.player.attackAnim > 0.0F;
+        if (!swingActive) {
+            swingHandled = false;
+            return;
+        }
+
+        if (swingHandled || mc.player.attackAnim > 0.18F) {
+            return;
+        }
+
+        swingHandled = true;
+        if (ThreadLocalRandom.current().nextDouble() > chance) {
+            return;
+        }
+
+        if (cooldownTicksRemaining > 0) {
+            return;
+        }
+        cooldownTicksRemaining = delayTicks;
+
+        if (preset == Preset.VANILLA) {
+            return;
+        }
+
+        if (preset == Preset.BLATANT || shouldResetForMiss()) {
             mc.player.resetAttackStrengthTicker();
         }
     }
 
     @Override
     public void onDisable() {
-        tickCounter = 0;
+        cooldownTicksRemaining = 0;
+        swingHandled = false;
+    }
+
+    private boolean shouldResetForMiss() {
+        if (!(mc.hitResult instanceof EntityHitResult entityHitResult)) {
+            return true;
+        }
+        return !(entityHitResult.getEntity() instanceof LivingEntity living) || !living.isAlive();
     }
 
     public double getChance() { return chance; }

@@ -85,7 +85,7 @@ public class Health extends Module {
                             buildHealthValueComponent(player), 0.25);
                 }
 
-                if (nametagHealth) {
+                if (nametagHealth && !isCustomNametagsActive()) {
                     MutableComponent name = player.getDisplayName().copy();
                     Component suffix = buildNametagHealthComponent(player);
                     if (suffix != null) {
@@ -282,6 +282,14 @@ public class Health extends Module {
         int intPart = tenths / 10;
         int fracPart = Math.abs(tenths % 10);
         return fracPart == 0 ? String.valueOf(intPart) : intPart + "." + fracPart;
+    }
+
+    private boolean isCustomNametagsActive() {
+        if (PhantomMod.getModuleManager() == null) {
+            return false;
+        }
+        Nametags module = PhantomMod.getModuleManager().getModuleByClass(Nametags.class);
+        return module != null && module.isEnabled();
     }
 
     public static boolean shouldHideVanillaNametag(Entity entity) {

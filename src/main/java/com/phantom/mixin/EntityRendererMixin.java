@@ -1,6 +1,7 @@
 package com.phantom.mixin;
 
 import com.phantom.module.impl.render.Health;
+import com.phantom.module.impl.render.Nametags;
 import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -12,7 +13,7 @@ public class EntityRendererMixin {
 
     @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/Entity;D)Z", at = @At("HEAD"), cancellable = true)
     private void phantom$hideVanillaNametags(Entity entity, double distanceToCameraSq, CallbackInfoReturnable<Boolean> cir) {
-        if (Health.shouldHideVanillaNametag(entity)) {
+        if (Nametags.shouldHideVanillaNametag(entity) || Health.shouldHideVanillaNametag(entity)) {
             cir.setReturnValue(false);
         }
     }

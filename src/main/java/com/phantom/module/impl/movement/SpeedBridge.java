@@ -22,12 +22,18 @@ import java.util.Properties;
 
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
+    private static final int JUMP_SNEAK_TICKS = 4;
+    private static final int UNSNEAK_GRACE_TICKS = 2;
 
     private long lastPlaceTime;
     private double autoOffDelay = 3.0;
     private boolean sneakingFromModule;
     private int delayTicks = 3;
     private boolean blocksOnly = true;
+    private boolean sneakOnJump = true;
+    private int jumpSneakTicks;
+    private int unsneakGraceTicks;
+    private boolean wasOnGround;
 
     public SpeedBridge() {
         super(
@@ -45,6 +51,9 @@ public class SpeedBridge extends Module {
         }
 
         lastPlaceTime = System.currentTimeMillis();
+        jumpSneakTicks = 0;
+        unsneakGraceTicks = 0;
+        wasOnGround = mc.player.onGround();
     }
 
     @Override
@@ -81,17 +90,26 @@ public class SpeedBridge extends Module {
 
         if (mc.options.keyUse.isDown()) {
             lastPlaceTime = System.currentTimeMillis();
+            detectJumpSneakWindow();
             applyFastPlace();
         }
 
         if (checkAutoDisable()) return;
 
-        if (!mc.player.onGround()) {
-            updateSneakState(false);
-            return;
+        boolean onGround = mc.player.onGround();
+        if (!onGround && jumpSneakTicks > 0) {
+            jumpSneakTicks--;
         }
 
-        updateSneakState(isAtEdge());
+        boolean shouldSneak = (onGround && isAtEdge()) || shouldSneakOnJump();
+        if (shouldSneak) {
+            unsneakGraceTicks = UNSNEAK_GRACE_TICKS;
+        } else if (unsneakGraceTicks > 0) {
+            unsneakGraceTicks--;
+        }
+
+        updateSneakState(shouldSneak || unsneakGraceTicks > 0);
+        wasOnGround = onGround;
     }
 
     private boolean checkAutoDisable() {
@@ -128,6 +146,7 @@ public class SpeedBridge extends Module {
             }
         }
         blocksOnly = Boolean.parseBoolean(properties.getProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly)));
+        sneakOnJump = Boolean.parseBoolean(properties.getProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump)));
     }
 
     @Override
@@ -136,6 +155,7 @@ public class SpeedBridge extends Module {
         properties.setProperty("speedbridge.auto_off_delay", Double.toString(autoOffDelay));
         properties.setProperty("speedbridge.delay_ticks", Integer.toString(delayTicks));
         properties.setProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly));
+        properties.setProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump));
     }
 
     public int getDelayTicks() {
@@ -153,6 +173,15 @@ public class SpeedBridge extends Module {
 
     public void setBlocksOnly(boolean blocksOnly) {
         this.blocksOnly = blocksOnly;
+        saveConfig();
+    }
+
+    public boolean isSneakOnJump() {
+        return sneakOnJump;
+    }
+
+    public void setSneakOnJump(boolean sneakOnJump) {
+        this.sneakOnJump = sneakOnJump;
         saveConfig();
     }
 
@@ -236,10 +265,44 @@ public class SpeedBridge extends Module {
             return;
         }
 
+        if (shouldDelayPlacementForJump()) {
+            return;
+        }
+
         MinecraftClientAccessor accessor = (MinecraftClientAccessor) mc;
         if (accessor.phantom$getRightClickDelay() > delayTicks) {
             accessor.phantom$setRightClickDelay(delayTicks);
         }
+    }
+
+    private void detectJumpSneakWindow() {
+        if (!sneakOnJump || mc.player == null) {
+            return;
+        }
+        boolean jumpedThisTick = wasOnGround
+                && !mc.player.onGround()
+                && mc.player.getDeltaMovement().y > 0.15D;
+        if (jumpedThisTick) {
+            jumpSneakTicks = JUMP_SNEAK_TICKS;
+            unsneakGraceTicks = Math.max(unsneakGraceTicks, UNSNEAK_GRACE_TICKS);
+        }
+    }
+
+    private boolean shouldSneakOnJump() {
+        return sneakOnJump
+                && jumpSneakTicks > 0
+                && !mc.player.onGround()
+                && mc.options.keyUse.isDown();
+    }
+
+    private boolean shouldDelayPlacementForJump() {
+        if (!sneakOnJump || mc.player == null || !mc.options.keyUse.isDown()) {
+            return false;
+        }
+        if (mc.player.onGround() || jumpSneakTicks <= 0) {
+            return false;
+        }
+        return mc.player.getDeltaMovement().y > -0.02D;
     }
 
     private void updateSneakState(boolean overEdge) {

@@ -25,11 +25,11 @@ import com.phantom.module.impl.player.LatencyAlerts;
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.movement.SpeedBridge;
 import com.phantom.module.impl.movement.AlwaysSprint;
-import com.phantom.module.impl.render.Arrows;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Health;
+import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
 import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.smp.BedESP;
@@ -762,6 +762,8 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Delay ticks", 0.0, 4.0,
                     sb.getDelayTicks(), val -> sb.setDelayTicks((int) Math.round(val))));
             y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, sb::isSneakOnJump, sb::setSneakOnJump, "Sneak on Jump");
+            y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(
                     Component.literal("Blocks only: " + onOff(sb.isBlocksOnly())),
                     button -> {
@@ -1146,25 +1148,6 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
-        if (module instanceof Arrows arrows) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Radius", 30.0, 140.0,
-                    arrows.getRadius(), arrows::setRadius));
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, arrows::isShowDistance, arrows::setShowDistance, "Show Distance");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, arrows::isPlayersOnly, arrows::setPlayersOnly, "Players Only");
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(
-                    Component.literal("Style: " + arrows.getStyleLabel()),
-                    button -> {
-                        arrows.cycleArrowStyle();
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, arrows::isOnlyOffScreen, arrows::setOnlyOffScreen, "Off-screen Only");
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
         if (module instanceof Health health) {
             addFilterRow(centerX, y, health::isShowBar, health::setShowBar, "Show Bar");
             y += ROW_HEIGHT + ROW_SPACING;
@@ -1188,6 +1171,29 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Distance", 16.0, 160.0,
                     health.getMaxDistance(), health::setMaxDistance));
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof Nametags nametags) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 160.0,
+                    nametags.getRange(), nametags::setRange));
+            y += ROW_HEIGHT + ROW_SPACING;
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Scale", 0.5, 3.0,
+                    nametags.getScale(), nametags::setScale));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowOwnNameTag, nametags::setShowOwnNameTag, "Show Own");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isDistanceScaling, nametags::setDistanceScaling, "Distance Scaling");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isBackground, nametags::setBackground, "Background");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isTextShadow, nametags::setTextShadow, "Text Shadow");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowHealth, nametags::setShowHealth, "Show Health");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowDistance, nametags::setShowDistance, "Show Distance");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowInvisible, nametags::setShowInvisible, "Show Invisible");
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1585,7 +1591,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof SpeedBridge) {
-            contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof WTap) {
@@ -1636,12 +1642,12 @@ public class ModuleSettingsScreen extends Screen {
             contentHeight += 4 * (ROW_HEIGHT + ROW_SPACING);
         }
 
-        if (module instanceof Arrows) {
-            contentHeight += 5 * (ROW_HEIGHT + ROW_SPACING);
-        }
-
         if (module instanceof Health) {
             contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+        if (module instanceof Nametags) {
+            contentHeight += 9 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AlwaysSprint) {

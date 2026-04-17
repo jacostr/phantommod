@@ -32,11 +32,11 @@ import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.impl.player.LatencyAlerts;
 import com.phantom.module.impl.movement.SafeWalk;
-import com.phantom.module.impl.render.Arrows;
 import com.phantom.module.impl.render.FullBright;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.Health;
+import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
 import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.combat.Reach;
@@ -92,7 +92,6 @@ public class ModuleManager {
         modules.add(new AntiBot());
         modules.add(new AutoTotem());
         modules.add(new AutoTools());
-        modules.add(new Arrows());
         modules.add(new ESP());
         modules.add(new FastPlace());
         modules.add(new FullBright());
@@ -100,6 +99,7 @@ public class ModuleManager {
         modules.add(new Indicators());
         modules.add(new LatencyAlerts());
         modules.add(new Health());
+        modules.add(new Nametags());
         modules.add(new TNTTimer());
         modules.add(new Trajectories());
         modules.add(new NoFall());
