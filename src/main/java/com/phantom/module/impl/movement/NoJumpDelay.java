@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * NoJumpDelay.java — Removes the vanilla 10-tick jump cooldown (Movement module).
  *

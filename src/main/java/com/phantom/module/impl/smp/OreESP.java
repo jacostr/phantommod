@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * OreESP.java — Highlights ore blocks through walls.
  *

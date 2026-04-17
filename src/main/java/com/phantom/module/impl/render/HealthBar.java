@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * HealthBar.java — Renders a health indicator near the crosshair and above entities.
  */
@@ -54,7 +55,7 @@ public class HealthBar extends Module {
     public HealthBar() {
         super("HealthBar",
                 "Displays your health near the crosshair and opponents' health above their heads.\nDetectability: Safe",
-                ModuleCategory.PLAYER,
+                ModuleCategory.RENDER,
                 -1);
     }
 

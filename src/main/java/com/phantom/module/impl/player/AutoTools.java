@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoTools.java — Automatically selects the best tool or weapon from the hotbar (Player module).
  *

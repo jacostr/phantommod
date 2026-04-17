@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * SilentAura.java — Automatically attacks nearby entities and smoothly pulls the camera.
  *

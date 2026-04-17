@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * NoHitDelay.java — Reduces or removes the 1.9+ attack cooldown.
  *

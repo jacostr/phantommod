@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * FullBright.java — Maximum ambient light level for night vision (Player module).
  *
@@ -20,7 +21,7 @@ public class FullBright extends Module {
         // No hotkey by default; assign one in settings if you toggle this often.
         super("FullBright",
                 "Modifies ambient light level to maximum, letting you see perfectly in the dark.\nDetectability: Safe",
-                ModuleCategory.PLAYER,
+                ModuleCategory.RENDER,
                 -1);
     }
 

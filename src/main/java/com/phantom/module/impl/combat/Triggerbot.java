@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Triggerbot.java — Automatically attacks entities you hover over.
  *

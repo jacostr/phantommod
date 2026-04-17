@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Reach.java — Extends entity and block interaction range (Combat module).
  *

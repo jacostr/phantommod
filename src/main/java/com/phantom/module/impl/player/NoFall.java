@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * NoFall.java — Prevents fall damage by spoofing ground state (Player module).
  *

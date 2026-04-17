@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoClicker.java — Repeats left-click attacks while the mouse button is held.
  *

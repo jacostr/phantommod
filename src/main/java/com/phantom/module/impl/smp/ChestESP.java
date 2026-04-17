@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * ChestESP.java — Highlights chests, ender chests, and trapped chests through walls.
  *

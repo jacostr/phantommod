@@ -60,11 +60,11 @@ PhantomMod `v1.0.6` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 
 | Action | Default |
 | --- | --- |
-| Open ClickGUI | `M` |
+| Open ClickGUI | `RIGHT_SHIFT` |
 
 Each module can also have its own hotkey assigned from the settings screen.
 
-If you used an older PhantomMod build before this release, Minecraft may keep the previous ClickGUI keybind in its saved controls. If the GUI still opens on a different key, open Minecraft's Controls menu and rebind `Open Phantom GUI` to `M`.
+If you need to change the ClickGUI open bind to a different key, simply open Minecraft's native `Options -> Controls -> Key Binds` menu, scroll down to the `PhantomMod` (or `main`) category, and rebind `Open Phantom GUI` to whatever you prefer.
 
 ## Configuration
 

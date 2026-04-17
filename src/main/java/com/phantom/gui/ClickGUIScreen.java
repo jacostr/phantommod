@@ -55,9 +55,9 @@ public class ClickGUIScreen extends Screen {
         rebuildingSearch = true;
         this.clearWidgets();
         
-        int tabWidth = 65;
+        int tabWidth = 60;
         int totalTabsWidth = ModuleCategory.values().length * tabWidth;
-        int startX = (this.width - totalTabsWidth) / 2;
+        int startX = Math.max(90, (this.width - totalTabsWidth) / 2 + 15);
 
         for (int i = 0; i < ModuleCategory.values().length; i++) {
             ModuleCategory category = ModuleCategory.values()[i];
@@ -91,9 +91,15 @@ public class ClickGUIScreen extends Screen {
         int profileX = 6;
         int profileY = LIST_TOP + 18;
         this.addRenderableWidget(Button.builder(
-                        Component.literal("Profiles"),
+                        Component.literal("Custom"),
                         button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager())))
                 .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
+                .build());
+
+        this.addRenderableWidget(Button.builder(
+                        Component.literal("Premade"),
+                        button -> {})
+                .bounds(profileX, profileY + ROW_HEIGHT + ROW_SPACING, PROFILE_WIDTH, ROW_HEIGHT)
                 .build());
 
         int btnY = this.height - 24;
@@ -106,6 +112,7 @@ public class ClickGUIScreen extends Screen {
         btnY -= 24;
         this.addRenderableWidget(Button.builder(Component.literal("Reset Binds"), button -> {
             PhantomMod.getModuleManager().getModules().forEach(m -> m.setKey(-1));
+            PhantomMod.saveConfig();
             NotificationManager.push("All keybinds cleared.");
             rebuildUI();
         }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
@@ -113,6 +120,7 @@ public class ClickGUIScreen extends Screen {
         btnY -= 24;
         this.addRenderableWidget(Button.builder(Component.literal("Reset Settings"), button -> {
             PhantomMod.resetConfig();
+            PhantomMod.saveConfig();
             NotificationManager.push("Settings reset to default.");
             rebuildUI();
         }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
@@ -175,7 +183,7 @@ public class ClickGUIScreen extends Screen {
 
         // Header Branding
         graphics.drawString(this.font, "PhantomMod", 4, 10, 0xFFA8E6A3);
-        graphics.drawString(this.font, "Profiles", 8, LIST_TOP + 6, 0xFFFFFFFF);
+        graphics.drawString(this.font, "Configs", 8, LIST_TOP + 6, 0xFFFFFFFF);
 
         super.render(graphics, mouseX, mouseY, delta);
 

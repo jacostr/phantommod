@@ -31,6 +31,7 @@ import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Health;
 import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
+import com.phantom.module.impl.render.TimeChanger;
 import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.smp.BedESP;
 import com.phantom.module.impl.smp.ChestESP;
@@ -39,6 +40,7 @@ import com.phantom.module.impl.smp.ShulkerESP;
 import com.phantom.module.impl.smp.OreFinder;
 import com.phantom.gui.widget.PhantomSlider;
 import com.phantom.module.impl.combat.AimAssist;
+import com.phantom.module.impl.combat.AutoCrystal;
 import com.phantom.module.impl.combat.BowAimbot;
 import com.phantom.module.impl.combat.AutoClicker;
 import com.phantom.module.impl.combat.BlockHit;
@@ -104,6 +106,8 @@ public class ModuleSettingsScreen extends Screen {
             List<FormattedCharSequence> descriptionLines = this.font.split(Component.literal(module.getDescription()),
                     PANEL_WIDTH - 20);
             y += descriptionLines.size() * 9;
+        } else {
+            y += 14;
         }
 
         if (module instanceof ESP esp) {
@@ -131,8 +135,6 @@ public class ModuleSettingsScreen extends Screen {
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
-        } else {
-            y += 14;
         }
 
         if (module instanceof Velocity vel) {
@@ -677,6 +679,39 @@ public class ModuleSettingsScreen extends Screen {
                         autoClicker.setBreakBlockPause(!autoClicker.isBreakBlockPause());
                         init();
                     }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof AutoCrystal ac) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Delay (ticks)", 0.0, 20.0,
+                    ac.getDelay(), val -> ac.setDelay(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, ac::isActivateOnRightClick, ac::setActivateOnRightClick, "Right Click Only");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+        if (module instanceof TimeChanger tc) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Time", 0, 24000,
+                    tc.getTargetTime(), val -> tc.setTargetTime(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(Component.literal("Day"), b -> {
+                tc.setPresetDay();
+                init();
+            }).bounds(centerX - 80, y, 48, ROW_HEIGHT).build());
+            
+            this.addRenderableWidget(Button.builder(Component.literal("Dusk"), b -> {
+                tc.setPresetDusk();
+                init();
+            }).bounds(centerX - 24, y, 48, ROW_HEIGHT).build());
+
+            this.addRenderableWidget(Button.builder(Component.literal("Midnight"), b -> {
+                tc.setPresetMidnight();
+                init();
+            }).bounds(centerX + 32, y, 48, ROW_HEIGHT).build());
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            addFilterRow(centerX, y, tc::isFreezeTime, tc::setFreezeTime, "Freeze Time");
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1372,27 +1407,21 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
-        if (module instanceof ESP esp) {
-            addFilterRow(centerX, y, esp::isPlayersEnabled, esp::setPlayersEnabled, "Show Players");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, esp::isMobsEnabled, esp::setMobsEnabled, "Show Mobs");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, esp::isAnimalsEnabled, esp::setAnimalsEnabled, "Show Animals");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, esp::isThroughWalls, esp::setThroughWalls, "Through Walls");
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(
-                    net.minecraft.network.chat.Component.literal("Box Color: " + esp.getFallbackColor().getLabel()),
-                    button -> {
-                        esp.cycleFallbackColor();
-                        init();
-                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
         if (module instanceof Trajectories traj) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Max Ticks", 30.0, 200.0,
                     traj.getMaxTicks(), traj::setMaxTicks));
+            y += ROW_HEIGHT + ROW_SPACING;
+            
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Thickness", 1.0, 5.0,
+                    traj.getThickness(), val -> traj.setThickness((float)val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Line Color: " + traj.getColor().getLabel()),
+                    button -> {
+                        traj.cycleColor();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, traj::isOnlyWhenDrawing, traj::setOnlyWhenDrawing, "Only When Drawing");
             y += ROW_HEIGHT + ROW_SPACING;
@@ -1401,36 +1430,6 @@ public class ModuleSettingsScreen extends Screen {
         if (module instanceof TNTTimer tnt) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Scale", 0.5, 3.0,
                     tnt.getScale(), tnt::setScale));
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof ChestESP chest) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
-                    chest.getRange(), chest::setRange));
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof BedESP bed) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
-                    bed.getRange(), bed::setRange));
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof ShulkerESP shulker) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 128.0,
-                    shulker.getRange(), shulker::setRange));
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof OreESP ore) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 64.0,
-                    ore.getRange(), ore::setRange));
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-        if (module instanceof OreFinder finder) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 64.0,
-                    finder.getRange(), finder::setRange));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 

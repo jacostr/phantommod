@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * HitSelect.java — Advanced attack interruption for combat advantages.
  * Ported and enhanced for Fabric 1.21.11.

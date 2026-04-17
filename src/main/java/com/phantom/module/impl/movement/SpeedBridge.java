@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * SpeedBridge.java — Edge-detection bridging assist with auto block refill (Movement module).
  *

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * WeaponCycler.java — Automatically switches weapons after attacking.
  */

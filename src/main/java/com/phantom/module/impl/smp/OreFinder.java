@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * OreFinder.java — Logs exact coordinates of nearby ores and provides direction hints.
  *

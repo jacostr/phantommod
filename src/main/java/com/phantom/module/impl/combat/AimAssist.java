@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AimAssist.java — Smooth camera aim toward nearby targets (Combat module).
  *

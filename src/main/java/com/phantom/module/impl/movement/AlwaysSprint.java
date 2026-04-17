@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AlwaysSprint.java — Automatically keeps the player sprinting (Movement module).
  *

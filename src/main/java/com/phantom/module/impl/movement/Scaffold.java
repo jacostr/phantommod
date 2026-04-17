@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Scaffold.java — Automatically places blocks under the player (Movement module).
  *

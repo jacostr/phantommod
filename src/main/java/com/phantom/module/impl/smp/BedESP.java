@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * BedESP.java — Highlights bed blocks through walls.
  *

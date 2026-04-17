@@ -38,11 +38,13 @@ import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.Health;
 import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
+import com.phantom.module.impl.render.TimeChanger;
 import com.phantom.module.impl.render.Trajectories;
 import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.AimAssist;
+import com.phantom.module.impl.combat.AutoCrystal;
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.smp.BedESP;
@@ -67,6 +69,7 @@ public class ModuleManager {
         // Combat
         modules.add(new AimAssist());
         modules.add(new BowAimbot());
+        modules.add(new AutoCrystal());
         modules.add(new AutoClicker());
         modules.add(new WaterClutch());
         modules.add(new BlockHit());
@@ -102,6 +105,7 @@ public class ModuleManager {
         modules.add(new Nametags());
         modules.add(new TNTTimer());
         modules.add(new Trajectories());
+        modules.add(new TimeChanger());
         modules.add(new NoFall());
         // SMP
         modules.add(new AutoXPThrow());

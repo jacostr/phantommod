@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * JumpReset.java — Attempts a timed jump when you are hit to reduce knockback.
  *

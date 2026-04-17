@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.render;
 
 import com.phantom.module.Module;
@@ -22,6 +23,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.phantom.gui.ModuleSettingsScreen;
 
+import com.phantom.util.ESPColor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -29,10 +31,11 @@ import java.util.Properties;
 public class Trajectories extends Module {
     private boolean onlyWhenDrawing = true;
     private double maxTicks = 100.0;
-    private int color = 0xFF00FF00;
+    private ESPColor color = ESPColor.GREEN;
+    private float thickness = 2.0f;
 
     public Trajectories() {
-        super("Trajectories", "Visualizes the path of projectiles like arrows, pearls, and potions.", ModuleCategory.PLAYER, -1);
+        super("Trajectories", "Visualizes the path of projectiles for bows, crossbows, pearls, and potions.", ModuleCategory.RENDER, -1);
     }
 
     @Override
@@ -154,10 +157,10 @@ public class Trajectories extends Module {
         matrices.pushPose();
         matrices.translate(-camPos.x, -camPos.y, -camPos.z);
 
-        float r = ((color >> 16) & 0xFF) / 255.0f;
-        float g = ((color >> 8) & 0xFF) / 255.0f;
-        float b = (color & 0xFF) / 255.0f;
-        float a = ((color >> 24) & 0xFF) / 255.0f;
+        float r = ((color.getColor() >> 16) & 0xFF) / 255.0f;
+        float g = ((color.getColor() >> 8) & 0xFF) / 255.0f;
+        float b = (color.getColor() & 0xFF) / 255.0f;
+        float a = ((color.getColor() >> 24) & 0xFF) / 255.0f;
         if (a == 0) a = 1.0f;
 
         var matrix = matrices.last().pose();
@@ -165,8 +168,8 @@ public class Trajectories extends Module {
             Vec3 p1 = points.get(i);
             Vec3 p2 = points.get(i + 1);
 
-            buffer.addVertex(matrix, (float)p1.x, (float)p1.y, (float)p1.z).setColor(r, g, b, a).setNormal(0, 1, 0).setLineWidth(2.0f);
-            buffer.addVertex(matrix, (float)p2.x, (float)p2.y, (float)p2.z).setColor(r, g, b, a).setNormal(0, 1, 0).setLineWidth(2.0f);
+            buffer.addVertex(matrix, (float)p1.x, (float)p1.y, (float)p1.z).setColor(r, g, b, a).setNormal(0, 1, 0).setLineWidth(thickness);
+            buffer.addVertex(matrix, (float)p2.x, (float)p2.y, (float)p2.z).setColor(r, g, b, a).setNormal(0, 1, 0).setLineWidth(thickness);
         }
 
         matrices.popPose();
@@ -177,6 +180,8 @@ public class Trajectories extends Module {
         super.loadConfig(props);
         onlyWhenDrawing = Boolean.parseBoolean(props.getProperty("trajectories.only_drawing", "true"));
         maxTicks = Double.parseDouble(props.getProperty("trajectories.max_ticks", "100.0"));
+        thickness = Float.parseFloat(props.getProperty("trajectories.thickness", "2.0"));
+        color = ESPColor.fromString(props.getProperty("trajectories.color"), ESPColor.GREEN);
     }
 
     @Override
@@ -184,10 +189,16 @@ public class Trajectories extends Module {
         super.saveConfig(props);
         props.setProperty("trajectories.only_drawing", Boolean.toString(onlyWhenDrawing));
         props.setProperty("trajectories.max_ticks", Double.toString(maxTicks));
+        props.setProperty("trajectories.thickness", Float.toString(thickness));
+        props.setProperty("trajectories.color", color.name());
     }
 
     public boolean isOnlyWhenDrawing() { return onlyWhenDrawing; }
     public void setOnlyWhenDrawing(boolean v) { onlyWhenDrawing = v; saveConfig(); }
     public double getMaxTicks() { return maxTicks; }
     public void setMaxTicks(double v) { maxTicks = v; saveConfig(); }
+    public float getThickness() { return thickness; }
+    public void setThickness(float v) { thickness = v; saveConfig(); }
+    public ESPColor getColor() { return color; }
+    public void cycleColor() { color = color.next(); saveConfig(); }
 }

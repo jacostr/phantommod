@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * HudModule.java — Top-right overlay showing active modules, FPS, ping, and CPS.
  *
@@ -58,7 +59,7 @@ public class HudModule extends Module {
     public HudModule() {
         super("HUD",
                 "Shows a small top-right PhantomMod overlay with active features and optional FPS, ping, or CPS text.\nDetectability: Safe",
-                ModuleCategory.PLAYER, GLFW.GLFW_KEY_H);
+                ModuleCategory.RENDER, GLFW.GLFW_KEY_H);
     }
 
     @Override

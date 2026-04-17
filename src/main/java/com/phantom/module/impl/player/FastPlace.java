@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * FastPlace.java — Reduces vanilla right-click delay for placing blocks or using items.
  *

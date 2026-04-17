@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.render;
 
 import com.phantom.module.Module;
@@ -21,7 +22,7 @@ public class TNTTimer extends Module {
     private double scale = 1.0;
 
     public TNTTimer() {
-        super("TNTTimer", "Displays a countdown timer above primed TNT entities.", ModuleCategory.PLAYER, -1);
+        super("TNTTimer", "Displays a countdown timer above primed TNT entities.", ModuleCategory.RENDER, -1);
     }
 
     @Override

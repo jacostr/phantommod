@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AntiAFK.java — Prevents idle kicks by issuing light movement and look changes.
  *

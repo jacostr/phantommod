@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Velocity.java — Reduces incoming knockback by a configurable percentage (Combat module).
  *

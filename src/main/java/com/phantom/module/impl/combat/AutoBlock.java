@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoBlock.java — Automatic sword blocking after hitting an entity (Combat module).
  *

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Indicators.java — On-screen projectile warnings.
  *
@@ -86,7 +87,7 @@ public class Indicators extends Module {
     public Indicators() {
         super("Indicators",
                 "Displays on-screen warnings for nearby projectiles, with optional threat filtering.\nDetectability: Safe",
-                ModuleCategory.PLAYER,
+                ModuleCategory.RENDER,
                 -1);
     }
 

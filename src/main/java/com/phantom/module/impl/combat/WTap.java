@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * WTap.java — Briefly releases sprint after an attack to refresh sprint knockback.
  *

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * RightClicker.java — Automates right-clicking for blocks and usable items.
  *

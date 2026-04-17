@@ -32,7 +32,7 @@ public final class PhantomMod implements ClientModInitializer {
 
         guiKey = KeyBindingHelper.registerKeyBinding(new KeyMapping(
                 "key.phantom.gui",
-                GLFW.GLFW_KEY_M,
+                GLFW.GLFW_KEY_RIGHT_SHIFT,
                 KEY_CATEGORY
         ));
 

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoGapple.java — Swaps to a golden apple when health drops below threshold, eats it, swaps back.
  *

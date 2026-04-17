@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Health.java — Custom health rendering beside entities and in player nametags.
  */
@@ -45,7 +46,7 @@ public class Health extends Module {
     public Health() {
         super("Health",
                 "Displays opponent health as a side bar, above-head value, or inside the nametag.\nDetectability: Safe",
-                ModuleCategory.PLAYER, -1);
+                ModuleCategory.RENDER, -1);
     }
 
     @Override

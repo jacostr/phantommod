@@ -21,6 +21,7 @@ public enum ModuleCategory {
     COMBAT("Combat"),
     MOVEMENT("Movement"),
     PLAYER("Player"),
+    RENDER("Render"),
     SMP("SMP");
 
     private final String label;

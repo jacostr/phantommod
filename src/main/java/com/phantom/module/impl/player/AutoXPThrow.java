@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoXPThrow.java — Throws all Experience Bottles from your inventory.
  *

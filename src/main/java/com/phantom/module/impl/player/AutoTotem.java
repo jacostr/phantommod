@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * AutoTotem.java — Automatically equips a Totem of Undying to the offhand.
  *

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.render;
 
 import com.phantom.gui.ModuleSettingsScreen;
@@ -30,7 +31,7 @@ public class Arrows extends Module {
     public Arrows() {
         super("Arrows",
                 "Draws directional arrows toward nearby players around your crosshair.\nDetectability: Safe",
-                ModuleCategory.PLAYER, -1);
+                ModuleCategory.RENDER, -1);
     }
 
     @Override

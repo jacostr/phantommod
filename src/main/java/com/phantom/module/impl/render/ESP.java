@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.render;
 
 import com.phantom.gui.ModuleSettingsScreen;
@@ -53,7 +54,7 @@ public class ESP extends Module {
 
     public ESP() {
         super("ESP", "Team-colored 3D entity hitboxes with through-wall rendering.\nDetectability: Safe",
-                ModuleCategory.PLAYER, GLFW.GLFW_KEY_Y);
+                ModuleCategory.RENDER, GLFW.GLFW_KEY_Y);
     }
 
     @Override

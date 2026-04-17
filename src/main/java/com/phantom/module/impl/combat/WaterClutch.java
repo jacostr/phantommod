@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.combat;
 
 import com.phantom.gui.ModuleSettingsScreen;

@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * Criticals.java — Forces critical hits via spoofed position packets (Combat module).
  *

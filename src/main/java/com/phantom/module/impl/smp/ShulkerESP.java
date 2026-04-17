@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * ShulkerESP.java — Highlights shulker boxes through walls.
  *

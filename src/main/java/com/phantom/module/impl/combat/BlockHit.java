@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 /*
  * BlockHit.java — Performs timed sword blocks around attack events.
  *

@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
+    "EntityRendererMixin",
     "MinecraftClientMixin",
     "MinecraftClientAccessor",
     "LivingEntityJumpAccessor",

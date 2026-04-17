@@ -25,7 +25,7 @@ public class ProfileScreen extends Screen {
     private long pendingOverwriteUntil;
 
     public ProfileScreen(Screen parent, ModuleManager moduleManager) {
-        super(Component.literal("Profiles"));
+        super(Component.literal("Configs"));
         this.parent = parent;
         this.moduleManager = moduleManager;
     }
@@ -79,8 +79,12 @@ public class ProfileScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.fill(0, 0, this.width, this.height, 0x90101010);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 24, 0xFFA8E6A3);
+        
+        graphics.drawCenteredString(this.font, "To import your friends configs manually,", this.width / 2, this.height - 40, 0xFFAAAAAA);
+        graphics.drawCenteredString(this.font, "copy .properties files into .minecraft/phantom-profiles", this.width / 2, this.height - 26, 0xFFAAAAAA);
+        
         super.render(graphics, mouseX, mouseY, delta);
-        NotificationManager.render(graphics, 10, this.height - 52);
+        NotificationManager.render(graphics, 10, this.height - 54);
     }
 
     @Override

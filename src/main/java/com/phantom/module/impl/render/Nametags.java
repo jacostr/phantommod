@@ -1,3 +1,4 @@
+/* Copyright (c) 2026 PhantomMod. All rights reserved. */
 package com.phantom.module.impl.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -38,7 +39,7 @@ public class Nametags extends Module {
     public Nametags() {
         super("Nametags",
                 "Renders larger custom name tags with optional health and distance info.\nDetectability: Safe",
-                ModuleCategory.PLAYER,
+                ModuleCategory.RENDER,
                 -1);
     }
 
@@ -81,14 +82,20 @@ public class Nametags extends Module {
 
             renderTag(matrices, consumers, camera, text, dx, dy, dz, Math.sqrt(distanceSq));
         }
+
+        if (consumers instanceof net.minecraft.client.renderer.MultiBufferSource.BufferSource bs) {
+            bs.endBatch();
+        }
     }
 
     private boolean shouldRender(Player player) {
         if (player == null || !player.isAlive()) {
             return false;
         }
-        if (!showOwnNameTag && player == mc.player) {
-            return false;
+        if (player == mc.player) {
+            if (!showOwnNameTag || mc.options.getCameraType().isFirstPerson()) {
+                return false;
+            }
         }
         if (!showInvisible && player.isInvisible()) {
             return false;
