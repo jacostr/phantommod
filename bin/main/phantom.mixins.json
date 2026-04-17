@@ -12,7 +12,8 @@
     "ClientPacketListenerMixin",
     "MultiPlayerGameModeMixin",
     "ItemInHandRendererMixin",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "LevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -67,6 +67,7 @@ public class SilentAura extends Module {
     private boolean targetPlayers = true;
     private boolean targetMobs = true;
     private boolean targetAnimals = false;
+    private boolean hypixelMode = false;
 
     private long lastAttackAt;
     private long nextDelayMs = 100L;
@@ -109,8 +110,13 @@ public class SilentAura extends Module {
         long now = System.currentTimeMillis();
         if (now - lastAttackAt < nextDelayMs) return;
 
-        // Ensure we are somewhat looking at the target before attacking (within 35 degrees)
-        if (getAngleToEntity(currentTarget) < 35.0) {
+        boolean canAttack = getAngleToEntity(currentTarget) < 35.0;
+
+        if (hypixelMode) {
+            canAttack = (mc.crosshairPickEntity == currentTarget) && (mc.player.distanceTo(currentTarget) <= 3.0);
+        }
+
+        if (canAttack) {
             mc.gameMode.attack(mc.player, currentTarget);
             mc.player.swing(InteractionHand.MAIN_HAND);
             lastAttackAt = now;
@@ -280,6 +286,8 @@ public class SilentAura extends Module {
     public void setTargetMobs(boolean v) { targetMobs = v; saveConfig(); }
     public boolean isTargetAnimals() { return targetAnimals; }
     public void setTargetAnimals(boolean v) { targetAnimals = v; saveConfig(); }
+    public boolean isHypixelMode() { return hypixelMode; }
+    public void setHypixelMode(boolean v) { hypixelMode = v; saveConfig(); }
 
     @Override public boolean hasConfigurableSettings() { return true; }
     @Override public Screen createSettingsScreen(Screen parent) { return new ModuleSettingsScreen(parent, this); }
@@ -301,6 +309,7 @@ public class SilentAura extends Module {
         targetPlayers = Boolean.parseBoolean(p.getProperty("silentaura.target_players", Boolean.toString(targetPlayers)));
         targetMobs = Boolean.parseBoolean(p.getProperty("silentaura.target_mobs", Boolean.toString(targetMobs)));
         targetAnimals = Boolean.parseBoolean(p.getProperty("silentaura.target_animals", Boolean.toString(targetAnimals)));
+        hypixelMode = Boolean.parseBoolean(p.getProperty("silentaura.hypixel_mode", Boolean.toString(hypixelMode)));
     }
 
     @Override
@@ -320,5 +329,6 @@ public class SilentAura extends Module {
         p.setProperty("silentaura.target_players", Boolean.toString(targetPlayers));
         p.setProperty("silentaura.target_mobs", Boolean.toString(targetMobs));
         p.setProperty("silentaura.target_animals", Boolean.toString(targetAnimals));
+        p.setProperty("silentaura.hypixel_mode", Boolean.toString(hypixelMode));
     }
 }

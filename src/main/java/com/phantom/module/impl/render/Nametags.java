@@ -59,7 +59,12 @@ public class Nametags extends Module {
         Vec3 cameraPos = camera.position();
         double rangeSq = range * range;
 
-        for (Player player : mc.level.players()) {
+        java.util.List<Player> targetPlayers = new java.util.ArrayList<>(mc.level.players());
+        if (mc.player != null && !targetPlayers.contains(mc.player)) {
+            targetPlayers.add(mc.player);
+        }
+
+        for (Player player : targetPlayers) {
             if (!shouldRender(player)) {
                 continue;
             }

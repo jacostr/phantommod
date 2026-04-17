@@ -226,6 +226,8 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, sa::isTargetAnimals, sa::setTargetAnimals, "Target Animals");
             y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, sa::isHypixelMode, sa::setHypixelMode, "Hypixel Mode");
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
         if (module instanceof AutoTotem at) {
@@ -695,23 +697,36 @@ public class ModuleSettingsScreen extends Screen {
                     tc.getTargetTime(), val -> tc.setTargetTime(val)));
             y += ROW_HEIGHT + ROW_SPACING;
 
+            this.addRenderableWidget(Button.builder(Component.literal("Dawn"), b -> {
+                tc.setPresetDawn();
+                init();
+            }).bounds(centerX - 80, y, 38, ROW_HEIGHT).build());
+
             this.addRenderableWidget(Button.builder(Component.literal("Day"), b -> {
                 tc.setPresetDay();
                 init();
-            }).bounds(centerX - 80, y, 48, ROW_HEIGHT).build());
+            }).bounds(centerX - 40, y, 38, ROW_HEIGHT).build());
             
             this.addRenderableWidget(Button.builder(Component.literal("Dusk"), b -> {
                 tc.setPresetDusk();
                 init();
-            }).bounds(centerX - 24, y, 48, ROW_HEIGHT).build());
+            }).bounds(centerX, y, 38, ROW_HEIGHT).build());
 
-            this.addRenderableWidget(Button.builder(Component.literal("Midnight"), b -> {
+            this.addRenderableWidget(Button.builder(Component.literal("Night"), b -> {
                 tc.setPresetMidnight();
                 init();
-            }).bounds(centerX + 32, y, 48, ROW_HEIGHT).build());
+            }).bounds(centerX + 40, y, 40, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
 
             addFilterRow(centerX, y, tc::isFreezeTime, tc::setFreezeTime, "Freeze Time");
+            y += ROW_HEIGHT + ROW_SPACING;
+
+            this.addRenderableWidget(Button.builder(
+                    Component.literal("Weather: " + tc.getWeatherMode().getLabel()),
+                    button -> {
+                        tc.cycleWeather();
+                        init();
+                    }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 

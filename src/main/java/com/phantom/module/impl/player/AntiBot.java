@@ -16,7 +16,7 @@ import java.util.Properties;
 public class AntiBot extends Module {
     private final Map<UUID, Integer> firstSeenTicks = new HashMap<>();
     private boolean tabListCheck = true;
-    private boolean uuidCheck = true;
+    private boolean uuidCheck = false;
     private boolean invisibleUnlistedCheck = true;
     private int joinGraceTicks = 20;
 

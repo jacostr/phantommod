@@ -8,13 +8,24 @@ import net.minecraft.client.gui.screens.Screen;
 
 import java.util.Properties;
 
+    
 public class TimeChanger extends Module {
+    public enum WeatherMode {
+        DEFAULT("Server"), CLEAR("Clear"), RAIN("Rain"), THUNDER("Thunder");
+        private final String label;
+        WeatherMode(String label) { this.label = label; }
+        public String getLabel() { return label; }
+        public WeatherMode next() {
+            return values()[(this.ordinal() + 1) % values().length];
+        }
+    }
+
     private int targetTime = 6000;
     private boolean freezeTime = true;
-    private long lastServerTime = 0;
+    private WeatherMode weatherMode = WeatherMode.DEFAULT;
 
     public TimeChanger() {
-        super("TimeChanger", "Changes the world time locally.\nPresets: Day, Dusk, Midnight.", ModuleCategory.RENDER, -1);
+        super("Environment", "Changes world time & weather locally.", ModuleCategory.RENDER, -1);
     }
 
     @Override
@@ -23,12 +34,13 @@ public class TimeChanger extends Module {
             if (freezeTime) {
                 data.setDayTime(targetTime);
             } else {
-                // To cleanly follow the cycle with an offset without a mixin:
-                // Minecraft time progresses automatically. We just apply the difference.
-                // It's easier to just let it run if not frozen, but Minecraft sets time from packets.
-                // We will implement offset via mixin ideally, but for now we do simple offset by tracking delta.
                 long realTime = data.getDayTime();
                 data.setDayTime(realTime + targetTime);
+            }
+            
+            if (weatherMode != WeatherMode.DEFAULT) {
+                boolean rain = weatherMode == WeatherMode.RAIN || weatherMode == WeatherMode.THUNDER;
+                data.setRaining(rain);
             }
         }
     }
@@ -42,6 +54,8 @@ public class TimeChanger extends Module {
     public void setTargetTime(double time) { this.targetTime = (int) time; saveConfig(); }
     public boolean isFreezeTime() { return freezeTime; }
     public void setFreezeTime(boolean freezeTime) { this.freezeTime = freezeTime; saveConfig(); }
+    public WeatherMode getWeatherMode() { return weatherMode; }
+    public void cycleWeather() { weatherMode = weatherMode.next(); saveConfig(); }
 
     @Override public boolean hasConfigurableSettings() { return true; }
     @Override public Screen createSettingsScreen(Screen parent) { return new ModuleSettingsScreen(parent, this); }
@@ -49,14 +63,16 @@ public class TimeChanger extends Module {
     @Override
     public void loadConfig(Properties p) {
         super.loadConfig(p);
-        try { targetTime = Integer.parseInt(p.getProperty("timechanger.time", "6000")); } catch (Exception ignored) {}
-        freezeTime = Boolean.parseBoolean(p.getProperty("timechanger.freeze", "true"));
+        try { targetTime = Integer.parseInt(p.getProperty("environment.time", "6000")); } catch (Exception ignored) {}
+        freezeTime = Boolean.parseBoolean(p.getProperty("environment.freeze", "true"));
+        try { weatherMode = WeatherMode.valueOf(p.getProperty("environment.weather", "DEFAULT")); } catch (Exception ignored) {}
     }
 
     @Override
     public void saveConfig(Properties p) {
         super.saveConfig(p);
-        p.setProperty("timechanger.time", Integer.toString(targetTime));
-        p.setProperty("timechanger.freeze", Boolean.toString(freezeTime));
+        p.setProperty("environment.time", Integer.toString(targetTime));
+        p.setProperty("environment.freeze", Boolean.toString(freezeTime));
+        p.setProperty("environment.weather", weatherMode.name());
     }
 }
