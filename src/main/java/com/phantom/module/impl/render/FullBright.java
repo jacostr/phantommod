@@ -14,11 +14,9 @@ import com.phantom.module.ModuleCategory;
 
 public class FullBright extends Module {
 
-    private Double savedGamma;
-
+    // Logic moved to LightTextureMixin to avoid vanilla option validation errors.
+    
     public FullBright() {
-        // Moved to Player tab — it's a visual QoL feature, not combat automation.
-        // No hotkey by default; assign one in settings if you toggle this often.
         super("FullBright",
                 "Modifies ambient light level to maximum, letting you see perfectly in the dark.\nDetectability: Safe",
                 ModuleCategory.RENDER,
@@ -27,41 +25,15 @@ public class FullBright extends Module {
 
     @Override
     public void onEnable() {
-        applyGamma();
+        if (mc.levelRenderer != null) {
+            mc.levelRenderer.allChanged();
+        }
     }
 
     @Override
     public void onDisable() {
-        restoreGamma();
-    }
-
-    @Override
-    public void onTick() {
-        if (!isEnabled() || mc.options == null) {
-            return;
+        if (mc.levelRenderer != null) {
+            mc.levelRenderer.allChanged();
         }
-        // Keep gamma applied if the user opened options and changed something mid-session.
-        var opt = mc.options.gamma();
-        if (savedGamma != null && opt.get() < 0.999) {
-            opt.set(1.0);
-        }
-    }
-
-    private void applyGamma() {
-        if (mc.options == null) {
-            return;
-        }
-        var opt = mc.options.gamma();
-        if (savedGamma == null) {
-            savedGamma = opt.get();
-        }
-        opt.set(1.0);
-    }
-
-    private void restoreGamma() {
-        if (mc.options != null && savedGamma != null) {
-            mc.options.gamma().set(savedGamma);
-        }
-        savedGamma = null;
     }
 }

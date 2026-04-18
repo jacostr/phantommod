@@ -48,7 +48,7 @@ import com.phantom.module.impl.combat.AimAssist;
 import com.phantom.module.impl.combat.AutoCrystal;
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
-import com.phantom.module.impl.smp.BedESP;
+import com.phantom.module.impl.render.BedESP;
 import com.phantom.module.impl.smp.ChestESP;
 import com.phantom.module.impl.smp.OreESP;
 import com.phantom.module.impl.smp.ShulkerESP;
@@ -109,9 +109,9 @@ public class ModuleManager {
         modules.add(new Trajectories());
         modules.add(new TimeChanger());
         modules.add(new NoFall());
+        modules.add(new BedESP());
         // SMP
         modules.add(new AutoXPThrow());
-        modules.add(new BedESP());
         modules.add(new ChestESP());
         modules.add(new OreESP());
         modules.add(new OreFinder());

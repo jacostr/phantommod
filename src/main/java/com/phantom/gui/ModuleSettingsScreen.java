@@ -34,7 +34,7 @@ import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
 import com.phantom.module.impl.render.TimeChanger;
 import com.phantom.module.impl.render.Trajectories;
-import com.phantom.module.impl.smp.BedESP;
+import com.phantom.module.impl.render.BedESP;
 import com.phantom.module.impl.smp.ChestESP;
 import com.phantom.module.impl.smp.OreESP;
 import com.phantom.module.impl.smp.ShulkerESP;
@@ -369,6 +369,8 @@ public class ModuleSettingsScreen extends Screen {
         if (module instanceof BedESP be) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 8.0, 128.0,
                     be.getRange(), val -> be.setRange(val)));
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, be::isTeamColor, be::setTeamColor, "Team Color");
             y += ROW_HEIGHT + ROW_SPACING;
             this.addRenderableWidget(Button.builder(Component.literal("Color: " + be.getColorMode().getLabel()), b -> {
                 be.cycleColorMode();
@@ -1714,7 +1716,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof BedESP) {
-            contentHeight += 2 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof ShulkerESP) {

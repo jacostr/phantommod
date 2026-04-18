@@ -5,7 +5,7 @@
  * Scans nearby blocks for bed block entities and renders colored wireframes.
  * Detectability: Safe — purely client-side rendering.
  */
-package com.phantom.module.impl.smp;
+package com.phantom.module.impl.render;
 
 import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
@@ -32,6 +32,7 @@ import java.util.Properties;
 
 public class BedESP extends Module {
     private double range = 64.0;
+    private boolean teamColor = false;
     private ESPColor colorMode = ESPColor.PINK;
 
     private List<BlockPos> cachedBeds = new ArrayList<>();
@@ -39,7 +40,7 @@ public class BedESP extends Module {
 
     public BedESP() {
         super("BedESP", "Highlights bed blocks through walls.\nDetectability: Safe",
-                ModuleCategory.SMP, -1);
+                ModuleCategory.RENDER, -1);
     }
 
     @Override
@@ -77,13 +78,20 @@ public class BedESP extends Module {
         GL11.glDepthFunc(GL11.GL_ALWAYS);
         try {
             for (BlockPos pos : cachedBeds) {
+                BlockState state = mc.level.getBlockState(pos);
+                int color = colorMode.getColor();
+
+                if (teamColor && state.getBlock() instanceof BedBlock bed) {
+                    color = 0xFF000000 | bed.getColor().getFireworkColor();
+                }
+
                 AABB box = new AABB(pos);
                 var buffer = consumers.getBuffer(RenderTypes.lines());
                 ShapeRenderer.renderShape(
                         context.matrices(), buffer,
                         Shapes.create(box.inflate(0.02D)),
                         -cameraPos.x, -cameraPos.y, -cameraPos.z,
-                        colorMode.getColor(), 1.0F); 
+                        color, 1.0F); 
             }
             if (consumers instanceof MultiBufferSource.BufferSource bs) {
                 bs.endBatch(RenderTypes.lines());
@@ -98,6 +106,8 @@ public class BedESP extends Module {
 
     public double getRange() { return range; }
     public void setRange(double v) { range = Mth.clamp(v, 8.0, 128.0); saveConfig(); }
+    public boolean isTeamColor() { return teamColor; }
+    public void setTeamColor(boolean v) { teamColor = v; saveConfig(); }
     public ESPColor getColorMode() { return colorMode; }
     public void cycleColorMode() { colorMode = colorMode.next(); saveConfig(); }
 
@@ -108,6 +118,7 @@ public class BedESP extends Module {
     public void loadConfig(Properties p) {
         super.loadConfig(p);
         try { range = Mth.clamp(Double.parseDouble(p.getProperty("bedesp.range", "64.0")), 8.0, 128.0); } catch (Exception ignored) {}
+        teamColor = Boolean.parseBoolean(p.getProperty("bedesp.team", "false"));
         colorMode = ESPColor.fromString(p.getProperty("bedesp.color"), ESPColor.PINK);
     }
 
@@ -115,6 +126,7 @@ public class BedESP extends Module {
     public void saveConfig(Properties p) {
         super.saveConfig(p);
         p.setProperty("bedesp.range", Double.toString(range));
+        p.setProperty("bedesp.team", Boolean.toString(teamColor));
         p.setProperty("bedesp.color", colorMode.name());
     }
 }
