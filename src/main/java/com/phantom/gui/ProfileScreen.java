@@ -43,8 +43,9 @@ public class ProfileScreen extends Screen {
         for (int slot = 0; slot < ProfileManager.SLOT_COUNT; slot++) {
             final int currentSlot = slot;
             boolean isBundled = ProfileManager.hasBundledProfile(slot);
-            if (premadeOnly && !isBundled) continue;
-            
+            if (premadeOnly && !isBundled)
+                continue;
+
             int y = startY + rowIdx * (ROW_HEIGHT + ROW_SPACING);
             rowIdx++;
 
@@ -61,7 +62,8 @@ public class ProfileScreen extends Screen {
                         button -> handleSave(currentSlot)).bounds(centerX + 28, y, 52, ROW_HEIGHT).build());
             } else {
                 // Premade Mode: Use a label (static bundled name)
-                Button label = Button.builder(Component.literal(ProfileManager.getBundledName(slot)), b -> {})
+                Button label = Button.builder(Component.literal(ProfileManager.getBundledName(slot)), b -> {
+                })
                         .bounds(centerX - 120, y, 200, ROW_HEIGHT)
                         .build();
                 label.active = false;
@@ -77,7 +79,9 @@ public class ProfileScreen extends Screen {
                                 ? ProfileManager.loadBundledSlot(currentSlot, moduleManager)
                                 : ProfileManager.loadSlot(currentSlot, moduleManager);
                         if (loaded) {
-                            NotificationManager.push("Loaded " + (premadeOnly ? ProfileManager.getBundledName(currentSlot) : ProfileManager.getProfileName(currentSlot)));
+                            NotificationManager
+                                    .push("Loaded " + (premadeOnly ? ProfileManager.getBundledName(currentSlot)
+                                            : ProfileManager.getProfileName(currentSlot)));
                         } else {
                             NotificationManager.push("No data for this slot");
                         }
@@ -96,10 +100,12 @@ public class ProfileScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
         graphics.fill(0, 0, this.width, this.height, 0x90101010);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 24, 0xFFA8E6A3);
-        
-        graphics.drawCenteredString(this.font, "To import your friends configs manually,", this.width / 2, this.height - 40, 0xFFAAAAAA);
-        graphics.drawCenteredString(this.font, "copy .properties files into .minecraft/phantom-profiles", this.width / 2, this.height - 26, 0xFFAAAAAA);
-        
+
+        graphics.drawCenteredString(this.font, "To import your friends configs manually,", this.width / 2,
+                this.height - 40, 0xFFAAAAAA);
+        graphics.drawCenteredString(this.font, "copy .properties files into .minecraft/config/phantom-profiles/",
+                this.width / 2, this.height - 26, 0xFFAAAAAA);
+
         super.render(graphics, mouseX, mouseY, delta);
         NotificationManager.render(graphics, 10, this.height - 54);
     }
