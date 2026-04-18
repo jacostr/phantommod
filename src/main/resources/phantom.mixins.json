@@ -13,9 +13,7 @@
     "MultiPlayerGameModeMixin",
     "ItemInHandRendererMixin",
     "TitleScreenMixin",
-    "LevelMixin",
-    "LightTextureMixin",
-    "WorldIconMixin"
+    "LevelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.BedBlock;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -37,6 +38,7 @@ public class BedESP extends Module {
 
     private List<BlockPos> cachedBeds = new ArrayList<>();
     private long lastScanTick = 0;
+    private int lastWorldHash = 0;
 
     public BedESP() {
         super("BedESP", "Highlights bed blocks through walls.\nDetectability: Safe",
@@ -44,10 +46,23 @@ public class BedESP extends Module {
     }
 
     @Override
+    public void onEnable() {
+        cachedBeds.clear();
+        lastScanTick = 0;
+        lastWorldHash = 0;
+    }
+
+    @Override
     public void onTick() {
         if (mc.player == null || mc.level == null) return;
+        int currentWorldHash = System.identityHashCode(mc.level);
+        if (lastWorldHash != 0 && lastWorldHash != currentWorldHash) {
+            cachedBeds.clear();
+            lastScanTick = 0;
+        }
+        lastWorldHash = currentWorldHash;
         long currentTick = mc.level.getGameTime();
-        if (currentTick - lastScanTick >= 20) {
+        if (lastScanTick == 0 || currentTick - lastScanTick >= 20) {
             lastScanTick = currentTick;
             rescan();
         }

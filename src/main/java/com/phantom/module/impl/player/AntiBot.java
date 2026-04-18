@@ -6,6 +6,8 @@ import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.network.chat.Component;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -15,15 +17,21 @@ import java.util.Properties;
 
 public class AntiBot extends Module {
     private final Map<UUID, Integer> firstSeenTicks = new HashMap<>();
+    private final Map<UUID, Long> lastPlayerInfoUpdate = new HashMap<>();
+
     private boolean tabListCheck = true;
     private boolean uuidCheck = false;
     private boolean invisibleUnlistedCheck = true;
+    private boolean nameLengthCheck = true;
+    private boolean pingCheck = false;
     private int joinGraceTicks = 20;
+    private int minNameLength = 2;
+    private int maxNameLength = 16;
 
     public AntiBot() {
         super("AntiBot",
                 "Filters out bots and NPCs from ESP and combat modules.\n" +
-                        "Uses tab-list, UUID, invisibility, and fresh-join heuristics.\n" +
+                        "Uses tab-list, UUID, invisibility, name length, ping, and gamemode heuristics.\n" +
                         "Detectability: Safe",
                 ModuleCategory.PLAYER, -1);
     }
@@ -32,14 +40,18 @@ public class AntiBot extends Module {
     public void onTick() {
         if (mc.level == null) {
             firstSeenTicks.clear();
+            lastPlayerInfoUpdate.clear();
             return;
         }
 
         for (Player player : mc.level.players()) {
-            if (player == mc.player) {
-                continue;
-            }
+            if (player == mc.player) continue;
             firstSeenTicks.putIfAbsent(player.getUUID(), player.tickCount);
+
+            PlayerInfo info = mc.getConnection() != null ? mc.getConnection().getPlayerInfo(player.getUUID()) : null;
+            if (info != null) {
+                lastPlayerInfoUpdate.put(player.getUUID(), System.currentTimeMillis());
+            }
         }
 
         Iterator<Map.Entry<UUID, Integer>> iterator = firstSeenTicks.entrySet().iterator();
@@ -47,24 +59,11 @@ public class AntiBot extends Module {
             UUID uuid = iterator.next().getKey();
             if (mc.level.getPlayerByUUID(uuid) == null) {
                 iterator.remove();
+                lastPlayerInfoUpdate.remove(uuid);
             }
         }
     }
 
-    /**
-     * Returns true if the entity is considered a bot or NPC and should be
-     * ignored by targeting modules (ESP, KillAura, AimAssist, etc.).
-     *
-     * Two checks, in order of reliability:
-     *
-     * 1. Tab-list check — on Hypixel (and most servers), every real connected
-     * player has a PlayerInfo entry. Bots/NPCs injected server-side almost
-     * never do. This alone catches the vast majority of cases.
-     *
-     * 2. UUID version check — real Minecraft accounts use version-4 (random)
-     * UUIDs. Hypixel NPCs and many bot frameworks use version-2 or version-3
-     * UUIDs. Any non-v4 UUID is a strong signal the entity is not a real player.
-     */
     public static boolean isBot(Entity entity) {
         AntiBot module = PhantomMod.getModuleManager() == null
                 ? null
@@ -76,16 +75,12 @@ public class AntiBot extends Module {
         if (!(entity instanceof Player player))
             return false;
 
-        // Never flag the local player themselves
         if (player == mc.player)
             return false;
 
         if (!player.isAlive() || player.isSpectator()) {
             return true;
         }
-
-        boolean listedInTab = mc.getConnection() != null
-                && mc.getConnection().getPlayerInfo(player.getUUID()) != null;
 
         if (module.joinGraceTicks > 0) {
             int firstSeenTick = module.firstSeenTicks.getOrDefault(player.getUUID(), player.tickCount);
@@ -94,12 +89,13 @@ public class AntiBot extends Module {
             }
         }
 
-        // Check 1: not in the server's tab list
-        if (module.tabListCheck && mc.getConnection() != null && !listedInTab) {
+        boolean listedInTab = mc.getConnection() != null
+                && mc.getConnection().getPlayerInfo(player.getUUID()) != null;
+
+        if (module.tabListCheck && !listedInTab) {
             return true;
         }
 
-        // Check 2: UUID is not version 4 (not a real Mojang account UUID)
         UUID uuid = player.getUUID();
         if (module.uuidCheck && uuid.version() != 4) {
             return true;
@@ -109,59 +105,48 @@ public class AntiBot extends Module {
             return true;
         }
 
+        if (module.nameLengthCheck) {
+            Component displayName = player.getDisplayName();
+            String name = displayName != null ? displayName.getString() : "";
+            if (name.length() < module.minNameLength || name.length() > module.maxNameLength) {
+                return true;
+            }
+        }
+
+        if (module.pingCheck && listedInTab) {
+            PlayerInfo info = mc.getConnection().getPlayerInfo(player.getUUID());
+            if (info != null && info.getLatency() == 0) {
+                return true;
+            }
+        }
+
         return false;
     }
 
-    public boolean isTabListCheck() {
-        return tabListCheck;
-    }
-
-    public void setTabListCheck(boolean tabListCheck) {
-        this.tabListCheck = tabListCheck;
-        saveConfig();
-    }
-
-    public boolean isUuidCheck() {
-        return uuidCheck;
-    }
-
-    public void setUuidCheck(boolean uuidCheck) {
-        this.uuidCheck = uuidCheck;
-        saveConfig();
-    }
-
-    public boolean isInvisibleUnlistedCheck() {
-        return invisibleUnlistedCheck;
-    }
-
-    public void setInvisibleUnlistedCheck(boolean invisibleUnlistedCheck) {
-        this.invisibleUnlistedCheck = invisibleUnlistedCheck;
-        saveConfig();
-    }
-
-    public int getJoinGraceTicks() {
-        return joinGraceTicks;
-    }
-
-    public void setJoinGraceTicks(int joinGraceTicks) {
-        this.joinGraceTicks = Math.max(0, Math.min(200, joinGraceTicks));
-        saveConfig();
-    }
+    public boolean isTabListCheck() { return tabListCheck; }
+    public void setTabListCheck(boolean v) { tabListCheck = v; saveConfig(); }
+    public boolean isUuidCheck() { return uuidCheck; }
+    public void setUuidCheck(boolean v) { uuidCheck = v; saveConfig(); }
+    public boolean isInvisibleUnlistedCheck() { return invisibleUnlistedCheck; }
+    public void setInvisibleUnlistedCheck(boolean v) { invisibleUnlistedCheck = v; saveConfig(); }
+    public boolean isNameLengthCheck() { return nameLengthCheck; }
+    public void setNameLengthCheck(boolean v) { nameLengthCheck = v; saveConfig(); }
+    public boolean isPingCheck() { return pingCheck; }
+    public void setPingCheck(boolean v) { pingCheck = v; saveConfig(); }
+    public int getJoinGraceTicks() { return joinGraceTicks; }
+    public void setJoinGraceTicks(int v) { joinGraceTicks = Math.max(0, Math.min(200, v)); saveConfig(); }
 
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
         tabListCheck = Boolean.parseBoolean(properties.getProperty("antibot.tab_list", Boolean.toString(tabListCheck)));
         uuidCheck = Boolean.parseBoolean(properties.getProperty("antibot.uuid_check", Boolean.toString(uuidCheck)));
-        invisibleUnlistedCheck = Boolean.parseBoolean(
-                properties.getProperty("antibot.invisible_unlisted", Boolean.toString(invisibleUnlistedCheck)));
-        String grace = properties.getProperty("antibot.join_grace_ticks");
-        if (grace != null) {
-            try {
-                joinGraceTicks = Math.max(0, Math.min(200, Integer.parseInt(grace.trim())));
-            } catch (NumberFormatException ignored) {
-            }
-        }
+        invisibleUnlistedCheck = Boolean.parseBoolean(properties.getProperty("antibot.invisible_unlisted", Boolean.toString(invisibleUnlistedCheck)));
+        nameLengthCheck = Boolean.parseBoolean(properties.getProperty("antibot.name_length", Boolean.toString(nameLengthCheck)));
+        pingCheck = Boolean.parseBoolean(properties.getProperty("antibot.ping_check", Boolean.toString(pingCheck)));
+        try { joinGraceTicks = Integer.parseInt(properties.getProperty("antibot.join_grace_ticks", "20")); } catch (Exception ignored) {}
+        try { minNameLength = Integer.parseInt(properties.getProperty("antibot.min_name_length", "2")); } catch (Exception ignored) {}
+        try { maxNameLength = Integer.parseInt(properties.getProperty("antibot.max_name_length", "16")); } catch (Exception ignored) {}
     }
 
     @Override
@@ -170,6 +155,10 @@ public class AntiBot extends Module {
         properties.setProperty("antibot.tab_list", Boolean.toString(tabListCheck));
         properties.setProperty("antibot.uuid_check", Boolean.toString(uuidCheck));
         properties.setProperty("antibot.invisible_unlisted", Boolean.toString(invisibleUnlistedCheck));
+        properties.setProperty("antibot.name_length", Boolean.toString(nameLengthCheck));
+        properties.setProperty("antibot.ping_check", Boolean.toString(pingCheck));
         properties.setProperty("antibot.join_grace_ticks", Integer.toString(joinGraceTicks));
+        properties.setProperty("antibot.min_name_length", Integer.toString(minNameLength));
+        properties.setProperty("antibot.max_name_length", Integer.toString(maxNameLength));
     }
 }

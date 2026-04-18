@@ -215,7 +215,7 @@ public abstract class Module {
     }
 
     protected boolean shouldPauseForBedMining() {
-        if (mc.player == null || mc.level == null || mc.options == null || !mc.options.keyAttack.isDown()) {
+        if (mc.level == null || mc.player == null || mc.options == null || !mc.options.keyAttack.isDown()) {
             return false;
         }
         if (!(mc.hitResult instanceof BlockHitResult blockHitResult)) {

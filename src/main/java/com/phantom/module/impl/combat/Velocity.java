@@ -18,13 +18,27 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class Velocity extends Module {
-    private double kbPercent = 0.0; // 0.0 = 0% kb (None), 1.0 = 100% (Vanilla)
-    private double horizontalPercent = 0.0;
-    private double verticalPercent = 0.0;
+    public enum Mode {
+        LEGIT("Legit"),
+        SUBTLE("Subtle"),
+        BLATANT("Blatant"),
+        NONE("None");
+
+        private final String label;
+        Mode(String label) { this.label = label; }
+        public String getLabel() { return label; }
+    }
+
+    private Mode mode = Mode.LEGIT;
+    private double kbPercent = 0.9;
+    private double horizontalPercent = 0.9;
+    private double verticalPercent = 1.0;
     private double chance = 1.0;
-    private boolean hypixelMode = false;
     private boolean onlyWhileTargeting = false;
     private boolean disableWhileHoldingS = false;
+    private boolean pulseMode = false;
+    private int pulseInterval = 20;
+    private int pulseTicks = 0;
 
     public Velocity() {
         super("Velocity", "Reduces incoming knockback according to your percentage.\nDetectability: Blatant/Subtle", ModuleCategory.COMBAT, -1);
@@ -80,15 +94,6 @@ public class Velocity extends Module {
         saveConfig();
     }
 
-    public boolean isHypixelMode() {
-        return hypixelMode;
-    }
-
-    public void setHypixelMode(boolean hypixelMode) {
-        this.hypixelMode = hypixelMode;
-        saveConfig();
-    }
-
     public boolean isOnlyWhileTargeting() {
         return onlyWhileTargeting;
     }
@@ -117,56 +122,52 @@ public class Velocity extends Module {
         if (disableWhileHoldingS && mc.options != null && mc.options.keyDown.isDown()) {
             return false;
         }
+
+        if (pulseMode) {
+            pulseTicks++;
+            if (pulseTicks >= pulseInterval) {
+                pulseTicks = 0;
+            } else {
+                return false;
+            }
+        }
+
         return chance >= 1.0 || ThreadLocalRandom.current().nextDouble() <= chance;
     }
 
-    public void applyPresetLegit() {
-        setHorizontalPercent(0.90);
-        setVerticalPercent(1.0);
+    public void setMode(Mode mode) {
+        this.mode = mode;
+        switch (mode) {
+            case LEGIT -> { horizontalPercent = 0.90; verticalPercent = 1.0; }
+            case SUBTLE -> { horizontalPercent = 0.75; verticalPercent = 0.90; }
+            case BLATANT -> { horizontalPercent = 0.40; verticalPercent = 0.60; }
+            case NONE -> { horizontalPercent = 0.0; verticalPercent = 0.0; }
+        }
+        kbPercent = (horizontalPercent + verticalPercent) * 0.5;
+        saveConfig();
     }
 
-    public void applyPresetSubtle() {
-        setHorizontalPercent(0.75);
-        setVerticalPercent(0.90);
+    public Mode getMode() { return mode; }
+
+    public void cycleMode() {
+        Mode[] modes = Mode.values();
+        mode = modes[(mode.ordinal() + 1) % modes.length];
+        setMode(mode);
     }
 
-    public void applyPresetBlatant() {
-        setHorizontalPercent(0.40);
-        setVerticalPercent(0.60);
-    }
-
-    public void applyPresetNone() {
-        setHorizontalPercent(0.0);
-        setVerticalPercent(0.0);
-    }
+    public boolean isPulseMode() { return pulseMode; }
+    public void setPulseMode(boolean v) { pulseMode = v; saveConfig(); }
+    public int getPulseInterval() { return pulseInterval; }
+    public void setPulseInterval(int v) { pulseInterval = Math.max(1, v); saveConfig(); }
 
     @Override
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
-        String v = properties.getProperty("velocity.kb");
-        if (v != null) {
-            try {
-                kbPercent = Math.max(0.0, Math.min(1.0, Double.parseDouble(v.trim())));
-            } catch (NumberFormatException ignored) {}
-        }
-        String horizontal = properties.getProperty("velocity.horizontal");
-        if (horizontal != null) {
-            try {
-                horizontalPercent = Math.max(0.0, Math.min(1.0, Double.parseDouble(horizontal.trim())));
-            } catch (NumberFormatException ignored) {
-            }
-        } else {
-            horizontalPercent = kbPercent;
-        }
-        String vertical = properties.getProperty("velocity.vertical");
-        if (vertical != null) {
-            try {
-                verticalPercent = Math.max(0.0, Math.min(1.0, Double.parseDouble(vertical.trim())));
-            } catch (NumberFormatException ignored) {
-            }
-        } else {
-            verticalPercent = kbPercent;
-        }
+        try {
+            mode = Mode.valueOf(properties.getProperty("velocity.mode", "LEGIT"));
+        } catch (Exception ignored) {}
+        setMode(mode);
+
         String chanceValue = properties.getProperty("velocity.chance");
         if (chanceValue != null) {
             try {
@@ -174,23 +175,24 @@ public class Velocity extends Module {
             } catch (NumberFormatException ignored) {
             }
         }
-        hypixelMode = Boolean.parseBoolean(properties.getProperty("velocity.hypixel", Boolean.toString(hypixelMode)));
         onlyWhileTargeting = Boolean.parseBoolean(
                 properties.getProperty("velocity.only_while_targeting", Boolean.toString(onlyWhileTargeting)));
         disableWhileHoldingS = Boolean.parseBoolean(
                 properties.getProperty("velocity.disable_while_holding_s", Boolean.toString(disableWhileHoldingS)));
-        kbPercent = (horizontalPercent + verticalPercent) * 0.5;
+        pulseMode = Boolean.parseBoolean(properties.getProperty("velocity.pulse", "false"));
+        try { pulseInterval = Integer.parseInt(properties.getProperty("velocity.pulse_interval", "20")); } catch (Exception ignored) {}
     }
 
     @Override
     public void saveConfig(Properties properties) {
         super.saveConfig(properties);
-        properties.setProperty("velocity.kb", Double.toString(kbPercent));
+        properties.setProperty("velocity.mode", mode.name());
         properties.setProperty("velocity.horizontal", Double.toString(horizontalPercent));
         properties.setProperty("velocity.vertical", Double.toString(verticalPercent));
         properties.setProperty("velocity.chance", Double.toString(chance));
-        properties.setProperty("velocity.hypixel", Boolean.toString(hypixelMode));
         properties.setProperty("velocity.only_while_targeting", Boolean.toString(onlyWhileTargeting));
         properties.setProperty("velocity.disable_while_holding_s", Boolean.toString(disableWhileHoldingS));
+        properties.setProperty("velocity.pulse", Boolean.toString(pulseMode));
+        properties.setProperty("velocity.pulse_interval", Integer.toString(pulseInterval));
     }
 }

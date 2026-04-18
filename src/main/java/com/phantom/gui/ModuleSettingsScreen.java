@@ -30,7 +30,6 @@ import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Health;
-import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
 import com.phantom.module.impl.render.TimeChanger;
 import com.phantom.module.impl.render.Trajectories;
@@ -148,29 +147,21 @@ public class ModuleSettingsScreen extends Screen {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Chance", 0.0, 1.0,
                     vel.getChance(), val -> vel.setChance(val)));
             y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, vel::isHypixelMode, vel::setHypixelMode, "Hypixel Mode");
-            y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, vel::isOnlyWhileTargeting, vel::setOnlyWhileTargeting, "Only While Targeting");
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, vel::isDisableWhileHoldingS, vel::setDisableWhileHoldingS, "Disable While S");
             y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(Component.literal("Legit (90%)"), b -> {
-                vel.applyPresetLegit();
-                init();
-            }).bounds(centerX - 122, y, 118, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(Component.literal("Subtle (75%)"), b -> {
-                vel.applyPresetSubtle();
-                init();
-            }).bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
+            addFilterRow(centerX, y, vel::isPulseMode, vel::setPulseMode, "Pulse Mode");
             y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(Button.builder(Component.literal("Blatant (40%)"), b -> {
-                vel.applyPresetBlatant();
+            if (vel.isPulseMode()) {
+                this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Pulse Interval", 1, 100,
+                        vel.getPulseInterval(), val -> { vel.setPulseInterval((int) val); init(); }));
+                y += ROW_HEIGHT + ROW_SPACING;
+            }
+            this.addRenderableWidget(Button.builder(Component.literal("Mode: " + vel.getMode().getLabel()), b -> {
+                vel.cycleMode();
                 init();
-            }).bounds(centerX - 122, y, 118, ROW_HEIGHT).build());
-            this.addRenderableWidget(Button.builder(Component.literal("None (0%)"), b -> {
-                vel.applyPresetNone();
-                init();
-            }).bounds(centerX + 4, y, 118, ROW_HEIGHT).build());
+            }).bounds(centerX - 80, y, 160, ROW_HEIGHT).build());
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1234,34 +1225,6 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
-        if (module instanceof Nametags nametags) {
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Range", 16.0, 160.0,
-                    nametags.getRange(), nametags::setRange));
-            y += ROW_HEIGHT + ROW_SPACING;
-            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Scale", 0.5, 3.0,
-                    nametags.getScale(), nametags::setScale));
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowOwnNameTag, nametags::setShowOwnNameTag, "Show Own");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isDistanceScaling, nametags::setDistanceScaling, "Distance Scaling");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isBackground, nametags::setBackground, "Background");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isTextShadow, nametags::setTextShadow, "Text Shadow");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowHealth, nametags::setShowHealth, "Show Health");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowDistance, nametags::setShowDistance, "Show Distance");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowInvisible, nametags::setShowInvisible, "Show Invisible");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowAnimals, nametags::setShowAnimals, "Show Animals");
-            y += ROW_HEIGHT + ROW_SPACING;
-            addFilterRow(centerX, y, nametags::isShowMobs, nametags::setShowMobs, "Show Mobs");
-            y += ROW_HEIGHT + ROW_SPACING;
-        }
-
-
         if (module instanceof LatencyAlerts latencyAlerts) {
             this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "High ping ms", 50.0, 1000.0,
                     latencyAlerts.getHighPingMs(), val -> latencyAlerts.setHighPingMs((int) Math.round(val))));
@@ -1672,10 +1635,6 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof Health) {
             contentHeight += 10 * (ROW_HEIGHT + ROW_SPACING);
-        }
-
-        if (module instanceof Nametags) {
-            contentHeight += 11 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AlwaysSprint) {

@@ -44,6 +44,8 @@ public class WaterClutch extends Module {
     private boolean clutch = true;
     private int triggerHeight = 8; // blocks above ground to trigger fall clutch
     private int fireDurationThreshold = 30; // ticks on fire before extinguishing (~1.5s)
+    private int cooldownTicks = 0;
+    private boolean cancelOnBlockPlace = true;
 
     public WaterClutch() {
         super("WaterClutch",
@@ -59,6 +61,8 @@ public class WaterClutch extends Module {
     public void onTick() {
         if (mc.player == null || mc.level == null || mc.gameMode == null)
             return;
+
+        if (cooldownTicks > 0) cooldownTicks--;
 
         // Track fire ticks
         if (mc.player.isOnFire())
@@ -219,6 +223,7 @@ public class WaterClutch extends Module {
     }
 
     private boolean shouldClutch() {
+        if (cooldownTicks > 0) return false;
         if (mc.level.dimension() == Level.NETHER)
             return false;
         if (mc.player.onGround())
@@ -227,21 +232,15 @@ public class WaterClutch extends Module {
             return false;
         if (mc.player.isInWater() || mc.player.isInLava())
             return false;
-        // Require real downward velocity — not a hop peak
         if (mc.player.getDeltaMovement().y >= -0.3)
             return false;
-        // 3 ticks of confirmed freefall rules out 1-2 tick parkour gaps without
-        // burning precious trigger window on longer falls.
         if (freefallTicks < 3)
             return false;
 
-        // Lookahead: simulate player Y in 4 ticks (swap + look-down lerp + place lag)
-        // and check if THAT position is within the trigger threshold. This means the
-        // sequence fires early enough that water actually lands before the player does.
         double vy = mc.player.getDeltaMovement().y;
         double predictedY = mc.player.getY();
         for (int t = 0; t < 4; t++) {
-            vy = (vy - 0.08) * 0.98; // Minecraft gravity + air drag
+            vy = (vy - 0.08) * 0.98;
             predictedY += vy;
         }
         BlockPos predictedPos = BlockPos.containing(mc.player.getX(), predictedY - 0.01, mc.player.getZ());
@@ -347,6 +346,10 @@ public class WaterClutch extends Module {
             fireDurationThreshold = Integer.parseInt(p.getProperty("waterclutch.fire_threshold", "30"));
         } catch (Exception ignored) {
         }
+        try {
+            cooldownTicks = Integer.parseInt(p.getProperty("waterclutch.cooldown", "10"));
+        } catch (Exception ignored) {
+        }
     }
 
     @Override
@@ -356,5 +359,6 @@ public class WaterClutch extends Module {
         p.setProperty("waterclutch.clutch", Boolean.toString(clutch));
         p.setProperty("waterclutch.trigger_height", Integer.toString(triggerHeight));
         p.setProperty("waterclutch.fire_threshold", Integer.toString(fireDurationThreshold));
+        p.setProperty("waterclutch.cooldown", Integer.toString(cooldownTicks));
     }
 }

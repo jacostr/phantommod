@@ -50,24 +50,12 @@ public class ClientPacketListenerMixin {
                 double horizontal = velocityModule.getHorizontalPercent();
                 double vertical = velocityModule.getVerticalPercent();
 
-                if (velocityModule.isHypixelMode() && !mc.player.onGround()) {
-                    // Hypixel air-KB bypass: Cancel/Reduce horizontal motion while airborne.
-                    // Keep the vertical (Y) motion to look more natural.
-                    net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
-                    mc.player.setDeltaMovement(
-                            currentMotion.x() * Math.min(horizontal, 0.2),
-                            currentMotion.y() * vertical,
-                            currentMotion.z() * Math.min(horizontal, 0.2)
-                    );
-                } else {
-                    // Scale all three axes uniformly for non-airborne or standard mode.
-                    net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
-                    mc.player.setDeltaMovement(
-                            currentMotion.x() * horizontal,
-                            currentMotion.y() * vertical,
-                            currentMotion.z() * horizontal
-                    );
-                }
+                net.minecraft.world.phys.Vec3 currentMotion = mc.player.getDeltaMovement();
+                mc.player.setDeltaMovement(
+                        currentMotion.x() * horizontal,
+                        currentMotion.y() * vertical,
+                        currentMotion.z() * horizontal
+                );
             }
         }
     }

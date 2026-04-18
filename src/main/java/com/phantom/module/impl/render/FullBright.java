@@ -1,39 +1,48 @@
 /* Copyright (c) 2026 PhantomMod. All rights reserved. */
-/*
- * FullBright.java — Maximum ambient light level for night vision (Player module).
- *
- * Saves the current gamma value on enable, sets it to 1.0 (maximum), and restores
- * the original value on disable. Re-applies gamma every tick in case the user opens
- * vanilla Options and the value gets reset.
- * Detectability: Safe — gamma is a client-only graphics option.
- */
 package com.phantom.module.impl.render;
 
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import net.minecraft.client.Minecraft;
 
 public class FullBright extends Module {
 
-    // Logic moved to LightTextureMixin to avoid vanilla option validation errors.
-    
     public FullBright() {
         super("FullBright",
-                "Modifies ambient light level to maximum, letting you see perfectly in the dark.\nDetectability: Safe",
+                "Removes darkness for full vision.\nDetectability: Safe",
                 ModuleCategory.RENDER,
                 -1);
     }
 
     @Override
     public void onEnable() {
-        if (mc.levelRenderer != null) {
-            mc.levelRenderer.allChanged();
-        }
+        setGamma(100.0);
     }
 
     @Override
     public void onDisable() {
-        if (mc.levelRenderer != null) {
-            mc.levelRenderer.allChanged();
+        setGamma(0.5);
+    }
+
+    private void setGamma(double value) {
+        try {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.options != null) {
+                var gammaOption = mc.options.gamma();
+                var field = gammaOption.getClass().getDeclaredField("value");
+                field.setAccessible(true);
+                field.set(gammaOption, value);
+                mc.options.save();
+            }
+        } catch (Exception e) {
+            // Fallback - try normal setter
+            try {
+                Minecraft mc = Minecraft.getInstance();
+                if (mc.options != null) {
+                    mc.options.gamma().set(Math.min(2.0, Math.max(0.0, value)));
+                    mc.options.save();
+                }
+            } catch (Exception ignored) {}
         }
     }
 }

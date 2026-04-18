@@ -42,7 +42,6 @@ public class InventoryUtil {
         if (Minecraft.getInstance().player != null && selectedField != null) {
             try {
                 selectedField.set(Minecraft.getInstance().player.getInventory(), slot);
-                // Notify server of the change using the correct 1.21 packet name
                 Minecraft.getInstance().getConnection().send(new ServerboundSetCarriedItemPacket(slot));
             } catch (Exception e) {
                 e.printStackTrace();

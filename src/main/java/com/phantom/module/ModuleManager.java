@@ -28,7 +28,6 @@ import com.phantom.module.impl.player.AutoGG;
 import com.phantom.module.impl.player.AutoTotem;
 import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
-import com.phantom.module.impl.player.NoFall;
 import com.phantom.module.impl.render.ESP;
 import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.impl.player.LatencyAlerts;
@@ -37,7 +36,6 @@ import com.phantom.module.impl.render.FullBright;
 import com.phantom.module.impl.render.HudModule;
 import com.phantom.module.impl.render.Indicators;
 import com.phantom.module.impl.render.Health;
-import com.phantom.module.impl.render.Nametags;
 import com.phantom.module.impl.render.TNTTimer;
 import com.phantom.module.impl.render.TimeChanger;
 import com.phantom.module.impl.render.Trajectories;
@@ -45,7 +43,6 @@ import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.AimAssist;
-import com.phantom.module.impl.combat.AutoCrystal;
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.render.BedESP;
@@ -70,7 +67,6 @@ public class ModuleManager {
         // Combat
         modules.add(new AimAssist());
         modules.add(new BowAimbot());
-        modules.add(new AutoCrystal());
         modules.add(new AutoClicker());
         modules.add(new WaterClutch());
         modules.add(new BlockHit());
@@ -104,11 +100,9 @@ public class ModuleManager {
         modules.add(new Indicators());
         modules.add(new LatencyAlerts());
         modules.add(new Health());
-        modules.add(new Nametags());
         modules.add(new TNTTimer());
         modules.add(new Trajectories());
         modules.add(new TimeChanger());
-        modules.add(new NoFall());
         modules.add(new BedESP());
         // SMP
         modules.add(new AutoXPThrow());
