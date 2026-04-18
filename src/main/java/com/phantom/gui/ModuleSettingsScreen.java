@@ -1253,6 +1253,10 @@ public class ModuleSettingsScreen extends Screen {
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, nametags::isShowInvisible, nametags::setShowInvisible, "Show Invisible");
             y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowAnimals, nametags::setShowAnimals, "Show Animals");
+            y += ROW_HEIGHT + ROW_SPACING;
+            addFilterRow(centerX, y, nametags::isShowMobs, nametags::setShowMobs, "Show Mobs");
+            y += ROW_HEIGHT + ROW_SPACING;
         }
 
 
@@ -1669,7 +1673,7 @@ public class ModuleSettingsScreen extends Screen {
         }
 
         if (module instanceof Nametags) {
-            contentHeight += 9 * (ROW_HEIGHT + ROW_SPACING);
+            contentHeight += 11 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof AlwaysSprint) {

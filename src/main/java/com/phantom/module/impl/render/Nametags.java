@@ -35,6 +35,8 @@ public class Nametags extends Module {
     private boolean showHealth = true;
     private boolean showDistance;
     private boolean showInvisible = true;
+    private boolean showAnimals = true;
+    private boolean showMobs = true;
 
     public Nametags() {
         super("Nametags",
@@ -45,82 +47,102 @@ public class Nametags extends Module {
 
     @Override
     public void onRender(WorldRenderContext context) {
-        if (mc.player == null || mc.level == null) {
+        if (mc.player == null || mc.level == null)
             return;
-        }
 
         PoseStack matrices = context.matrices();
-        if (matrices == null) {
+        if (matrices == null)
             return;
-        }
 
-        // Use Minecraft's own buffer source for text rendering — the context's
-        // consumers() may not track/flush font render types correctly, which
-        // causes drawInBatch text to silently vanish.
-        MultiBufferSource.BufferSource bufferSource =
-                mc.renderBuffers().bufferSource();
-
+        MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
         Camera camera = mc.gameRenderer.getMainCamera();
         Vec3 cameraPos = camera.position();
         double rangeSq = range * range;
         float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
-        java.util.List<Player> targetPlayers = new java.util.ArrayList<>(mc.level.players());
-        if (mc.player != null && !targetPlayers.contains(mc.player)) {
-            targetPlayers.add(mc.player);
+        // Use AABB query so mobs/animals behind the camera are not frustum-culled.
+        // Always manually add the local player for third-person rendering.
+        java.util.List<LivingEntity> entities = new java.util.ArrayList<>(
+                mc.level.getEntitiesOfClass(LivingEntity.class,
+                        mc.player.getBoundingBox().inflate(range)));
+        if (!entities.contains(mc.player)) {
+            entities.add(mc.player);
         }
 
-        for (Player player : targetPlayers) {
-            if (!shouldRender(player)) {
+        for (LivingEntity living : entities) {
+            if (!shouldRender(living))
                 continue;
-            }
 
-            // Use interpolated positions so the nametag tracks the entity smoothly
-            double ix = Mth.lerp(partialTick, player.xOld, player.getX());
-            double iy = Mth.lerp(partialTick, player.yOld, player.getY());
-            double iz = Mth.lerp(partialTick, player.zOld, player.getZ());
+            // xOld/yOld/zOld are unreliable for the local player — use current pos directly
+            double ix, iy, iz;
+            if (living == mc.player) {
+                ix = living.getX();
+                iy = living.getY();
+                iz = living.getZ();
+            } else {
+                ix = Mth.lerp(partialTick, living.xOld, living.getX());
+                iy = Mth.lerp(partialTick, living.yOld, living.getY());
+                iz = Mth.lerp(partialTick, living.zOld, living.getZ());
+            }
 
             double dx = ix - cameraPos.x;
-            double dy = iy + player.getBbHeight() + 0.55 - cameraPos.y;
+            double dy = iy + living.getBbHeight() + 0.55 - cameraPos.y;
             double dz = iz - cameraPos.z;
             double distanceSq = dx * dx + dy * dy + dz * dz;
-            if (distanceSq > rangeSq) {
+            if (distanceSq > rangeSq)
                 continue;
-            }
 
-            MutableComponent text = player.getDisplayName().copy();
+            MutableComponent text = living.getDisplayName().copy();
             if (showHealth) {
-                text.append(buildHealthComponent(player));
+                text.append(buildHealthComponent(living));
             }
             if (showDistance) {
-                text.append(Component.literal(" [" + Mth.floor(Math.sqrt(distanceSq)) + "m]").withStyle(ChatFormatting.GRAY));
+                text.append(Component.literal(" [" + Mth.floor(Math.sqrt(distanceSq)) + "m]")
+                        .withStyle(ChatFormatting.GRAY));
             }
 
             renderTag(matrices, bufferSource, camera, text, dx, dy, dz, Math.sqrt(distanceSq));
         }
 
-        // Flush our buffer source — safe because we created it ourselves,
-        // not using the shared context consumers.
         bufferSource.endBatch();
     }
 
-    private boolean shouldRender(Player player) {
-        if (player == null || !player.isAlive()) {
+    private boolean shouldRender(LivingEntity entity) {
+        if (entity == null || !entity.isAlive())
             return false;
+
+        // Own nametag — only visible in third-person, skip all other checks
+        if (entity == mc.player) {
+            return showOwnNameTag && !mc.options.getCameraType().isFirstPerson();
         }
-        if (player == mc.player) {
-            if (!showOwnNameTag || mc.options.getCameraType().isFirstPerson()) {
-                return false;
-            }
-        }
-        if (!showInvisible && player.isInvisible()) {
+
+        if (!showInvisible && entity.isInvisible())
             return false;
+
+        // Other players (filter bots)
+        if (entity instanceof Player player) {
+            return !AntiBot.isBot(player);
         }
-        return !AntiBot.isBot(player);
+
+        // Animals & ambient creatures.
+        // WaterAnimal does not exist in this MC version — AbstractFish extends Animal
+        // anyway.
+        if (entity instanceof net.minecraft.world.entity.animal.Animal
+                || entity instanceof net.minecraft.world.entity.ambient.AmbientCreature) {
+            return showAnimals;
+        }
+
+        // Everything else with AI (zombies, skeletons, golems, etc.)
+        // Monster extends Mob so one check covers both.
+        if (entity instanceof net.minecraft.world.entity.Mob) {
+            return showMobs;
+        }
+
+        return false;
     }
 
     private void renderTag(PoseStack matrices, MultiBufferSource consumers, Camera camera, Component text,
-                           double dx, double dy, double dz, double distance) {
+            double dx, double dy, double dz, double distance) {
         matrices.pushPose();
         matrices.translate(dx, dy, dz);
         matrices.mulPose(camera.rotation());
@@ -139,17 +161,8 @@ public class Nametags extends Module {
         Matrix4f matrix = matrices.last().pose();
 
         mc.font.drawInBatch(
-                line,
-                textX,
-                0.0f,
-                0xFFFFFFFF,
-                textShadow,
-                matrix,
-                consumers,
-                Font.DisplayMode.SEE_THROUGH,
-                backgroundColor,
-                LightTexture.FULL_BRIGHT
-        );
+                line, textX, 0.0f, 0xFFFFFFFF, textShadow, matrix, consumers,
+                Font.DisplayMode.SEE_THROUGH, backgroundColor, LightTexture.FULL_BRIGHT);
 
         matrices.popPose();
     }
@@ -160,15 +173,14 @@ public class Nametags extends Module {
         float ratio = health / maxHealth;
 
         ChatFormatting color;
-        if (ratio > 0.75f) {
+        if (ratio > 0.75f)
             color = ChatFormatting.GREEN;
-        } else if (ratio > 0.50f) {
+        else if (ratio > 0.50f)
             color = ChatFormatting.YELLOW;
-        } else if (ratio > 0.25f) {
+        else if (ratio > 0.25f)
             color = ChatFormatting.GOLD;
-        } else {
+        else
             color = ChatFormatting.RED;
-        }
 
         return Component.literal(" " + fastOneDecimal(health / 2.0f) + " \u2764").withStyle(color);
     }
@@ -181,12 +193,10 @@ public class Nametags extends Module {
     }
 
     public static boolean shouldHideVanillaNametag(net.minecraft.world.entity.Entity entity) {
-        if (!(entity instanceof Player)) {
+        if (!(entity instanceof Player))
             return false;
-        }
-        if (PhantomMod.getModuleManager() == null) {
+        if (PhantomMod.getModuleManager() == null)
             return false;
-        }
         Nametags module = PhantomMod.getModuleManager().getModuleByClass(Nametags.class);
         return module != null && module.isEnabled();
     }
@@ -201,56 +211,143 @@ public class Nametags extends Module {
         return new ModuleSettingsScreen(parent, this);
     }
 
-    public double getRange() { return range; }
-    public void setRange(double range) { this.range = Mth.clamp(range, 16.0, 160.0); saveConfig(); }
-    public double getScale() { return scale; }
-    public void setScale(double scale) { this.scale = Mth.clamp(scale, 0.5, 3.0); saveConfig(); }
-    public boolean isShowOwnNameTag() { return showOwnNameTag; }
-    public void setShowOwnNameTag(boolean showOwnNameTag) { this.showOwnNameTag = showOwnNameTag; saveConfig(); }
-    public boolean isDistanceScaling() { return distanceScaling; }
-    public void setDistanceScaling(boolean distanceScaling) { this.distanceScaling = distanceScaling; saveConfig(); }
-    public boolean isBackground() { return background; }
-    public void setBackground(boolean background) { this.background = background; saveConfig(); }
-    public boolean isTextShadow() { return textShadow; }
-    public void setTextShadow(boolean textShadow) { this.textShadow = textShadow; saveConfig(); }
-    public boolean isShowHealth() { return showHealth; }
-    public void setShowHealth(boolean showHealth) { this.showHealth = showHealth; saveConfig(); }
-    public boolean isShowDistance() { return showDistance; }
-    public void setShowDistance(boolean showDistance) { this.showDistance = showDistance; saveConfig(); }
-    public boolean isShowInvisible() { return showInvisible; }
-    public void setShowInvisible(boolean showInvisible) { this.showInvisible = showInvisible; saveConfig(); }
+    public double getRange() {
+        return range;
+    }
 
-    @Override
-    public void loadConfig(Properties properties) {
-        super.loadConfig(properties);
-        try {
-            range = Mth.clamp(Double.parseDouble(properties.getProperty("nametags.range", "96.0")), 16.0, 160.0);
-        } catch (NumberFormatException ignored) {
-        }
-        try {
-            scale = Mth.clamp(Double.parseDouble(properties.getProperty("nametags.scale", "1.0")), 0.5, 3.0);
-        } catch (NumberFormatException ignored) {
-        }
-        showOwnNameTag = Boolean.parseBoolean(properties.getProperty("nametags.show_own", Boolean.toString(showOwnNameTag)));
-        distanceScaling = Boolean.parseBoolean(properties.getProperty("nametags.distance_scaling", Boolean.toString(distanceScaling)));
-        background = Boolean.parseBoolean(properties.getProperty("nametags.background", Boolean.toString(background)));
-        textShadow = Boolean.parseBoolean(properties.getProperty("nametags.text_shadow", Boolean.toString(textShadow)));
-        showHealth = Boolean.parseBoolean(properties.getProperty("nametags.show_health", Boolean.toString(showHealth)));
-        showDistance = Boolean.parseBoolean(properties.getProperty("nametags.show_distance", Boolean.toString(showDistance)));
-        showInvisible = Boolean.parseBoolean(properties.getProperty("nametags.show_invisible", Boolean.toString(showInvisible)));
+    public void setRange(double v) {
+        this.range = Mth.clamp(v, 16.0, 160.0);
+        saveConfig();
+    }
+
+    public double getScale() {
+        return scale;
+    }
+
+    public void setScale(double v) {
+        this.scale = Mth.clamp(v, 0.5, 3.0);
+        saveConfig();
+    }
+
+    public boolean isShowOwnNameTag() {
+        return showOwnNameTag;
+    }
+
+    public void setShowOwnNameTag(boolean v) {
+        this.showOwnNameTag = v;
+        saveConfig();
+    }
+
+    public boolean isDistanceScaling() {
+        return distanceScaling;
+    }
+
+    public void setDistanceScaling(boolean v) {
+        this.distanceScaling = v;
+        saveConfig();
+    }
+
+    public boolean isBackground() {
+        return background;
+    }
+
+    public void setBackground(boolean v) {
+        this.background = v;
+        saveConfig();
+    }
+
+    public boolean isTextShadow() {
+        return textShadow;
+    }
+
+    public void setTextShadow(boolean v) {
+        this.textShadow = v;
+        saveConfig();
+    }
+
+    public boolean isShowHealth() {
+        return showHealth;
+    }
+
+    public void setShowHealth(boolean v) {
+        this.showHealth = v;
+        saveConfig();
+    }
+
+    public boolean isShowDistance() {
+        return showDistance;
+    }
+
+    public void setShowDistance(boolean v) {
+        this.showDistance = v;
+        saveConfig();
+    }
+
+    public boolean isShowInvisible() {
+        return showInvisible;
+    }
+
+    public void setShowInvisible(boolean v) {
+        this.showInvisible = v;
+        saveConfig();
+    }
+
+    public boolean isShowAnimals() {
+        return showAnimals;
+    }
+
+    public void setShowAnimals(boolean v) {
+        this.showAnimals = v;
+        saveConfig();
+    }
+
+    public boolean isShowMobs() {
+        return showMobs;
+    }
+
+    public void setShowMobs(boolean v) {
+        this.showMobs = v;
+        saveConfig();
     }
 
     @Override
-    public void saveConfig(Properties properties) {
-        super.saveConfig(properties);
-        properties.setProperty("nametags.range", Double.toString(range));
-        properties.setProperty("nametags.scale", Double.toString(scale));
-        properties.setProperty("nametags.show_own", Boolean.toString(showOwnNameTag));
-        properties.setProperty("nametags.distance_scaling", Boolean.toString(distanceScaling));
-        properties.setProperty("nametags.background", Boolean.toString(background));
-        properties.setProperty("nametags.text_shadow", Boolean.toString(textShadow));
-        properties.setProperty("nametags.show_health", Boolean.toString(showHealth));
-        properties.setProperty("nametags.show_distance", Boolean.toString(showDistance));
-        properties.setProperty("nametags.show_invisible", Boolean.toString(showInvisible));
+    public void loadConfig(Properties props) {
+        super.loadConfig(props);
+        try {
+            range = Mth.clamp(Double.parseDouble(props.getProperty("nametags.range", "96.0")), 16.0, 160.0);
+        } catch (NumberFormatException ignored) {
+        }
+        try {
+            scale = Mth.clamp(Double.parseDouble(props.getProperty("nametags.scale", "1.0")), 0.5, 3.0);
+        } catch (NumberFormatException ignored) {
+        }
+        showOwnNameTag = Boolean.parseBoolean(props.getProperty("nametags.show_own", Boolean.toString(showOwnNameTag)));
+        distanceScaling = Boolean
+                .parseBoolean(props.getProperty("nametags.distance_scaling", Boolean.toString(distanceScaling)));
+        background = Boolean.parseBoolean(props.getProperty("nametags.background", Boolean.toString(background)));
+        textShadow = Boolean.parseBoolean(props.getProperty("nametags.text_shadow", Boolean.toString(textShadow)));
+        showHealth = Boolean.parseBoolean(props.getProperty("nametags.show_health", Boolean.toString(showHealth)));
+        showDistance = Boolean
+                .parseBoolean(props.getProperty("nametags.show_distance", Boolean.toString(showDistance)));
+        showInvisible = Boolean
+                .parseBoolean(props.getProperty("nametags.show_invisible", Boolean.toString(showInvisible)));
+        showAnimals = Boolean.parseBoolean(props.getProperty("nametags.show_animals", Boolean.toString(showAnimals)));
+        showMobs = Boolean.parseBoolean(props.getProperty("nametags.show_mobs", Boolean.toString(showMobs)));
+    }
+
+    @Override
+    public void saveConfig(Properties props) {
+        super.saveConfig(props);
+        props.setProperty("nametags.range", Double.toString(range));
+        props.setProperty("nametags.scale", Double.toString(scale));
+        props.setProperty("nametags.show_own", Boolean.toString(showOwnNameTag));
+        props.setProperty("nametags.distance_scaling", Boolean.toString(distanceScaling));
+        props.setProperty("nametags.background", Boolean.toString(background));
+        props.setProperty("nametags.text_shadow", Boolean.toString(textShadow));
+        props.setProperty("nametags.show_health", Boolean.toString(showHealth));
+        props.setProperty("nametags.show_distance", Boolean.toString(showDistance));
+        props.setProperty("nametags.show_invisible", Boolean.toString(showInvisible));
+        props.setProperty("nametags.show_animals", Boolean.toString(showAnimals));
+        props.setProperty("nametags.show_mobs", Boolean.toString(showMobs));
     }
 }
