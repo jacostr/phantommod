@@ -20,6 +20,7 @@ import com.phantom.module.impl.player.AutoTotem;
 import com.phantom.module.impl.player.AutoTools;
 import com.phantom.module.impl.player.AutoXPThrow;
 import com.phantom.module.impl.player.FastPlace;
+import com.phantom.module.impl.player.AutoGG;
 import com.phantom.module.impl.player.LatencyAlerts;
 
 import com.phantom.module.impl.movement.Scaffold;
@@ -831,6 +832,13 @@ public class ModuleSettingsScreen extends Screen {
             addFilterRow(centerX, y, as::isAllowSideways, as::setAllowSideways, "Sprint sideways");
             y += ROW_HEIGHT + ROW_SPACING;
             addFilterRow(centerX, y, as::isAllowInInventory, as::setAllowInInventory, "Sprint in inventory");
+            y += ROW_HEIGHT + ROW_SPACING;
+        }
+
+
+        if (module instanceof AutoGG gg) {
+            this.addRenderableWidget(new PhantomSlider(centerX - 80, y, 160, ROW_HEIGHT, "Delay (ms)", 0.0, 5000.0,
+                    gg.getDelayMs(), val -> gg.setDelayMs((int) val)));
             y += ROW_HEIGHT + ROW_SPACING;
         }
 
@@ -1670,6 +1678,11 @@ public class ModuleSettingsScreen extends Screen {
 
         if (module instanceof LatencyAlerts) {
             contentHeight += 3 * (ROW_HEIGHT + ROW_SPACING);
+        }
+
+
+        if (module instanceof AutoGG) {
+            contentHeight += 1 * (ROW_HEIGHT + ROW_SPACING);
         }
 
         if (module instanceof NoHitDelay) {

@@ -179,8 +179,8 @@ public class Trajectories extends Module {
     public void loadConfig(Properties props) {
         super.loadConfig(props);
         onlyWhenDrawing = Boolean.parseBoolean(props.getProperty("trajectories.only_drawing", "true"));
-        maxTicks = Double.parseDouble(props.getProperty("trajectories.max_ticks", "100.0"));
-        thickness = Float.parseFloat(props.getProperty("trajectories.thickness", "2.0"));
+        try { maxTicks = Double.parseDouble(props.getProperty("trajectories.max_ticks", "100.0")); } catch (NumberFormatException ignored) {}
+        try { thickness = Float.parseFloat(props.getProperty("trajectories.thickness", "2.0")); } catch (NumberFormatException ignored) {}
         color = ESPColor.fromString(props.getProperty("trajectories.color"), ESPColor.GREEN);
     }
 

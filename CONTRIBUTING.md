@@ -1,4 +1,4 @@
-# PhantomMod v1.0.6 — Technical Reference
+# PhantomMod v1.0.7 — Technical Reference
 
 > A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
 

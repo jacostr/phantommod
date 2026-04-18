@@ -152,6 +152,9 @@ public abstract class Module {
     public void onHudRender(GuiGraphics graphics) {
     }
 
+    public void onChat(String message) {
+    }
+
     public boolean hasSettings() {
         return true;
     }

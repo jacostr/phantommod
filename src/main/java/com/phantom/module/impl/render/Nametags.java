@@ -50,14 +50,20 @@ public class Nametags extends Module {
         }
 
         PoseStack matrices = context.matrices();
-        MultiBufferSource consumers = context.consumers();
-        if (matrices == null || consumers == null) {
+        if (matrices == null) {
             return;
         }
+
+        // Use Minecraft's own buffer source for text rendering — the context's
+        // consumers() may not track/flush font render types correctly, which
+        // causes drawInBatch text to silently vanish.
+        MultiBufferSource.BufferSource bufferSource =
+                mc.renderBuffers().bufferSource();
 
         Camera camera = mc.gameRenderer.getMainCamera();
         Vec3 cameraPos = camera.position();
         double rangeSq = range * range;
+        float partialTick = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
 
         java.util.List<Player> targetPlayers = new java.util.ArrayList<>(mc.level.players());
         if (mc.player != null && !targetPlayers.contains(mc.player)) {
@@ -69,9 +75,14 @@ public class Nametags extends Module {
                 continue;
             }
 
-            double dx = player.getX() - cameraPos.x;
-            double dy = player.getY() + player.getBbHeight() + 0.55 - cameraPos.y;
-            double dz = player.getZ() - cameraPos.z;
+            // Use interpolated positions so the nametag tracks the entity smoothly
+            double ix = Mth.lerp(partialTick, player.xOld, player.getX());
+            double iy = Mth.lerp(partialTick, player.yOld, player.getY());
+            double iz = Mth.lerp(partialTick, player.zOld, player.getZ());
+
+            double dx = ix - cameraPos.x;
+            double dy = iy + player.getBbHeight() + 0.55 - cameraPos.y;
+            double dz = iz - cameraPos.z;
             double distanceSq = dx * dx + dy * dy + dz * dz;
             if (distanceSq > rangeSq) {
                 continue;
@@ -85,12 +96,12 @@ public class Nametags extends Module {
                 text.append(Component.literal(" [" + Mth.floor(Math.sqrt(distanceSq)) + "m]").withStyle(ChatFormatting.GRAY));
             }
 
-            renderTag(matrices, consumers, camera, text, dx, dy, dz, Math.sqrt(distanceSq));
+            renderTag(matrices, bufferSource, camera, text, dx, dy, dz, Math.sqrt(distanceSq));
         }
 
-        if (consumers instanceof net.minecraft.client.renderer.MultiBufferSource.BufferSource bs) {
-            bs.endBatch();
-        }
+        // Flush our buffer source — safe because we created it ourselves,
+        // not using the shared context consumers.
+        bufferSource.endBatch();
     }
 
     private boolean shouldRender(Player player) {

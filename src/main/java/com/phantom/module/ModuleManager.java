@@ -24,6 +24,7 @@ import com.phantom.module.impl.combat.WTap;
 import com.phantom.module.impl.combat.WeaponCycler;
 import com.phantom.module.impl.combat.WaterClutch;
 import com.phantom.module.impl.player.AutoTools;
+import com.phantom.module.impl.player.AutoGG;
 import com.phantom.module.impl.player.AutoTotem;
 import com.phantom.module.impl.player.AntiAFK;
 import com.phantom.module.impl.player.FastPlace;
@@ -93,6 +94,7 @@ public class ModuleManager {
         // Player
         modules.add(new AntiAFK());
         modules.add(new AntiBot());
+        modules.add(new AutoGG());
         modules.add(new AutoTotem());
         modules.add(new AutoTools());
         modules.add(new ESP());

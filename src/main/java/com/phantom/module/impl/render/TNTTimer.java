@@ -55,7 +55,7 @@ public class TNTTimer extends Module {
         if (fuse <= 0) return;
 
         String text = timeFormatter.format(fuse / 20.0f) + "s";
-        float partialTicks = 0.0f; // Simplified as context.tickDelta() failed
+        float partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
         
         double x = Mth.lerp(partialTicks, tnt.xo, tnt.getX()) - camPos.x;
         double y = Mth.lerp(partialTicks, tnt.yo, tnt.getY()) - camPos.y + tnt.getBbHeight() + 0.5;

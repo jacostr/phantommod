@@ -1,9 +1,9 @@
 # PhantomMod
 
-| **Latest Version** | v1.0.6 | **Release Ready** |
+| **Latest Version** | v1.0.7 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v1.0.6` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
+PhantomMod `v1.0.7` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
 
 ## Included Modules
 
@@ -98,13 +98,16 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v1.0.6 Notes
+## v1.0.7 Notes
 
-- **Health Module Refactor**: Replaced `Nametags` and old `HealthBar` with a dedicated `Health` module featuring billboarded, scaling vertical bars.
-- **Optimization**: Simplified `ESP` to strictly handle entity hitboxes, improving performance.
-- **Triggerbot Update**: Added target mode (Players, Mobs, or Both).
-- **Cleanup**: Removed `Tracers`, `AutoGapple`, and simplified `Scaffold`.
-- **UI/UX**: Moved HUD settings to a dedicated bottom-right button and added profile overwrite confirmations.
+- **Nametags Fix**: Resolved rendering bug that caused nametags to vanish or jitter. Added smooth interpolation for entity positions.
+- **Bug Audit & Stability**: 
+    - Fixed floating health text rendering in the `Health` module.
+    - Improved `AutoGG` thread-safety for reliable message dispatch.
+    - Expanded `AimAssist` to support Axes, Maces, and Tridents.
+    - Hardened config parsing to prevent startup crashes from malformed data.
+- **TNTTimer Update**: Re-implemented interpolation for TNT fuse timers for smoother visuals.
+- **Clutch Foundation**: Integrated full logic for the `Clutch` module (currently hidden from UI).
 
 ### Visuals
 - **Health**: Vertical indicators with billboarded scaling bars (replaces old Nametags).

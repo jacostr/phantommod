@@ -293,7 +293,7 @@ public class AimAssist extends Module {
 
     private boolean isHoldingWeapon() {
         String id = mc.player.getMainHandItem().getItem().getDescriptionId().toLowerCase(Locale.ROOT);
-        return id.contains("sword");
+        return id.contains("sword") || id.contains("_axe") || id.contains("mace") || id.contains("trident");
     }
 
     private boolean isAttackHeld() {
@@ -369,9 +369,7 @@ public class AimAssist extends Module {
         }
 
         applyYaw(nextYaw);
-        if (mc.getCameraEntity() == mc.player) {
-            applyYaw(nextYaw);
-        }
+
         if (aimVertically) {
             float pitchDivisor = Mth.lerp(smoothFactor, 6.5F, 16.5F) - (snapFactor * 2.5F);
             pitchDivisor = Math.max(1.8F, pitchDivisor);
@@ -382,9 +380,6 @@ public class AimAssist extends Module {
                 nextPitch = Mth.clamp(targetPitch, -90.0F, 90.0F);
             }
             applyPitch(nextPitch);
-            if (mc.getCameraEntity() == mc.player) {
-                applyPitch(nextPitch);
-            }
         }
     }
 

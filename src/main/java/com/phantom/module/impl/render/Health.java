@@ -61,6 +61,11 @@ public class Health extends Module {
             return;
         }
 
+        // Use Minecraft's own buffer source for text rendering — context.consumers()
+        // doesn't properly track/flush font render types.
+        MultiBufferSource.BufferSource textBufferSource =
+                mc.renderBuffers().bufferSource();
+
         Camera camera = mc.gameRenderer.getMainCamera();
         Vec3 cameraPos = camera.position();
         double rangeSq = maxDistance * maxDistance;
@@ -82,7 +87,7 @@ public class Health extends Module {
                 }
 
                 if (showAboveHeads && !nametagHealth) {
-                    renderFloatingText(matrices, consumers, camera, cameraPos, player,
+                    renderFloatingText(matrices, textBufferSource, camera, cameraPos, player,
                             buildHealthValueComponent(player), 0.25);
                 }
 
@@ -92,13 +97,15 @@ public class Health extends Module {
                     if (suffix != null) {
                         name.append(suffix);
                     }
-                    renderFloatingText(matrices, consumers, camera, cameraPos, player, name, 0.55);
+                    renderFloatingText(matrices, textBufferSource, camera, cameraPos, player, name, 0.55);
                 }
             }
 
             if (showBar && consumers instanceof MultiBufferSource.BufferSource bufferSource) {
                 bufferSource.endBatch(RenderTypes.lines());
             }
+            // Flush text render types
+            textBufferSource.endBatch();
         } finally {
             if (throughWalls) {
                 org.lwjgl.opengl.GL11.glDepthFunc(org.lwjgl.opengl.GL11.GL_LEQUAL);

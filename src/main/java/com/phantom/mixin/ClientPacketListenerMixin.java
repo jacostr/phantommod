@@ -12,6 +12,8 @@ import com.phantom.module.impl.combat.Velocity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket;
+import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
+import net.minecraft.network.protocol.game.ClientboundDisguisedChatPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -67,6 +69,22 @@ public class ClientPacketListenerMixin {
                     );
                 }
             }
+        }
+    }
+
+    @Inject(method = "handleSystemChat", at = @At("HEAD"))
+    private void onHandleSystemChat(ClientboundSystemChatPacket packet, CallbackInfo ci) {
+        if (PhantomMod.getModuleManager() != null) {
+            String content = packet.content().getString();
+            PhantomMod.getModuleManager().getModules().forEach(m -> m.onChat(content));
+        }
+    }
+
+    @Inject(method = "handleDisguisedChat", at = @At("HEAD"))
+    private void onHandleDisguisedChat(ClientboundDisguisedChatPacket packet, CallbackInfo ci) {
+        if (PhantomMod.getModuleManager() != null) {
+            String content = packet.message().getString();
+            PhantomMod.getModuleManager().getModules().forEach(m -> m.onChat(content));
         }
     }
 }

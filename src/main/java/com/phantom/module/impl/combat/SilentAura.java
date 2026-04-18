@@ -214,9 +214,7 @@ public class SilentAura extends Module {
         }
 
         applyYaw(nextYaw);
-        if (mc.getCameraEntity() == mc.player) {
-            applyYaw(nextYaw);
-        }
+        
         if (aimVertically) {
             float pitchDivisor = Mth.lerp(smoothFactor, 6.5F, 16.5F) - (snapFactor * 2.5F);
             pitchDivisor = Math.max(1.8F, pitchDivisor);
@@ -227,9 +225,6 @@ public class SilentAura extends Module {
                 nextPitch = Mth.clamp(targetPitch, -90.0F, 90.0F);
             }
             applyPitch(nextPitch);
-            if (mc.getCameraEntity() == mc.player) {
-                applyPitch(nextPitch);
-            }
         }
     }
 
