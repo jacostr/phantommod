@@ -22,7 +22,7 @@ import java.util.Properties;
 public final class ProfileManager {
     public static final int SLOT_COUNT = 4;
 
-    private static final String[] DEFAULT_NAMES = {"Profile 1", "Profile 2", "Profile 3", "Profile 4"};
+    private static final String[] DEFAULT_NAMES = {"Profile 1", "SMP", "Bedwars Legit", "Profile 4"};
     private static final String[] profileNames = new String[SLOT_COUNT];
     private static boolean namesLoaded = false;
 
@@ -68,6 +68,11 @@ public final class ProfileManager {
         return profileNames[slot];
     }
 
+    public static String getBundledName(int slot) {
+        if (slot < 0 || slot >= SLOT_COUNT) return "Unknown";
+        return DEFAULT_NAMES[slot];
+    }
+
     public static void setProfileName(int slot, String name) {
         ensureNamesLoaded();
         if (slot < 0 || slot >= SLOT_COUNT) return;
@@ -90,9 +95,33 @@ public final class ProfileManager {
         return true;
     }
 
+    public static boolean loadBundledSlot(int slot, ModuleManager moduleManager) {
+        if (slot < 0 || slot >= SLOT_COUNT) return false;
+        Properties properties = new Properties();
+        String resourcePath = "/profiles/slot_" + slot + ".properties";
+        try (InputStream is = PhantomMod.class.getResourceAsStream(resourcePath)) {
+            if (is == null) return false;
+            properties.load(is);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        ConfigManager.apply(moduleManager, properties, true);
+        return true;
+    }
+
     public static boolean hasSavedSlot(int slot) {
+        return hasLocalSave(slot) || hasBundledProfile(slot);
+    }
+
+    public static boolean hasLocalSave(int slot) {
         if (slot < 0 || slot >= SLOT_COUNT) return false;
         return Files.exists(getSlotFilePath(slot));
+    }
+
+    public static boolean hasBundledProfile(int slot) {
+        if (slot < 0 || slot >= SLOT_COUNT) return false;
+        return PhantomMod.class.getResource("/profiles/slot_" + slot + ".properties") != null;
     }
 
     // Legacy compatibility: migrate old "custom" profile to slot 0 on first access

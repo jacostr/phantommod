@@ -92,13 +92,13 @@ public class ClickGUIScreen extends Screen {
         int profileY = LIST_TOP + 18;
         this.addRenderableWidget(Button.builder(
                         Component.literal("Custom"),
-                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager())))
+                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager(), false)))
                 .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
                 .build());
 
         this.addRenderableWidget(Button.builder(
                         Component.literal("Premade"),
-                        button -> {})
+                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager(), true)))
                 .bounds(profileX, profileY + ROW_HEIGHT + ROW_SPACING, PROFILE_WIDTH, ROW_HEIGHT)
                 .build());
 

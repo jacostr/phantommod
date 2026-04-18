@@ -21,13 +21,15 @@ public class ProfileScreen extends Screen {
 
     private final Screen parent;
     private final ModuleManager moduleManager;
+    private final boolean premadeOnly;
     private int pendingOverwriteSlot = -1;
     private long pendingOverwriteUntil;
 
-    public ProfileScreen(Screen parent, ModuleManager moduleManager) {
-        super(Component.literal("Configs"));
+    public ProfileScreen(Screen parent, ModuleManager moduleManager, boolean premadeOnly) {
+        super(Component.literal(premadeOnly ? "Premade Profiles" : "Custom Profiles"));
         this.parent = parent;
         this.moduleManager = moduleManager;
+        this.premadeOnly = premadeOnly;
     }
 
     @Override
@@ -37,32 +39,47 @@ public class ProfileScreen extends Screen {
         int centerX = this.width / 2;
         int startY = 50;
 
+        int rowIdx = 0;
         for (int slot = 0; slot < ProfileManager.SLOT_COUNT; slot++) {
-            int y = startY + slot * (ROW_HEIGHT + ROW_SPACING);
             final int currentSlot = slot;
+            boolean isBundled = ProfileManager.hasBundledProfile(slot);
+            if (premadeOnly && !isBundled) continue;
+            
+            int y = startY + rowIdx * (ROW_HEIGHT + ROW_SPACING);
+            rowIdx++;
 
-            // Name edit box
-            EditBox nameBox = new EditBox(this.font, centerX - 120, y, 140, ROW_HEIGHT, Component.literal("Name"));
-            nameBox.setMaxLength(32);
-            nameBox.setValue(ProfileManager.getProfileName(slot));
-            nameBox.setResponder(name -> ProfileManager.setProfileName(currentSlot, name));
-            this.addRenderableWidget(nameBox);
+            if (!premadeOnly) {
+                // Custom Mode: editable name and save button
+                EditBox nameBox = new EditBox(this.font, centerX - 120, y, 140, ROW_HEIGHT, Component.literal("Name"));
+                nameBox.setMaxLength(32);
+                nameBox.setValue(ProfileManager.getProfileName(slot));
+                nameBox.setResponder(name -> ProfileManager.setProfileName(currentSlot, name));
+                this.addRenderableWidget(nameBox);
 
-            // Save button
-            this.addRenderableWidget(Button.builder(
-                    Component.literal(getSaveLabel(currentSlot)),
-                    button -> handleSave(currentSlot)).bounds(centerX + 28, y, 52, ROW_HEIGHT).build());
+                this.addRenderableWidget(Button.builder(
+                        Component.literal(getSaveLabel(currentSlot)),
+                        button -> handleSave(currentSlot)).bounds(centerX + 28, y, 52, ROW_HEIGHT).build());
+            } else {
+                // Premade Mode: Use a label (static bundled name)
+                Button label = Button.builder(Component.literal(ProfileManager.getBundledName(slot)), b -> {})
+                        .bounds(centerX - 120, y, 200, ROW_HEIGHT)
+                        .build();
+                label.active = false;
+                this.addRenderableWidget(label);
+            }
 
             // Load button
             this.addRenderableWidget(Button.builder(
                     Component.literal("Load"),
                     button -> {
                         clearPendingOverwrite();
-                        boolean loaded = ProfileManager.loadSlot(currentSlot, moduleManager);
+                        boolean loaded = premadeOnly
+                                ? ProfileManager.loadBundledSlot(currentSlot, moduleManager)
+                                : ProfileManager.loadSlot(currentSlot, moduleManager);
                         if (loaded) {
-                            NotificationManager.push("Loaded " + ProfileManager.getProfileName(currentSlot));
+                            NotificationManager.push("Loaded " + (premadeOnly ? ProfileManager.getBundledName(currentSlot) : ProfileManager.getProfileName(currentSlot)));
                         } else {
-                            NotificationManager.push("No saved data for " + ProfileManager.getProfileName(currentSlot));
+                            NotificationManager.push("No data for this slot");
                         }
                     }).bounds(centerX + 84, y, 52, ROW_HEIGHT).build());
         }
