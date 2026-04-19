@@ -1,9 +1,9 @@
 # PhantomMod
 
-| **Latest Version** | v1.0.5 | **Release Ready** |
+| **Latest Version** | v0.6.0 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v1.0.5` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
+PhantomMod `v0.6.0` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
 
 ## Included Modules
 
@@ -99,7 +99,7 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v1.0.5 Notes
+## v0.6.0 Notes
 
 - **Stealth & Logging (Stealth Audit)**: 
     - **Logger 2.0**: Implemented a "Silent-by-Default" logger. Mod activity is completely hidden unless the user enables **Debug Console** or **Log File** in the HUD settings.

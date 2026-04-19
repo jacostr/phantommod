@@ -76,8 +76,11 @@ public class ClickGUIScreen extends Screen {
 
         EditBox search = new EditBox(this.font, 24, 28, this.width - 48, 18, Component.literal("search"));
         search.setMaxLength(64);
+        search.setBordered(true);
+        search.setFocusUnlocked(true);
         search.setHint(Component.literal("Search modules…"));
         search.setValue(searchText);
+        this.setInitialFocus(search);
         search.setResponder(s -> {
             if (rebuildingSearch) {
                 return;
@@ -189,7 +192,11 @@ public class ClickGUIScreen extends Screen {
         graphics.fill(0, LIST_TOP, this.width, this.height, 0x90101010);
 
         // Header Branding
-        graphics.drawString(this.font, "PhantomMod", 4, 10, 0xFFA8E6A3);
+        int brandX = 4;
+        graphics.drawString(this.font, "PhantomMod", brandX, 10, 0xFFA8E6A3);
+        int verWidth = this.font.width("v0.6.0");
+        int brandWidth = this.font.width("PhantomMod");
+        graphics.drawString(this.font, "v0.6.0", brandX + brandWidth / 2 - verWidth / 2, 20, 0xFF888888);
         graphics.drawString(this.font, "Configs", 8, LIST_TOP + 6, 0xFFFFFFFF);
 
         super.render(graphics, mouseX, mouseY, delta);
