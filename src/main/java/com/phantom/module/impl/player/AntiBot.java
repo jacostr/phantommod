@@ -106,8 +106,7 @@ public class AntiBot extends Module {
         }
 
         if (module.nameLengthCheck) {
-            Component displayName = player.getDisplayName();
-            String name = displayName != null ? displayName.getString() : "";
+            String name = player.getScoreboardName();
             if (name.length() < module.minNameLength || name.length() > module.maxNameLength) {
                 return true;
             }
@@ -135,6 +134,10 @@ public class AntiBot extends Module {
     public void setPingCheck(boolean v) { pingCheck = v; saveConfig(); }
     public int getJoinGraceTicks() { return joinGraceTicks; }
     public void setJoinGraceTicks(int v) { joinGraceTicks = Math.max(0, Math.min(200, v)); saveConfig(); }
+    public int getMinNameLength() { return minNameLength; }
+    public void setMinNameLength(int v) { minNameLength = Math.max(1, Math.min(16, v)); saveConfig(); }
+    public int getMaxNameLength() { return maxNameLength; }
+    public void setMaxNameLength(int v) { maxNameLength = Math.max(1, Math.min(16, v)); saveConfig(); }
 
     @Override
     public void loadConfig(Properties properties) {

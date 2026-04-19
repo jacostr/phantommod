@@ -38,8 +38,6 @@ public class SpeedBridge extends Module {
 
     private boolean bridgeAssistEnabled = true;
     private boolean towerModeEnabled = true;
-    private boolean predictivePlacement = true;
-    private int predictionSteps = 1;
     private int scaffoldPlaceDelay = 1;
 
     private boolean isTowerMode = false;
@@ -112,7 +110,7 @@ public class SpeedBridge extends Module {
             return;
         }
 
-        if (bridgeAssistEnabled && isHoldingBlock &&
+        if (bridgeAssistEnabled && towerModeEnabled && isHoldingBlock &&
                 mc.options.keyJump.isDown() && mc.options.keyUse.isDown() &&
                 horizontalSpeed < STATIONARY_THRESHOLD && mc.player.onGround()) {
             isTowerMode = true;
@@ -273,8 +271,6 @@ public class SpeedBridge extends Module {
 
         bridgeAssistEnabled = Boolean.parseBoolean(properties.getProperty("speedbridge.bridge_assist_enabled", "true"));
         towerModeEnabled = Boolean.parseBoolean(properties.getProperty("speedbridge.tower_mode_enabled", "true"));
-        predictivePlacement = Boolean.parseBoolean(properties.getProperty("speedbridge.predictive_placement", "true"));
-        predictionSteps = Integer.parseInt(properties.getProperty("speedbridge.prediction_steps", "1"));
         scaffoldPlaceDelay = Integer.parseInt(properties.getProperty("speedbridge.scaffold_place_delay", "1"));
         swingArm = Boolean.parseBoolean(properties.getProperty("speedbridge.swing_arm", "true"));
         preset = Integer.parseInt(properties.getProperty("speedbridge.preset", "1"));
@@ -290,8 +286,6 @@ public class SpeedBridge extends Module {
 
         properties.setProperty("speedbridge.bridge_assist_enabled", String.valueOf(bridgeAssistEnabled));
         properties.setProperty("speedbridge.tower_mode_enabled", String.valueOf(towerModeEnabled));
-        properties.setProperty("speedbridge.predictive_placement", String.valueOf(predictivePlacement));
-        properties.setProperty("speedbridge.prediction_steps", String.valueOf(predictionSteps));
         properties.setProperty("speedbridge.scaffold_place_delay", String.valueOf(scaffoldPlaceDelay));
         properties.setProperty("speedbridge.swing_arm", String.valueOf(swingArm));
         properties.setProperty("speedbridge.preset", String.valueOf(preset));
@@ -342,23 +336,6 @@ public class SpeedBridge extends Module {
         saveConfig();
     }
 
-    public boolean isPredictivePlacement() {
-        return predictivePlacement;
-    }
-
-    public void setPredictivePlacement(boolean predictive) {
-        this.predictivePlacement = predictive;
-        saveConfig();
-    }
-
-    public int getPredictionSteps() {
-        return predictionSteps;
-    }
-
-    public void setPredictionSteps(int steps) {
-        this.predictionSteps = Math.max(1, Math.min(3, steps));
-        saveConfig();
-    }
 
     public int getScaffoldPlaceDelay() {
         return scaffoldPlaceDelay;

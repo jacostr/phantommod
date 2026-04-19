@@ -11,7 +11,6 @@
 package com.phantom.module.impl.player;
 
 import com.phantom.gui.ModuleSettingsScreen;
-import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.util.Logger;
 import com.phantom.module.Module;
 

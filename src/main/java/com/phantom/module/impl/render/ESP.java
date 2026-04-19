@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.ShapeRenderer;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
@@ -155,7 +154,7 @@ public class ESP extends Module {
     }
 
     private int getColor(Entity entity) {
-        if (entity instanceof AbstractClientPlayer) return 0xFF55FFFF;
+        if (entity instanceof Player) return 0xFF55FFFF;
         if (entity instanceof Animal || entity instanceof AgeableMob) return 0xFF55FF55;
         if (entity instanceof Mob) return 0xFFFF5555;
         return 0xFFFFFF55;
@@ -165,7 +164,7 @@ public class ESP extends Module {
         if (entity == mc.player) return false;
         if (entity instanceof LivingEntity living && !living.isAlive()) return false;
         if (AntiBot.isBot(entity)) return false;
-        if (playersEnabled  && entity instanceof AbstractClientPlayer) return true;
+        if (playersEnabled  && entity instanceof Player) return true;
         if (animalsEnabled  && (entity instanceof Animal || entity instanceof AgeableMob)) return true;
         return mobsEnabled  && entity instanceof Mob;
     }
