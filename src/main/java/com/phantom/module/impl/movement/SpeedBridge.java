@@ -1,22 +1,18 @@
 /* Copyright (c) 2026 PhantomMod. All rights reserved. */
-/*
- * SpeedBridge.java — Edge-detection bridging assist with auto block refill (Movement module).
- *
- * Captures bridge direction on enable. Each tick, checks if the player is hanging over
- * air and auto-sneaks to prevent falling. When the current block stack is depleted,
- * scans the hotbar for the next BlockItem and auto-swaps to it.
- * Detectability: Safe/Subtle — only sneak timing is automated; placement is manual.
- */
 package com.phantom.module.impl.movement;
 
 import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.mixin.MinecraftClientAccessor;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.Properties;
@@ -36,10 +32,26 @@ public class SpeedBridge extends Module {
     private int unsneakGraceTicks;
     private boolean wasOnGround;
 
+    private boolean bridgeAssistEnabled = true;
+    private boolean towerModeEnabled = true;
+    private boolean predictivePlacement = true;
+    private int predictionSteps = 1;
+    private int scaffoldPlaceDelay = 1;
+
+    private boolean isTowerMode = false;
+    private int towerHoldTicks = 0;
+    private int scaffoldCooldown = 0;
+    private float originalPitch = 0f;
+    private boolean swingArm = true;
+
+    private int activeIndicatorTimer = 0;
+
+    private int preset = 1;
+
     public SpeedBridge() {
         super(
                 "SpeedBridge Assist",
-                "Re-sneaks at the edge of blocks automatically. Face away from the void, hold right click and place buttons, then hold s, it will sneak for you. Combine with SafeWalk for best results!\nDetectability: Safe/Subtle",
+                "Auto bridge + tower assist. Hold jump + right-click while standing still to tower. Move normally to flat bridge.\nDetectability: Safe/Subtle",
                 ModuleCategory.MOVEMENT,
                 -1);
     }
@@ -55,17 +67,52 @@ public class SpeedBridge extends Module {
         jumpSneakTicks = 0;
         unsneakGraceTicks = 0;
         wasOnGround = mc.player.onGround();
+        isTowerMode = false;
+        towerHoldTicks = 0;
+        scaffoldCooldown = 0;
     }
 
     @Override
     public void onDisable() {
         releaseSneak();
+        isTowerMode = false;
+        towerHoldTicks = 0;
+        scaffoldCooldown = 0;
     }
 
     @Override
     public void onTick() {
         if (mc.level == null || mc.player == null || mc.options == null)
             return;
+
+        if (scaffoldCooldown > 0) {
+            scaffoldCooldown--;
+        }
+
+        if (activeIndicatorTimer > 0) {
+            activeIndicatorTimer--;
+        }
+
+        boolean isHoldingBlock = mc.player.getMainHandItem().getItem() instanceof BlockItem ||
+                mc.player.getOffhandItem().getItem() instanceof BlockItem;
+
+        double horizontalSpeed = Math.sqrt(
+                mc.player.getDeltaMovement().x() * mc.player.getDeltaMovement().x() +
+                mc.player.getDeltaMovement().z() * mc.player.getDeltaMovement().z());
+
+        if (bridgeAssistEnabled && isHoldingBlock &&
+                mc.options.keyJump.isDown() && mc.options.keyUse.isDown() &&
+                horizontalSpeed < 0.08 && mc.player.onGround()) {
+            isTowerMode = true;
+            towerHoldTicks = 8;
+        } else if (horizontalSpeed > 0.08) {
+            isTowerMode = false;
+        }
+
+        if (towerHoldTicks > 0) {
+            towerHoldTicks--;
+            if (towerHoldTicks == 0) isTowerMode = false;
+        }
 
         if (!(mc.player.getMainHandItem().getItem() instanceof BlockItem)) {
             int nextSlot = findNextBlockSlot();
@@ -95,6 +142,11 @@ public class SpeedBridge extends Module {
             applyFastPlace();
         }
 
+        if (isTowerMode) {
+            runTowerScaffold();
+            return;
+        }
+
         if (checkAutoDisable()) return;
 
         boolean onGround = mc.player.onGround();
@@ -113,12 +165,66 @@ public class SpeedBridge extends Module {
         wasOnGround = onGround;
     }
 
+    private void runTowerScaffold() {
+        if (scaffoldCooldown > 0) return;
+        if (!mc.player.onGround()) return;
+
+        BlockPos feet = mc.player.blockPosition();
+        if (!mc.level.getBlockState(feet.below()).isAir()) return;
+
+        int slot = findNextBlockSlot();
+        if (slot == -1) return;
+
+        int prevSlot = mc.player.getInventory().getSelectedSlot();
+        mc.player.getInventory().setSelectedSlot(slot);
+
+        BlockPos target = feet.below();
+        placeBlockAt(target);
+
+        mc.player.getInventory().setSelectedSlot(prevSlot);
+        scaffoldCooldown = scaffoldPlaceDelay;
+        activeIndicatorTimer = 20;
+    }
+
+    private void placeBlockAt(BlockPos pos) {
+        for (Direction dir : Direction.values()) {
+            BlockPos neighbor = pos.relative(dir);
+            if (!mc.level.getBlockState(neighbor).isAir()) {
+                Direction face = dir.getOpposite();
+                Vec3 hitVec = Vec3.atCenterOf(neighbor).add(
+                        new Vec3(face.getStepX(), face.getStepY(), face.getStepZ()).scale(0.5));
+                BlockHitResult hit = new BlockHitResult(hitVec, face, neighbor, false);
+                mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hit);
+                if (swingArm) mc.player.swing(InteractionHand.MAIN_HAND);
+                break;
+            }
+        }
+    }
+
     private boolean checkAutoDisable() {
         if (System.currentTimeMillis() - lastPlaceTime > autoOffDelay * 1000) {
             setEnabled(false);
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onHudRender(GuiGraphics graphics) {
+        if (!isEnabled()) return;
+
+        String towerStatus = isTowerMode ? "TOWER" : "FLAT";
+        String text = "[SpeedBridge] " + towerStatus;
+
+        int color = 0xFFFFFF;
+        if (activeIndicatorTimer > 0) {
+            color = 0x00FF00;
+        }
+
+        int w = graphics.guiWidth();
+        int h = graphics.guiHeight();
+
+        graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(text), w - 120, h - 20, color);
     }
 
     public double getAutoOffDelay() {
@@ -143,11 +249,18 @@ public class SpeedBridge extends Module {
         if (delay != null) {
             try {
                 delayTicks = Math.max(0, Math.min(4, Integer.parseInt(delay.trim())));
-            } catch (NumberFormatException ignored) {
-            }
+            } catch (NumberFormatException ignored) {}
         }
         blocksOnly = Boolean.parseBoolean(properties.getProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly)));
         sneakOnJump = Boolean.parseBoolean(properties.getProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump)));
+
+        bridgeAssistEnabled = Boolean.parseBoolean(properties.getProperty("speedbridge.bridge_assist_enabled", "true"));
+        towerModeEnabled = Boolean.parseBoolean(properties.getProperty("speedbridge.tower_mode_enabled", "true"));
+        predictivePlacement = Boolean.parseBoolean(properties.getProperty("speedbridge.predictive_placement", "true"));
+        predictionSteps = Integer.parseInt(properties.getProperty("speedbridge.prediction_steps", "1"));
+        scaffoldPlaceDelay = Integer.parseInt(properties.getProperty("speedbridge.scaffold_place_delay", "1"));
+        swingArm = Boolean.parseBoolean(properties.getProperty("speedbridge.swing_arm", "true"));
+        preset = Integer.parseInt(properties.getProperty("speedbridge.preset", "1"));
     }
 
     @Override
@@ -157,6 +270,14 @@ public class SpeedBridge extends Module {
         properties.setProperty("speedbridge.delay_ticks", Integer.toString(delayTicks));
         properties.setProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly));
         properties.setProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump));
+
+        properties.setProperty("speedbridge.bridge_assist_enabled", String.valueOf(bridgeAssistEnabled));
+        properties.setProperty("speedbridge.tower_mode_enabled", String.valueOf(towerModeEnabled));
+        properties.setProperty("speedbridge.predictive_placement", String.valueOf(predictivePlacement));
+        properties.setProperty("speedbridge.prediction_steps", String.valueOf(predictionSteps));
+        properties.setProperty("speedbridge.scaffold_place_delay", String.valueOf(scaffoldPlaceDelay));
+        properties.setProperty("speedbridge.swing_arm", String.valueOf(swingArm));
+        properties.setProperty("speedbridge.preset", String.valueOf(preset));
     }
 
     public int getDelayTicks() {
@@ -186,30 +307,106 @@ public class SpeedBridge extends Module {
         saveConfig();
     }
 
+    public boolean isBridgeAssistEnabled() {
+        return bridgeAssistEnabled;
+    }
+
+    public void setBridgeAssistEnabled(boolean enabled) {
+        this.bridgeAssistEnabled = enabled;
+        saveConfig();
+    }
+
+    public boolean isTowerModeEnabled() {
+        return towerModeEnabled;
+    }
+
+    public void setTowerModeEnabled(boolean enabled) {
+        this.towerModeEnabled = enabled;
+        saveConfig();
+    }
+
+    public boolean isPredictivePlacement() {
+        return predictivePlacement;
+    }
+
+    public void setPredictivePlacement(boolean predictive) {
+        this.predictivePlacement = predictive;
+        saveConfig();
+    }
+
+    public int getPredictionSteps() {
+        return predictionSteps;
+    }
+
+    public void setPredictionSteps(int steps) {
+        this.predictionSteps = Math.max(1, Math.min(3, steps));
+        saveConfig();
+    }
+
+    public int getScaffoldPlaceDelay() {
+        return scaffoldPlaceDelay;
+    }
+
+    public void setScaffoldPlaceDelay(int delay) {
+        this.scaffoldPlaceDelay = Math.max(0, Math.min(10, delay));
+        saveConfig();
+    }
+
+    public boolean isSwingArm() {
+        return swingArm;
+    }
+
+    public void setSwingArm(boolean swingArm) {
+        this.swingArm = swingArm;
+        saveConfig();
+    }
+
     public void applyPresetLegit() {
+        preset = 0;
         setDelayTicks(3);
         setBlocksOnly(true);
+        scaffoldPlaceDelay = 4;
+        saveConfig();
     }
 
     public void applyPresetNormal() {
+        preset = 1;
         setDelayTicks(2);
         setBlocksOnly(true);
+        scaffoldPlaceDelay = 2;
+        saveConfig();
     }
 
     public void applyPresetObvious() {
+        preset = 2;
         setDelayTicks(1);
         setBlocksOnly(true);
+        scaffoldPlaceDelay = 1;
+        saveConfig();
     }
 
     public void applyPresetBlatant() {
+        preset = 3;
         setDelayTicks(0);
         setBlocksOnly(false);
+        scaffoldPlaceDelay = 0;
+        saveConfig();
     }
 
-    /**
-     * Scans hotbar slots (0-8) for the first slot that has a block item with at
-     * least 1 count. Returns -1 if no blocks are found.
-     */
+    public int getPreset() {
+        return preset;
+    }
+
+    public void setPreset(int preset) {
+        this.preset = Math.max(0, Math.min(3, preset));
+        switch (this.preset) {
+            case 0 -> applyPresetLegit();
+            case 1 -> applyPresetNormal();
+            case 2 -> applyPresetObvious();
+            case 3 -> applyPresetBlatant();
+        }
+    }
+
     private int findNextBlockSlot() {
         if (mc.player == null) return -1;
         int current = mc.player.getInventory().getSelectedSlot();
@@ -297,6 +494,7 @@ public class SpeedBridge extends Module {
     }
 
     private boolean shouldDelayPlacementForJump() {
+        if (isTowerMode) return false;
         if (!sneakOnJump || mc.player == null || !mc.options.keyUse.isDown()) {
             return false;
         }

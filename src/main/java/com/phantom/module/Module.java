@@ -23,6 +23,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import net.minecraft.world.level.block.BedBlock;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -144,6 +145,9 @@ public abstract class Module {
     }
 
     public void onTick() {
+    }
+
+    public void onEntityEvent(ClientboundEntityEventPacket packet) {
     }
 
     public void onRender(WorldRenderContext context) {

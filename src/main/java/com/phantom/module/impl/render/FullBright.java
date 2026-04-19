@@ -7,6 +7,8 @@ import net.minecraft.client.Minecraft;
 
 public class FullBright extends Module {
 
+    private double previousGamma = 0.5;
+
     public FullBright() {
         super("FullBright",
                 "Removes darkness for full vision.\nDetectability: Safe",
@@ -16,33 +18,22 @@ public class FullBright extends Module {
 
     @Override
     public void onEnable() {
-        setGamma(100.0);
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options != null) {
+            // Save the player's current gamma before overriding
+            previousGamma = mc.options.gamma().get();
+            mc.options.gamma().set(16.0);
+            mc.options.save();
+        }
     }
 
     @Override
     public void onDisable() {
-        setGamma(0.5);
-    }
-
-    private void setGamma(double value) {
-        try {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.options != null) {
-                var gammaOption = mc.options.gamma();
-                var field = gammaOption.getClass().getDeclaredField("value");
-                field.setAccessible(true);
-                field.set(gammaOption, value);
-                mc.options.save();
-            }
-        } catch (Exception e) {
-            // Fallback - try normal setter
-            try {
-                Minecraft mc = Minecraft.getInstance();
-                if (mc.options != null) {
-                    mc.options.gamma().set(Math.min(2.0, Math.max(0.0, value)));
-                    mc.options.save();
-                }
-            } catch (Exception ignored) {}
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.options != null) {
+            // Restore the gamma to what it was before the module was enabled
+            mc.options.gamma().set(previousGamma);
+            mc.options.save();
         }
     }
 }

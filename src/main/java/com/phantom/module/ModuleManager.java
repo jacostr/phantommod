@@ -43,6 +43,7 @@ import com.phantom.module.impl.combat.Reach;
 import com.phantom.module.impl.combat.Triggerbot;
 import com.phantom.module.impl.combat.Criticals;
 import com.phantom.module.impl.combat.AimAssist;
+
 import com.phantom.module.impl.movement.NoJumpDelay;
 import com.phantom.module.impl.movement.Scaffold;
 import com.phantom.module.impl.render.BedESP;
@@ -52,6 +53,7 @@ import com.phantom.module.impl.smp.ShulkerESP;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.protocol.game.ClientboundEntityEventPacket;
 import com.phantom.module.impl.player.AutoXPThrow;
 import com.phantom.module.impl.smp.OreFinder;
 
@@ -149,6 +151,14 @@ public class ModuleManager {
 
     public void onTick() {
         modules.stream().filter(Module::isEnabled).forEach(Module::onTick);
+    }
+
+    public void onEntityEvent(ClientboundEntityEventPacket packet) {
+        for (Module module : modules) {
+            if (module.isEnabled()) {
+                module.onEntityEvent(packet);
+            }
+        }
     }
 
     public void onRender(WorldRenderContext context) {
