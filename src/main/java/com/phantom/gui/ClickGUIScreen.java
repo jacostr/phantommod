@@ -127,9 +127,16 @@ public class ClickGUIScreen extends Screen {
 
         HudModule hudModule = PhantomMod.getModuleManager().getModuleByClass(HudModule.class);
         if (hudModule != null) {
+            int hudSettingsY = this.height - (ROW_HEIGHT * 2) - 10;
             this.addRenderableWidget(Button.builder(
                             Component.literal("HUD Settings"),
                             button -> this.minecraft.setScreen(hudModule.createSettingsScreen(this)))
+                    .bounds(this.width - PROFILE_WIDTH - 6, hudSettingsY, PROFILE_WIDTH, ROW_HEIGHT)
+                    .build());
+
+            this.addRenderableWidget(Button.builder(
+                            Component.literal("Debug"),
+                            button -> this.minecraft.setScreen(new DebugSettingsScreen(this)))
                     .bounds(this.width - PROFILE_WIDTH - 6, this.height - 24, PROFILE_WIDTH, ROW_HEIGHT)
                     .build());
         }
