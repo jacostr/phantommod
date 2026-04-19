@@ -51,6 +51,8 @@ public class HudModule extends Module {
     private boolean showCps = true;
     private boolean alignLeft;
     private CornerSide statsSide = CornerSide.LEFT;
+    private boolean debugLogger = false;
+    private boolean fileLogger = false;
 
     // CPS tracking — ring buffer of click timestamps over the last 1000 ms
     private final long[] clickTimes = new long[20];
@@ -163,6 +165,20 @@ public class HudModule extends Module {
         saveConfig();
     }
 
+    public boolean isDebugLogger() { return debugLogger; }
+    public void setDebugLogger(boolean v) {
+        this.debugLogger = v;
+        com.phantom.util.Logger.setDebugEnabled(v);
+        saveConfig();
+    }
+
+    public boolean isFileLogger() { return fileLogger; }
+    public void setFileLogger(boolean v) {
+        this.fileLogger = v;
+        com.phantom.util.Logger.setFileLoggingEnabled(v);
+        saveConfig();
+    }
+
     @Override
     public void loadConfig(Properties p) {
         super.loadConfig(p);
@@ -178,6 +194,10 @@ public class HudModule extends Module {
             } catch (IllegalArgumentException ignored) {
             }
         }
+        debugLogger = Boolean.parseBoolean(p.getProperty("hud.debug_logger", "false"));
+        fileLogger = Boolean.parseBoolean(p.getProperty("hud.file_logger", "false"));
+        com.phantom.util.Logger.setDebugEnabled(debugLogger);
+        com.phantom.util.Logger.setFileLoggingEnabled(fileLogger);
     }
 
     @Override
@@ -189,6 +209,8 @@ public class HudModule extends Module {
         p.setProperty("hud.show_cps", Boolean.toString(showCps));
         p.setProperty("hud.align_left", Boolean.toString(alignLeft));
         p.setProperty("hud.stats_side", statsSide.name());
+        p.setProperty("hud.debug_logger", Boolean.toString(debugLogger));
+        p.setProperty("hud.file_logger", Boolean.toString(fileLogger));
     }
 
     /** Draws the module list; returns screen-space pixel height consumed. */

@@ -9,8 +9,8 @@ PhantomMod `v1.0.8` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 
 ### Combat
 - `AimAssist`
-- `AutoBlock`
 - `AutoClicker`
+- `BowAimbot`
 - `BlockHit`
 - `Criticals`
 - `HitSelect`
@@ -32,25 +32,26 @@ PhantomMod `v1.0.8` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 - `Scaffold`
 - `SpeedBridge`
 
-### Player
+### Player / Visuals
 - `AntiAFK`
 - `AntiBot`
-- `Arrows`
+- `AutoGG`
 - `AutoTools`
 - `AutoTotem`
 - `ESP`
 - `FastPlace`
-- `Freecam`
 - `FullBright`
+- `Health`
 - `HUD`
 - `Indicators`
 - `LatencyAlerts`
-- `Health`
-- `NoFall`
+- `TNTTimer`
+- `Trajectories`
+- `TimeChanger`
+- `BedESP`
 
 ### SMP
 - `AutoXPThrow`
-- `BedESP`
 - `ChestESP`
 - `OreESP`
 - `OreFinder`
@@ -100,17 +101,19 @@ The built jar is written to `build/libs/`.
 
 ## v1.0.8 Notes
 
-- **Stability & Crash Prevention**: 
-    - Implemented a universal **Logger** system to replace silent failures.
-    - Added hundreds of null-safety checks across `SpeedBridge`, `SilentAura`, and `AutoTotem`.
-    - Eliminated "silent catches" in config parsing; invalid settings now provide warnings in the console.
-- **Combat Logic Overhaul**:
-    - **AimAssist & AutoClicker**: Broadened weapon detection to include **Axes, Maces, and Tridents**. Optimized target filtering to reduce jitter.
-    - **Criticals**: Documented and constantized packet offsets. Adjusted randomization for better anti-cheat bypass.
-- **Project Standardization**: 
-    - Migrated remaining `System.err` calls to the centralized `Logger` class.
-    - Standardized version metadata across `gradle.properties` and the UI.
-- **Nametags Fix**: Resolved rendering bug that caused nametags to vanish or jitter. Added smooth interpolation for entity positions.
+- **Stealth & Logging (Stealth Audit)**: 
+    - **Logger 2.0**: Implemented a "Silent-by-Default" logger. Mod activity is completely hidden unless the user enables **Debug Console** or **Log File** in the HUD settings.
+    - Added a file-logging system that writes to `phantom.log` for troubleshooting without exposing info to screenshares.
+- **Velocity Fixing**:
+    - Resolved a critical bug where the Velocity module was not hooked to incoming packets.
+    - Implemented a hardened, thread-safe network hook using the new `Vec3` packet format for 1.21.11.
+- **Module Polish**:
+    - **SpeedBridge**: Fixed `towerModeEnabled` logic and removed unimplemented "Predictive" settings for a cleaner UI.
+    - **AntiBot**: Exposed name length thresholds in the configuration so they can be tuned via GUI.
+    - **Combat Overhaul**: AimAssist and AutoClicker now support Axes, Maces, and Tridents.
+- **Stability**:
+    - Fixed critical bugs including a double-import in `AutoTotem` and unstandardized `System.err` calls.
+    - Added robust null-safety to all network-facing code to prevent timeouts and crashes.
 
 ### Visuals
 - **Health**: Vertical indicators with billboarded scaling bars (replaces old Nametags).
