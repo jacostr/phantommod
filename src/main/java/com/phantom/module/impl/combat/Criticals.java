@@ -45,7 +45,9 @@ public class Criticals extends Module {
         if (c != null) {
             try {
                 chance = Math.max(0.0, Math.min(1.0, Double.parseDouble(c.trim())));
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException e) {
+            System.err.println("[PhantomMod] Criticals: Failed to parse config - " + e.getMessage());
+        }
         }
     }
 

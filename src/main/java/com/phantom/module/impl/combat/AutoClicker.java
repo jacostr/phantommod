@@ -11,7 +11,9 @@ import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
+import com.phantom.util.Logger;
 import net.minecraft.util.Mth;
+
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,9 +51,8 @@ public class AutoClicker extends Module {
         if (breakBlockPause && shouldPauseForBlockBreaking()) {
             return;
         }
-
-        boolean mouseHeld = mc.options.keyAttack.isDown() || (mc.mouseHandler != null && mc.mouseHandler.isLeftPressed());
-        if (requireMouseDown && !mouseHeld) {
+        
+        if (requireMouseDown && !isAttackHeld()) {
             return;
         }
 
@@ -108,14 +109,11 @@ public class AutoClicker extends Module {
         jitterOffsetCps = ThreadLocalRandom.current().nextDouble(-0.75D, 0.55D);
     }
 
-    private boolean shouldPauseForBlockBreaking() {
-        return shouldPauseForBedMining()
-                || (mc.player != null && mc.gameMode != null && mc.gameMode.isDestroying());
-    }
 
     private boolean isHoldingWeapon() {
+        if (mc.player == null) return false;
         String id = mc.player.getMainHandItem().getItem().getDescriptionId().toLowerCase(Locale.ROOT);
-        return id.contains("sword");
+        return id.contains("sword") || id.contains("_axe") || id.contains("mace") || id.contains("trident");
     }
 
     public double getMinCps() {
@@ -226,11 +224,13 @@ public class AutoClicker extends Module {
         super.loadConfig(properties);
         String min = properties.getProperty("autoclicker.min_cps");
         if (min != null) {
-            try { minCps = Mth.clamp(Double.parseDouble(min.trim()), 1.0D, 20.0D); } catch (Exception ignored) {}
+            try { minCps = Mth.clamp(Double.parseDouble(min.trim()), 1.0D, 20.0D); } 
+            catch (Exception e) { Logger.error("AutoClicker: Failed to parse min_cps", e); }
         }
         String max = properties.getProperty("autoclicker.max_cps");
         if (max != null) {
-            try { maxCps = Mth.clamp(Double.parseDouble(max.trim()), minCps, 20.0D); } catch (Exception ignored) {}
+            try { maxCps = Mth.clamp(Double.parseDouble(max.trim()), minCps, 20.0D); } 
+            catch (Exception e) { Logger.error("AutoClicker: Failed to parse max_cps", e); }
         }
         onlyWithWeapon = Boolean.parseBoolean(properties.getProperty("autoclicker.only_with_weapon", Boolean.toString(onlyWithWeapon)));
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("autoclicker.require_mouse_down", Boolean.toString(requireMouseDown)));

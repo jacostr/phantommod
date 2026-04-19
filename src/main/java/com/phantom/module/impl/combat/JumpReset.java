@@ -7,6 +7,8 @@
 package com.phantom.module.impl.combat;
 
 import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.util.Logger;
+
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
@@ -97,6 +99,10 @@ public class JumpReset extends Module {
     }
 
     private boolean shouldAttemptJump() {
+        if (shouldPauseForBlockBreaking()) {
+            return false;
+        }
+
         if (ThreadLocalRandom.current().nextDouble() > chance) {
             return false;
         }
@@ -113,7 +119,7 @@ public class JumpReset extends Module {
             }
         }
 
-        if (requireMouseDown && !mc.options.keyAttack.isDown()) {
+        if (requireMouseDown && !isAttackHeld()) {
             return false;
         }
 
@@ -255,17 +261,17 @@ public class JumpReset extends Module {
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("jumpreset.require_mouse_down", Boolean.toString(requireMouseDown)));
         requireMovingForward = Boolean.parseBoolean(properties.getProperty("jumpreset.require_moving_forward", Boolean.toString(requireMovingForward)));
         checkFOV = Boolean.parseBoolean(properties.getProperty("jumpreset.check_fov", Boolean.toString(checkFOV)));
-        String jcp = properties.getProperty("jumpreset.jump_chance_percent");
+        String jcp = properties.getProperty("jumpreset.chance_percent");
         if (jcp != null) {
-            try { jumpChancePercent = Mth.clamp(Double.parseDouble(jcp.trim()), 0.0D, 100.0D); } catch (NumberFormatException ignored) {}
+            try { jumpChancePercent = Mth.clamp(Double.parseDouble(jcp.trim()), 0.0D, 100.0D); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse chance_percent"); }
         }
         String maxDelay = properties.getProperty("jumpreset.max_delay_ticks");
         if (maxDelay != null) {
-            try { maxDelayTicks = Math.max(0, Math.min(6, Integer.parseInt(maxDelay.trim()))); } catch (NumberFormatException ignored) {}
+            try { maxDelayTicks = Math.max(0, Math.min(6, Integer.parseInt(maxDelay.trim()))); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse max_delay_ticks"); }
         }
         String cooldown = properties.getProperty("jumpreset.cooldown_ticks");
         if (cooldown != null) {
-            try { cooldownTicks = Math.max(0, Math.min(20, Integer.parseInt(cooldown.trim()))); } catch (NumberFormatException ignored) {}
+            try { cooldownTicks = Math.max(0, Math.min(20, Integer.parseInt(cooldown.trim()))); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse cooldown_ticks"); }
         }
     }
 

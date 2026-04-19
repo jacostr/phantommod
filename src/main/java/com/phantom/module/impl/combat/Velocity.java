@@ -9,7 +9,9 @@
  */
 package com.phantom.module.impl.combat;
 
+import com.phantom.util.Logger;
 import com.phantom.gui.ModuleSettingsScreen;
+
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
@@ -165,14 +167,28 @@ public class Velocity extends Module {
         super.loadConfig(properties);
         try {
             mode = Mode.valueOf(properties.getProperty("velocity.mode", "LEGIT"));
-        } catch (Exception ignored) {}
+        } catch (Exception e) { Logger.warn("Velocity: Failed to parse mode"); }
         setMode(mode);
+
+        String h = properties.getProperty("velocity.horizontal");
+        if (h != null) {
+            try { horizontalPercent = Double.parseDouble(h); } catch (Exception e) { Logger.warn("Velocity: Failed to parse horizontal"); }
+        }
+        String v = properties.getProperty("velocity.vertical");
+        if (v != null) {
+            try { verticalPercent = Double.parseDouble(v); } catch (Exception e) { Logger.warn("Velocity: Failed to parse vertical"); }
+        }
+        String interval = properties.getProperty("velocity.pulse_interval");
+        if (interval != null) {
+            try { pulseInterval = Integer.parseInt(interval); } catch (Exception e) { Logger.warn("Velocity: Failed to parse pulse_interval"); }
+        }
 
         String chanceValue = properties.getProperty("velocity.chance");
         if (chanceValue != null) {
             try {
                 chance = Math.max(0.0, Math.min(1.0, Double.parseDouble(chanceValue.trim())));
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                Logger.warn("Velocity: Failed to parse chance");
             }
         }
         onlyWhileTargeting = Boolean.parseBoolean(

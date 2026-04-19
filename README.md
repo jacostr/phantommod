@@ -1,9 +1,9 @@
 # PhantomMod
 
-| **Latest Version** | v1.0.7 | **Release Ready** |
+| **Latest Version** | v1.0.8 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v1.0.7` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
+PhantomMod `v1.0.8` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
 
 ## Included Modules
 
@@ -98,16 +98,19 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v1.0.7 Notes
+## v1.0.8 Notes
 
+- **Stability & Crash Prevention**: 
+    - Implemented a universal **Logger** system to replace silent failures.
+    - Added hundreds of null-safety checks across `SpeedBridge`, `SilentAura`, and `AutoTotem`.
+    - Eliminated "silent catches" in config parsing; invalid settings now provide warnings in the console.
+- **Combat Logic Overhaul**:
+    - **AimAssist & AutoClicker**: Broadened weapon detection to include **Axes, Maces, and Tridents**. Optimized target filtering to reduce jitter.
+    - **Criticals**: Documented and constantized packet offsets. Adjusted randomization for better anti-cheat bypass.
+- **Project Standardization**: 
+    - Migrated remaining `System.err` calls to the centralized `Logger` class.
+    - Standardized version metadata across `gradle.properties` and the UI.
 - **Nametags Fix**: Resolved rendering bug that caused nametags to vanish or jitter. Added smooth interpolation for entity positions.
-- **Bug Audit & Stability**: 
-    - Fixed floating health text rendering in the `Health` module.
-    - Improved `AutoGG` thread-safety for reliable message dispatch.
-    - Expanded `AimAssist` to support Axes, Maces, and Tridents.
-    - Hardened config parsing to prevent startup crashes from malformed data.
-- **TNTTimer Update**: Re-implemented interpolation for TNT fuse timers for smoother visuals.
-- **Clutch Foundation**: Integrated full logic for the `Clutch` module (currently hidden from UI).
 
 ### Visuals
 - **Health**: Vertical indicators with billboarded scaling bars (replaces old Nametags).

@@ -4,6 +4,8 @@ package com.phantom.module.impl.render;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.Minecraft;
+import com.phantom.util.Logger;
+
 
 import java.util.List;
 
@@ -48,25 +50,19 @@ public class FullBright extends Module {
 
     private double getGammaValue() {
         try {
-            Minecraft mc = Minecraft.getInstance();
-            Object gammaOpt = mc.options.gamma();
-            java.lang.reflect.Method get = gammaOpt.getClass().getMethod("get");
-            Object val = get.invoke(gammaOpt);
-            if (val instanceof Double) return (Double) val;
-            if (val instanceof Integer) return ((Integer) val).doubleValue();
-        } catch (Exception ignored) {}
+            return mc.options.gamma().get();
+        } catch (Exception e) {
+            Logger.error("FullBright: Failed to read gamma", e);
+        }
         return DEFAULT_GAMMA;
     }
 
     private void setGammaValue(double value) {
         try {
-            Minecraft mc = Minecraft.getInstance();
-            Object gammaOpt = mc.options.gamma();
-            java.lang.reflect.Method set = gammaOpt.getClass().getMethod("set", double.class);
-            set.invoke(gammaOpt, value);
+            mc.options.gamma().set(value);
             mc.options.save();
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("FullBright: Failed to set gamma to " + value, e);
         }
     }
 }

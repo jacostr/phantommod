@@ -15,6 +15,8 @@ package com.phantom.module.impl.combat;
 
 import com.phantom.PhantomMod;
 import com.phantom.gui.ModuleSettingsScreen;
+import com.phantom.util.Logger;
+
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
@@ -241,11 +243,11 @@ public class Reach extends Module {
         String b = properties.getProperty("reach.block");
         if (e != null) {
             try { entityReach = Math.max(3.0, Math.min(8.0, Double.parseDouble(e.trim()))); }
-            catch (NumberFormatException ignored) {}
+            catch (NumberFormatException ex) { Logger.warn("Reach: Failed to parse reach"); }
         }
         if (b != null) {
             try { blockReach = Math.max(4.5, Math.min(10.0, Double.parseDouble(b.trim()))); }
-            catch (NumberFormatException ignored) {}
+            catch (NumberFormatException ex) { Logger.warn("Reach: Failed to parse block_reach"); }
         }
         onlyWhileSprinting = Boolean.parseBoolean(properties.getProperty("reach.only_while_sprinting",
                 Boolean.toString(onlyWhileSprinting)));

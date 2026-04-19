@@ -82,7 +82,7 @@ public class WTap extends Module {
             return;
         }
 
-        if (shouldPauseForBedMining() || !mc.player.isAlive()) {
+        if (shouldPauseForBlockBreaking() || !mc.player.isAlive()) {
             scheduledTapAt = -1L;
             tapStartedAt = -1L;
             return;

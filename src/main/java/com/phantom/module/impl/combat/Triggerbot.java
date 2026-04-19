@@ -8,7 +8,9 @@
  */
 package com.phantom.module.impl.combat;
 
+import com.phantom.util.Logger;
 import com.phantom.gui.ModuleSettingsScreen;
+
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
@@ -61,13 +63,9 @@ public class Triggerbot extends Module {
             readyTicks = 0;
             return;
         }
-        if (shouldPauseForBedMining()) {
-            readyTicks = 0;
-            return;
-        }
+        if (shouldPauseForBlockBreaking()) return;
 
-        if (requireMouseDown && !mc.options.keyAttack.isDown()) {
-            readyTicks = 0;
+        if (requireMouseDown && !isAttackHeld()) {
             return;
         }
 
@@ -314,7 +312,8 @@ public class Triggerbot extends Module {
         if (missChance != null) {
             try {
                 targetMissChance = Math.max(0.0D, Math.min(1.0D, Double.parseDouble(missChance.trim())));
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                Logger.warn("Triggerbot: Failed to parse target_miss_chance");
             }
         }
 
@@ -322,7 +321,8 @@ public class Triggerbot extends Module {
         if (earlyChance != null) {
             try {
                 earlyHitChance = Math.max(0.0D, Math.min(1.0D, Double.parseDouble(earlyChance.trim())));
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                Logger.warn("Triggerbot: Failed to parse early_hit_chance");
             }
         }
 
@@ -330,7 +330,7 @@ public class Triggerbot extends Module {
         String mode = properties.getProperty("triggerbot.target_mode");
         if (mode != null) {
             try { targetMode = TargetMode.valueOf(mode.trim().toUpperCase(Locale.ROOT)); }
-            catch (IllegalArgumentException ignored) {}
+            catch (IllegalArgumentException e) { Logger.warn("Triggerbot: Failed to parse target_mode"); }
         }
     }
 

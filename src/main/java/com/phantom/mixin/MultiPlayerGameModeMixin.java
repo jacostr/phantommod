@@ -30,6 +30,10 @@ import java.util.Random;
 public class MultiPlayerGameModeMixin {
     private final Random rand = new Random();
 
+    // Standard Minecraft "mini-bounce" offsets to simulate being airborne for critical hits.
+    private static final double CRIT_OFFSET_HIGH = 0.0625101D;
+    private static final double CRIT_OFFSET_LOW = 0.0125D;
+
     @Inject(method = "attack", at = @At("HEAD"), cancellable = true)
     private void onAttack(Player player, Entity target, CallbackInfo ci) {
         Minecraft mc = Minecraft.getInstance();
@@ -50,9 +54,9 @@ public class MultiPlayerGameModeMixin {
                 
                 // Send standard NCP criticals packet sequence
                 if (mc.getConnection() != null) {
-                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y + 0.0625101D, z, false, false));
+                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y + CRIT_OFFSET_HIGH, z, false, false));
                     mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, false, false));
-                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y + 0.0125D, z, false, false));
+                    mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y + CRIT_OFFSET_LOW, z, false, false));
                     mc.getConnection().send(new ServerboundMovePlayerPacket.Pos(x, y, z, false, false));
                 }
             }

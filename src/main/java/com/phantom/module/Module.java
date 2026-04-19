@@ -218,14 +218,30 @@ public abstract class Module {
         }
     }
 
-    protected boolean shouldPauseForBedMining() {
-        if (mc.level == null || mc.player == null || mc.options == null || !mc.options.keyAttack.isDown()) {
+    protected boolean shouldPauseForBlockBreaking() {
+        if (mc.level == null || mc.player == null || mc.options == null || mc.gameMode == null) {
             return false;
         }
+        
+        // Return true if the gameMode is currently breaking/destroying a block
+        if (mc.gameMode.isDestroying()) return true;
+
         if (!(mc.hitResult instanceof BlockHitResult blockHitResult)) {
             return false;
         }
+        
+        // Also pause if targeting a bed specifically (bed mining logic)
         return mc.level.getBlockState(blockHitResult.getBlockPos()).getBlock() instanceof BedBlock;
+    }
+
+    protected boolean isAttackHeld() {
+        if (mc.options == null) return false;
+        
+        // Standard key mapping check
+        if (mc.options.keyAttack.isDown()) return true;
+        
+        // Direct GLFW mouse status check (fallback in case key mapping is being consumed)
+        return mc.mouseHandler != null && mc.mouseHandler.isLeftPressed();
     }
 
     protected boolean isTeammateTarget(Entity entity) {

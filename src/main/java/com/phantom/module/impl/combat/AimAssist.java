@@ -11,7 +11,9 @@
 package com.phantom.module.impl.combat;
 
 import com.phantom.module.impl.player.AntiBot;
+import com.phantom.util.Logger;
 import com.phantom.module.Module;
+
 import com.phantom.module.ModuleCategory;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.screens.Screen;
@@ -110,6 +112,7 @@ public class AimAssist extends Module {
     private TargetArea targetArea = TargetArea.CENTER;
     private TargetMode targetMode = TargetMode.YAW;
     private boolean attackHeldLastTick;
+    private boolean breakBlocksPause = true;
     private long clickAimWindowUntil;
     
     public AimAssist() {
@@ -228,11 +231,17 @@ public class AimAssist extends Module {
 
     private void updateAim() {
         if (mc.player == null || mc.level == null || mc.options == null) return;
-        if (shouldPauseForBedMining()) return;
+        if (shouldPauseForBlockBreaking()) return;
         if (mc.screen != null) return;
         
         if (limitToWeapons && !isHoldingWeapon()) return;
-        if (requireMouseDown && !isAttackHeld()) return;
+        if (breakBlocksPause && shouldPauseForBlockBreaking()) {
+            return;
+        }
+
+        if (requireMouseDown && !isAttackHeld()) {
+            return;
+        }
         if (clickAim && !isWithinClickAimWindow()) return;
 
         Entity target = getBestTarget();
@@ -292,13 +301,11 @@ public class AimAssist extends Module {
     }
 
     private boolean isHoldingWeapon() {
+        if (mc.player == null) return false;
         String id = mc.player.getMainHandItem().getItem().getDescriptionId().toLowerCase(Locale.ROOT);
         return id.contains("sword") || id.contains("_axe") || id.contains("mace") || id.contains("trident");
     }
 
-    private boolean isAttackHeld() {
-        return mc.options.keyAttack.isDown() || (mc.mouseHandler != null && mc.mouseHandler.isLeftPressed());
-    }
 
     private void updateClickAimWindow() {
         if (mc.player == null || mc.options == null) {
@@ -402,22 +409,27 @@ public class AimAssist extends Module {
         super.loadConfig(properties);
         String s = properties.getProperty("aim.smoothing");
         if (s != null) {
-            try { this.smoothing = Double.parseDouble(s); } catch (Exception ignored) {}
+            try { this.smoothing = Double.parseDouble(s); } 
+            catch (Exception e) { Logger.error("AimAssist: Failed to parse smoothing", e); }
         }
         String snap = properties.getProperty("aim.snapiness");
         if (snap != null) {
-            try { this.snapiness = Math.max(1.0, Math.min(10.0, Double.parseDouble(snap))); } catch (Exception ignored) {}
+            try { this.snapiness = Math.max(1.0, Math.min(10.0, Double.parseDouble(snap))); } 
+            catch (Exception e) { Logger.error("AimAssist: Failed to parse snapiness", e); }
         }
         String f = properties.getProperty("aim.fov");
         if (f != null) {
-            try { this.fov = Double.parseDouble(f); } catch (Exception ignored) {}
+            try { this.fov = Double.parseDouble(f); } 
+            catch (Exception e) { Logger.error("AimAssist: Failed to parse fov", e); }
         }
         String d = properties.getProperty("aim.distance");
         if (d != null) {
-            try { this.distance = Math.max(2.5, Math.min(6.0, Double.parseDouble(d))); } catch (Exception ignored) {}
+            try { this.distance = Math.max(2.5, Math.min(6.0, Double.parseDouble(d))); } 
+            catch (Exception e) { Logger.error("AimAssist: Failed to parse distance", e); }
         }
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown)));
         clickAim = Boolean.parseBoolean(properties.getProperty("aim.click_aim", Boolean.toString(clickAim)));
+        breakBlocksPause = Boolean.parseBoolean(properties.getProperty("aim.break_pause", Boolean.toString(breakBlocksPause)));
         aimVertically = Boolean.parseBoolean(properties.getProperty("aim.aim_vertically", Boolean.toString(aimVertically)));
         limitToWeapons = Boolean.parseBoolean(properties.getProperty("aim.limit_to_weapons", Boolean.toString(limitToWeapons)));
         visibilityCheck = Boolean.parseBoolean(properties.getProperty("aim.visibility_check", Boolean.toString(visibilityCheck)));
@@ -437,6 +449,7 @@ public class AimAssist extends Module {
         properties.setProperty("aim.distance", Double.toString(distance));
         properties.setProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown));
         properties.setProperty("aim.click_aim", Boolean.toString(clickAim));
+        properties.setProperty("aim.break_pause", Boolean.toString(breakBlocksPause));
         properties.setProperty("aim.aim_vertically", Boolean.toString(aimVertically));
         properties.setProperty("aim.limit_to_weapons", Boolean.toString(limitToWeapons));
         properties.setProperty("aim.visibility_check", Boolean.toString(visibilityCheck));

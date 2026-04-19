@@ -15,12 +15,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import com.phantom.util.Logger;
+
 import java.util.Properties;
+
 
 public class SpeedBridge extends Module {
     private static final double EDGE_CHECK_OFFSET = 0.32D;
     private static final int JUMP_SNEAK_TICKS = 4;
     private static final int UNSNEAK_GRACE_TICKS = 2;
+    private static final double STATIONARY_THRESHOLD = 0.08D;
 
     private long lastPlaceTime;
     private double autoOffDelay = 3.0;
@@ -93,19 +97,27 @@ public class SpeedBridge extends Module {
             activeIndicatorTimer--;
         }
 
-        boolean isHoldingBlock = mc.player.getMainHandItem().getItem() instanceof BlockItem ||
-                mc.player.getOffhandItem().getItem() instanceof BlockItem;
+        boolean isHoldingBlock = false;
+        double horizontalSpeed = 0.0;
 
-        double horizontalSpeed = Math.sqrt(
-                mc.player.getDeltaMovement().x() * mc.player.getDeltaMovement().x() +
-                mc.player.getDeltaMovement().z() * mc.player.getDeltaMovement().z());
+        try {
+            isHoldingBlock = mc.player.getMainHandItem().getItem() instanceof BlockItem ||
+                    mc.player.getOffhandItem().getItem() instanceof BlockItem;
+
+            horizontalSpeed = Math.sqrt(
+                    mc.player.getDeltaMovement().x() * mc.player.getDeltaMovement().x() +
+                    mc.player.getDeltaMovement().z() * mc.player.getDeltaMovement().z());
+        } catch (Exception e) {
+            Logger.warn("SpeedBridge: Error calculating movement/inventory state - " + e.getMessage());
+            return;
+        }
 
         if (bridgeAssistEnabled && isHoldingBlock &&
                 mc.options.keyJump.isDown() && mc.options.keyUse.isDown() &&
-                horizontalSpeed < 0.08 && mc.player.onGround()) {
+                horizontalSpeed < STATIONARY_THRESHOLD && mc.player.onGround()) {
             isTowerMode = true;
             towerHoldTicks = 8;
-        } else if (horizontalSpeed > 0.08) {
+        } else if (horizontalSpeed > STATIONARY_THRESHOLD) {
             isTowerMode = false;
         }
 
@@ -243,13 +255,18 @@ public class SpeedBridge extends Module {
         if (v != null) {
             try {
                 autoOffDelay = Double.parseDouble(v);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                Logger.error("SpeedBridge: Failed to parse auto_off_delay", e);
+            }
         }
-        String delay = properties.getProperty("speedbridge.delay_ticks");
-        if (delay != null) {
+
+        String delayVal = properties.getProperty("speedbridge.delay_ticks");
+        if (delayVal != null) {
             try {
-                delayTicks = Math.max(0, Math.min(4, Integer.parseInt(delay.trim())));
-            } catch (NumberFormatException ignored) {}
+                delayTicks = Math.max(0, Math.min(4, Integer.parseInt(delayVal.trim())));
+            } catch (NumberFormatException e) {
+                Logger.error("SpeedBridge: Failed to parse delay_ticks", e);
+            }
         }
         blocksOnly = Boolean.parseBoolean(properties.getProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly)));
         sneakOnJump = Boolean.parseBoolean(properties.getProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump)));
