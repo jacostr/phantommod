@@ -41,6 +41,7 @@ public class ClickGUIScreen extends Screen {
     private int maxScroll;
     private String searchText = "";
     private boolean rebuildingSearch;
+    private EditBox searchBox;
 
     public ClickGUIScreen() {
         super(Component.literal("Phantom Mod"));
@@ -64,7 +65,7 @@ public class ClickGUIScreen extends Screen {
             boolean isSelected = category == selectedCategory;
 
             this.addRenderableWidget(Button.builder(
-                            Component.literal((isSelected ? "> " : "") + category.getLabel()),
+                            Component.literal(category.getLabel()),
                             button -> {
                                 selectedCategory = category;
                                 scrollOffset = 0;
@@ -74,14 +75,13 @@ public class ClickGUIScreen extends Screen {
                     .build());
         }
 
-        EditBox search = new EditBox(this.font, 24, 28, this.width - 48, 18, Component.literal("search"));
-        search.setMaxLength(64);
-        search.setBordered(true);
-        search.setFocusUnlocked(true);
-        search.setHint(Component.literal("Search modules…"));
-        search.setValue(searchText);
-        this.setInitialFocus(search);
-        search.setResponder(s -> {
+        this.searchBox = new EditBox(this.font, 24, 28, this.width - 48, 18, Component.literal("search"));
+        this.searchBox.setMaxLength(64);
+        this.searchBox.setBordered(true);
+        this.searchBox.setHint(Component.literal("Search modules…"));
+        this.searchBox.setValue(searchText);
+        this.setInitialFocus(this.searchBox);
+        this.searchBox.setResponder(s -> {
             if (rebuildingSearch) {
                 return;
             }
@@ -89,7 +89,7 @@ public class ClickGUIScreen extends Screen {
             scrollOffset = 0;
             rebuildUI();
         });
-        this.addRenderableWidget(search);
+        this.addRenderableWidget(this.searchBox);
 
         int profileX = 6;
         int profileY = LIST_TOP + 18;

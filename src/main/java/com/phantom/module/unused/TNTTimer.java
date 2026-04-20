@@ -50,13 +50,13 @@ public class TNTTimer extends Module {
         PoseStack matrices = context.matrices();
         Vec3 camPos = mc.gameRenderer.getMainCamera().position();
         Font font = mc.font;
-        
+
         int fuse = tnt.getFuse();
         if (fuse <= 0) return;
 
         String text = timeFormatter.format(fuse / 20.0f) + "s";
         float partialTicks = mc.getDeltaTracker().getGameTimeDeltaPartialTick(true);
-        
+
         double x = Mth.lerp(partialTicks, tnt.xo, tnt.getX()) - camPos.x;
         double y = Mth.lerp(partialTicks, tnt.yo, tnt.getY()) - camPos.y + tnt.getBbHeight() + 0.5;
         double z = Mth.lerp(partialTicks, tnt.zo, tnt.getZ()) - camPos.z;
@@ -64,13 +64,15 @@ public class TNTTimer extends Module {
         matrices.pushPose();
         matrices.translate(x, y, z);
         matrices.mulPose(mc.gameRenderer.getMainCamera().rotation());
-        matrices.scale(-0.025f * (float)scale, -0.025f * (float)scale, 0.025f * (float)scale);
+        matrices.scale(-0.025f * (float)scale, -0.025f * (float)scale, -0.025f * (float)scale);
 
         float halfWidth = (float)(-font.width(text) / 2);
         MultiBufferSource.BufferSource bufferSource = mc.renderBuffers().bufferSource();
-        
-        // Background
-        font.drawInBatch(text, halfWidth, 0, 0xFFFFFFFF, false, matrices.last().pose(), bufferSource, Font.DisplayMode.NORMAL, 0x40000000, 0xF000F0);
+
+        font.drawInBatch(text, halfWidth, 0, 0xFFFFFFFF, false, matrices.last().pose(), bufferSource, Font.DisplayMode.SEE_THROUGH, 0x00000000, 0xF000F0);
+        bufferSource.endBatch();
+
+        font.drawInBatch(text, halfWidth, 0, 0xFFFFFFFF, false, matrices.last().pose(), bufferSource, Font.DisplayMode.POLYGON_OFFSET, 0x40000000, 0xF000F0);
         bufferSource.endBatch();
 
         matrices.popPose();

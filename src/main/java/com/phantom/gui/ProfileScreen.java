@@ -12,7 +12,9 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import org.lwjgl.glfw.GLFW;
 
 public class ProfileScreen extends Screen {
     private static final int ROW_HEIGHT = 24;
@@ -155,5 +157,14 @@ public class ProfileScreen extends Screen {
         boolean waitingForConfirm = pendingOverwriteSlot == slot
                 && System.currentTimeMillis() <= pendingOverwriteUntil;
         return waitingForConfirm ? "Sure?" : "Save";
+    }
+
+    @Override
+    public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_ESCAPE) {
+            this.minecraft.setScreen(this.parent);
+            return true;
+        }
+        return super.keyPressed(event);
     }
 }

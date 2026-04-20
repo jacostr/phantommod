@@ -102,7 +102,7 @@ public class ModuleManager {
         modules.add(new Indicators());
         modules.add(new LatencyAlerts());
         modules.add(new Health());
-        modules.add(new TNTTimer());
+        // modules.add(new TNTTimer());
         modules.add(new Trajectories());
         modules.add(new TimeChanger());
         modules.add(new BedESP());
