@@ -4,10 +4,10 @@
   <img src=".github/screenshots/clickgui.png" alt="PhantomMod ClickGUI" width="800">
 </p>
 
-| **Latest Version** | v0.7.0 | **Release Ready** |
+| **Latest Version** | v0.9.0 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium liquid glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
+PhantomMod `v0.9.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium liquid glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
 
 ## Features
 
@@ -73,8 +73,6 @@ PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It feat
 | Action | Default |
 | --- | --- |
 | Open ClickGUI | `RIGHT_SHIFT` |
-| SpeedBridge Presets | `/bridge legit` / `normal` / `obvious` / `blatant` |
-| SpeedBridge Tower Mode | `/bridge tower` / `flat` |
 
 Each module can also have its own hotkey assigned from the settings screen.
 
@@ -112,7 +110,7 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v0.7.0 Notes
+## v0.9.0 Notes
 
 - **Stealth & Logging**: Silent-by-default logger; activity hidden unless Debug Console or Log File is enabled in HUD settings. File logging to `phantom.log` for troubleshooting.
 - **Velocity Fixing**: Thread-safe network hook using the new `Vec3` packet format for 1.21.11.
