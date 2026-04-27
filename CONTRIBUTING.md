@@ -1,6 +1,6 @@
 # PhantomMod v0.9.0 — Technical Reference
 
-> A Fabric 1.21.11 client-side mod for Minecraft Java Edition.  
+> A Fabric 1.21.11 client-side mod for Minecraft Java Edition.
 
 ---
 
@@ -15,41 +15,31 @@
    - [Mixin System](#mixin-system)
    - [GUI System](#gui-system)
 5. [Module Reference](#module-reference)
-   - [Combat](#combat)
-   - [Movement](#movement)
-   - [Player](#player)
-   - [Visuals In Player](#visuals-in-player)
-   - [SMP](#smp)
-6. [Design Decisions & Bypass Reasoning](#design-decisions--bypass-reasoning)
+6. [Design Decisions](#design-decisions)
 7. [Build & Installation](#build--installation)
 
 ---
 
 ## Overview & Goals
 
-PhantomMod is a self-contained Fabric client mod. The primary goals are:
-- **Minimal footprint** — no third-party libraries beyond Fabric API. Pure vanilla mappings.
-- **Configurable detectability** — every automation module exposes sliders and presets so the user can tune risk vs. strength.
+PhantomMod is a self-contained Fabric client mod with these goals:
+- **Minimal footprint** — no third-party libraries beyond Fabric API
+- **Clean codebase** — well-documented, readable structure
+- **Configurable detectability** — every automation module exposes sliders and presets
 
 ---
 
 ## Technology Stack
 
-| Technology | Version | Why |
+| Technology | Version | Purpose |
 |---|---|---|
 | **Minecraft Java** | 1.21.11 | Target version |
-| **Fabric Loader** | 0.16.10+ | Mod loader; lightweight, fast startup |
-| **Fabric Loom** | 1.14.10 | Gradle build plugin; remapping + mixin processing |
-| **Fabric API** | 0.140.0+ | Event hooks (tick, HUD render, world render) |
-| **SpongePowered Mixin** | Bundled via Loom | Bytecode injection into vanilla classes |
+| **Fabric Loader** | 0.16.10+ | Mod loader |
+| **Fabric API** | 0.140.0+1.21.11 | Event hooks |
+| **Fabric Loom** | 1.14.10 | Build plugin + mixin processing |
+| **Mixin** | Bundled via Loom | Bytecode injection |
 | **Java** | 21 | Required by Minecraft 1.21+ |
-| **MojMap** | Bundled via Loom | Official Mojang obfuscation mappings |
-
-**Why Fabric over Forge?**  
-Fabric loads faster, has a smaller API surface, and mixins integrate more cleanly. Forge's event system adds overhead and is harder to keep bypass-safe since Forge itself modifies more vanilla code.
-
-**Why MojMap/Loom?**  
-Loom automatically remaps everything from obfuscated bytecode to readable MojMap names at build time. This means code like `mc.player.getDeltaMovement()` compiles directly without any manual obfuscation lookups.
+| **MojMap** | Bundled via Loom | Obfuscation mappings |
 
 ---
 
@@ -58,71 +48,87 @@ Loom automatically remaps everything from obfuscated bytecode to readable MojMap
 ```
 PhantomMod/
 ├── src/main/java/com/phantom/
-│   ├── PhantomMod.java              ← Fabric mod entrypoint
+│   ├── PhantomMod.java              ← Fabric entrypoint + client commands
+│   ├── module/
+│   │   ├── Module.java              ← Abstract base class
+│   │   ├── ModuleCategory.java      ← COMBAT, MOVEMENT, PLAYER, RENDER, SMP
+│   │   ├── ModuleManager.java       ← Registry + tick/render/keybind dispatch
+│   │   └── impl/
+│   │       ├── combat/
+│   │       │   ├── AimAssist.java   ← Smooth camera aim
+│   │       │   ├── AutoClicker.java ← Left click automation
+│   │       │   ├── BowAimbot.java  ← Bow projectile aim
+│   │       │   ├── BlockHit.java    ← Sword block-hit
+│   │       │   ├── Criticals.java   ← Packet-based crits
+│   │       │   ├── HitSelect.java   ← Attack timing gate
+│   │       │   ├── JumpReset.java   ← Jump reset assist
+│   │       │   ├── NoHitDelay.java  ← Cooldown bypass
+│   │       │   ├── Reach.java       ← Extended reach
+│   │       │   ├── RightClicker.java← Right click auto
+│   │       │   ├── SilentAura.java  ← Stealth combat
+│   │       │   ├── Triggerbot.java  ← Auto attack on target
+│   │       │   ├── Velocity.java    ← Knockback reduction
+│   │       │   ├── WaterClutch.java ← Auto bucket swap
+│   │       │   ├── WTap.java        ← Sprint reset
+│   │       │   └── WeaponCycler.java← Best weapon swap
+│   │       ├── movement/
+│   │       │   ├── AlwaysSprint.java    ← Sprint enforcement
+│   │       │   ├── NoJumpDelay.java     ← Jump cooldown removal
+│   │       │   ├── SafeWalk.java        ← Edge protection
+│   │       │   ├── Scaffold.java        ← Under-feet placement
+│   │       │   └── SpeedBridge.java     ← Bridge + tower assist
+│   │       ├── player/
+│   │       │   ├── AntiAFK.java     ← Idle prevention
+│   │       │   ├── AntiBot.java     ← Bot filtering
+│   │       │   ├── AutoTools.java   ← Tool swap
+│   │       │   ├── AutoTotem.java   ← Totem equip
+│   │       │   ├── AutoXPThrow.java ← XP throwing
+│   │       │   ├── FastPlace.java   ← Fast place delay
+│   │       │   └── LatencyAlerts.java ← Ping alerts
+│   │       ├── render/
+│   │       │   ├── BedESP.java      ← Bed highlighting
+│   │       │   ├── ESP.java         ← Entity hitboxes
+│   │       │   ├── FullBright.java  ← Gamma override
+│   │       │   ├── Health.java      ← Health bars
+│   │       │   ├── HudModule.java   ← HUD overlay
+│   │       │   ├── Indicators.java  ← Target markers
+│   │       │   ├── TimeChanger.java ← Time override
+│   │       │   └── Trajectories.java← Projectile prediction
+│   │       └── smp/
+│   │           ├── ChestESP.java    ← Chest highlighting
+│   │           ├── OreESP.java      ← Ore highlighting
+│   │           ├── OreFinder.java   ← Ore search
+│   │           └── ShulkerESP.java  ← Shulker highlighting
 │   ├── config/
-│   │   ├── ConfigManager.java       ← Reads/writes phantom-memory.properties
-│   │   └── ProfileManager.java      ← Manages named profile slots
+│   │   ├── ConfigManager.java      ← phantom-memory.properties
+│   │   └── ProfileManager.java     ← Profile slots
 │   ├── gui/
-│   │   ├── ClickGUIScreen.java      ← Main glassy UI with sidebar tabs
-│   │   ├── ModuleSettingsScreen.java← Per-module settings with sliders/presets
-│   │   ├── NotificationManager.java ← Toast-style on-screen popups
-│   │   ├── ProfileScreen.java       ← Save/load UI for 4 profile slots
-│   │   └── framework/            ← Modern UI widgets (buttons, sliders, toggles, text fields)
+│   │   ├── ClickGUIScreen.java     ← Main glassy UI
+│   │   ├── ModuleSettingsScreen.java← Per-module settings
+│   │   ├── ProfileScreen.java      ← Profile management
+│   │   ├── NotificationManager.java← Toast notifications
+│   │   └── framework/             ← Modern UI widgets
 │   ├── mixin/
-│   │   ├── ClientPacketListenerMixin.java   ← Hooks velocity packets (Velocity module)
-│   │   ├── LivingEntityJumpAccessor.java    ← Accessor for private jump timer field
-│   │   ├── LivingEntityJumpDelayMixin.java  ← Removes jump cooldown (NoJumpDelay)
-│   │   └── MultiPlayerGameModeMixin.java    ← Attack hook (Criticals module)
-│   ├── module/impl/
-│   │   ├── combat/
-│   │   │   ├── AimAssist.java   ← Smooth camera aim toward targets
-│   │   │   ├── AutoClicker.java ← Left click automation with presets
-│   │   │   ├── BowAimbot.java  ← Bow projectile aim assist
-│   │   │   ├── BlockHit.java    ← Visual/hold-use block-hit behavior
-│   │   │   ├── Criticals.java   ← Spoofed mini-jump critical hits
-│   │   │   ├── HitSelect.java   ← Attack timing / selective hit gating
-│   │   │   ├── JumpReset.java   ← Jump reset assist after taking hits
-│   │   │   ├── NoHitDelay.java  ← Attack cooldown removal/reduction
-│   │   │   ├── Reach.java       ← Extended entity/block reach
-│   │   │   ├── RightClicker.java← Right click automation
-│   │   │   ├── SilentAura.java  ← Stealth combat without rotations
-│   │   │   ├── Triggerbot.java  ← Auto attack when crosshair on target
-│   │   │   ├── Velocity.java    ← Knockback percentage reduction
-│   │   │   ├── WaterClutch.java ← Auto-swap to water bucket underwater
-│   │   │   ├── WTap.java        ← Sprint reset on attack
-│   │   │   └── WeaponCycler.java← Auto-switch to best weapon
-│   │   ├── movement/
-│   │   │   ├── AlwaysSprint.java    ← Sprint state enforcement
-│   │   │   ├── NoJumpDelay.java     ← Jump cooldown removal
-│   │   │   ├── SafeWalk.java        ← Edge protection while walking
-│   │   │   ├── Scaffold.java        ← Under-feet block placement
-│   │   │   └── SpeedBridge.java     ← Edge-detection bridging assist
-│   │   ├── player/
-│   │   │   ├── AntiAFK.java     ← Idle movement / input prevention
-│   │   │   ├── AntiBot.java     ← Client-side bot filtering helper
-│   │   │   ├── AutoTools.java   ← Auto tool/weapon swap
-│   │   │   ├── AutoTotem.java   ← Auto offhand totem equip
-│   │   │   ├── AutoXPThrow.java ← Fast XP bottle usage helper
-│   │   │   ├── FastPlace.java   ← Reduced right-click place delay
-│   │   │   └── LatencyAlerts.java ← Ping spike notifications
-│   │   ├── render/
-│   │   │   ├── BedESP.java      ← Bed block ESP
-│   │   │   ├── ESP.java         ← Entity ESP overlay
-│   │   │   ├── FullBright.java  ← Gamma override for night vision
-│   │   │   ├── Health.java      ← Entity health bars (billboarded)
-│   │   │   ├── HudModule.java   ← Corner info overlay
-│   │   │   ├── Indicators.java  ← On-screen target / state indicators
-│   │   │   ├── TimeChanger.java ← World time override
-│   │   │   └── Trajectories.java← Projectile path prediction
-│   │   └── smp/
-│   │       ├── ChestESP.java    ← Chest block ESP
-│   │       ├── OreESP.java      ← Ore block ESP
-│   │       ├── OreFinder.java   ← Ore search helper
-│   │       └── ShulkerESP.java  ← Shulker box ESP
+│   │   ├── ClientPacketListenerMixin.java  ← Velocity packet hook
+│   │   ├── MultiPlayerGameModeMixin.java  ← Criticals hook
+│   │   ├── LivingEntityJumpDelayMixin.java← NoJumpDelay hook
+│   │   ├── ItemInHandRendererMixin.java   ← Reach hook
+│   │   ├── EntityRendererMixin.java       ← ESP rendering
+│   │   ├── MinecraftClientMixin.java      ← Right-click delay
+│   │   ├── LevelMixin.java                ← World hooks
+│   │   ├── TitleScreenMixin.java           ← Title screen
+│   │   └── MinecraftClientAccessor.java    ← Accessor interface
+│   ├── render/
+│   │   └── EntityOutlineRender.java← Entity outlines
+│   └── util/
+│       ├── AnimationUtil.java
+│       ├── ESPColor.java
+│       ├── InventoryUtil.java
+│       └── RenderUtil.java
 ├── src/main/resources/
-│   ├── fabric.mod.json              ← Mod metadata, entrypoint declaration
-│   └── phantom.mixins.json          ← Mixin registration file
-└── build.gradle                     ← Loom + dependency configuration
+│   ├── fabric.mod.json
+│   └── phantom.mixins.json
+└── build.gradle
 ```
 
 ---
@@ -131,266 +137,145 @@ PhantomMod/
 
 ### Entry Point
 
-**`PhantomMod.java`** implements `ClientModInitializer` — Fabric's client-side lifecycle hook. This runs once when the game finishes loading.
-
-**What it does:**
-1. Creates the `ModuleManager` (which loads config and registers all modules)
-2. Registers `M` as the GUI open key
-3. Hooks into three Fabric API events:
-   - `ClientTickEvents.END_CLIENT_TICK` — runs every game tick for module logic
-   - `WorldRenderEvents.AFTER_ENTITIES` — runs in the 3D render cycle (used by ESP)
-   - `HudRenderCallback.EVENT` — runs every frame on the 2D HUD layer (overlays, notifications)
-
-**Why `END_CLIENT_TICK` instead of `START`?**  
-By the end of the tick, input state (key presses, mouse clicks, entity interactions) has all been processed. Reading it at END means module logic always sees the final, stable state for that tick.
+**`PhantomMod.java`** implements `ClientModInitializer`. It:
+1. Creates `ModuleManager` (loads config, registers modules)
+2. Registers RIGHT_SHIFT as GUI open key (H for HUD)
+3. Hooks into `ClientTickEvents.END_CLIENT_TICK`, `WorldRenderEvents.AFTER_ENTITIES`, and `HudRenderCallback.EVENT`
+4. Registers `/bridge` client commands for preset switching
 
 ---
 
 ### Module System
 
-Every feature is a `Module` subclass. The base class `Module.java` defines:
+Base class `Module.java` defines:
 
 | Method | Purpose |
 |---|---|
-| `onEnable()` | Called once when the module is toggled on |
-| `onDisable()` | Called once when toggled off; used to undo side effects |
-| `onTick()` | Called every game tick while enabled |
-| `onRender(context)` | Called every 3D frame while enabled |
-| `onHudRender(graphics)` | Called every 2D HUD frame while enabled |
-| `loadConfig(Properties)` | Reads saved values from the properties file |
-| `saveConfig(Properties)` | Writes current values to the properties file |
+| `onEnable()` | Called when toggled on |
+| `onDisable()` | Called when toggled off |
+| `onTick()` | Every game tick |
+| `onRender(context)` | Every 3D frame |
+| `onHudRender(graphics)` | Every 2D HUD frame |
+| `loadConfig/saveConfig` | Properties persistence |
 
-**Config key format:**  
-Module names are normalized to lowercase snake_case (e.g. `"AimAssist"` → `"aimassist"`). Each property is prefixed: `aimassist.key`, `aimassist.enabled`.
+**Config key format:** `modulename.enabled`, `modulename.key`
 
-**Enable/disable flow:**  
-`toggle()` → `setEnabled(bool)` → calls `onEnable()`/`onDisable()` + fires a `NotificationManager` toast + auto-saves config.
-
-**`ModuleCategory`** is a simple enum (`COMBAT`, `MOVEMENT`, `PLAYER`, `SMP`) that controls which tab a module appears under in the ClickGUI.
-
-**`ModuleManager`** is the registry. It:
-- Constructs all module instances at startup
-- Sorts them alphabetically within each category
-- Delegates tick/render/keybind calls to all enabled modules
-- Provides `getModuleByName(String)` for mixin lookups
+**Team Detection:** Base `Module` provides `isTeammateTarget(Entity)` checking vanilla team alliances and armor colors.
 
 ---
 
 ### Config System
 
-**`phantom-memory.properties`** is a standard Java `Properties` file stored in `.minecraft/config/`. It holds every module's enabled state, hotkey, and custom slider values in flat key=value format.
+**`phantom-memory.properties`** in `.minecraft/config/` — flat key=value format.
 
-**ProfileManager** manages 4 custom profiles (`slot_0.properties` through `slot_3.properties` in `config/phantom-profiles/`) with user-editable names persisted in `phantom-profile-names.properties`.
+**`ConfigManager`** provides:
+- `load(ModuleManager)` — reads file, calls `module.loadConfig()`
+- `save(ModuleManager)` — rebuilds Properties, writes atomically
+- `apply(ModuleManager, Properties, boolean)` — applies profile with lifecycle hooks
+- `readProfile/writeProfile` — profile slot I/O
 
-**`ConfigManager`** has two static methods:
-- `load(ModuleManager)` — reads the file and calls `module.loadConfig()` for each module
-- `save(ModuleManager)` — collects all values, then writes the file atomically
-
-**Why Properties instead of JSON?**  
-Properties files are human-readable, easy to hand-edit, and require zero external libraries. JSON would need Gson or an equivalent, adding a dependency.
+**Why Properties?** Zero dependencies, human-readable, crash-safe atomic writes.
 
 ---
 
 ### Mixin System
 
-Mixins use SpongePowered Mixin (bundled with Fabric) to inject code directly into compiled vanilla Minecraft classes — without modifying source. Loom processes the mixin JSON and applies bytecode transformations at launch.
+All mixins declared in **`phantom.mixins.json`**:
 
-All mixins are declared in **`phantom.mixins.json`**.
-
-#### `ClientPacketListenerMixin`
-- **Target:** `ClientPacketListener.handleSetEntityMotion`
-- **Injection point:** `@At("RETURN")` — after the vanilla code has already applied the packet's motion to the player
-- **What it does:** Reads the Velocity module's `kbPercent` slider and scales the player's `deltaMovement` vector by that fraction
-- **Why RETURN not HEAD?** If we cancelled/intercepted at HEAD, the vanilla code wouldn't run at all — the player would receive a "ghost" velocity that servers might detect as suspicious. By hooking at RETURN, the server-intended velocity is applied first, then we scale it back. This looks like normal physics lag to the server.
-
-#### `MultiPlayerGameModeMixin`
-- **Target:** `MultiPlayerGameMode.attack`
-- **Injection point:** `@At("HEAD")` — before the attack packet is sent
-- **What it does:** Sends 4 `ServerboundMovePlayerPacket.Pos` packets that simulate a tiny bobbing motion, making the server register the next hit as a critical (player was briefly airborne)
-- **Why packet spoofing?** Critical hits in vanilla require the player to be falling. Rather than literally making the player jump (visible, predictable), we spoof the positional state that the server uses to determine "was the player airborne during this attack"
-
-#### `LivingEntityJumpDelayMixin` + `LivingEntityJumpAccessor`
-- **Target:** `LivingEntity` jump timer field
-- The Accessor interface exposes the private `jumpDelay` field through a generated getter
-- The Mixin then zeroes it every tick when NoJumpDelay is enabled
+| Mixin | Target | Purpose |
+|---|---|---|
+| `ClientPacketListenerMixin` | `handleSetEntityMotion` | Velocity scaling at RETURN |
+| `MultiPlayerGameModeMixin` | `attack` | Critical hit packet spoofing |
+| `LivingEntityJumpDelayMixin` | `tick` | Zero jump cooldown |
+| `ItemInHandRendererMixin` | `render` | Reach extension |
+| `EntityRendererMixin` | `render` | ESP entity outlines |
+| `MinecraftClientMixin` | `tick` | Right-click delay tracking |
+| `LevelMixin` | Various | World hooks |
+| `TitleScreenMixin` | Various | Title screen hooks |
 
 ---
 
 ### GUI System
 
 #### `ClickGUIScreen`
-The main overlay opened with RIGHT_SHIFT. Features a premium liquid glassy aesthetic with:
-- Sidebar-based category navigation (Combat / Movement / Player / SMP)
-- Search box to filter modules by name
-- Module rows with enable/disable toggles and settings access
-- `Profiles` button in the sidebar to open profile management
-
-Scroll is handled via `mouseScrolled` tracking an `int scrollOffset` clamped to `maxScroll`. All widget Y positions are offset by `-scrollOffset` in `rebuildUI()`.
+Premium liquid glassy aesthetic:
+- Sidebar-based category navigation (Combat / Movement / Player / Render / SMP)
+- Search box to filter modules
+- Module rows with enable toggles and settings access
+- `Profiles` button in sidebar
 
 #### `ModuleSettingsScreen`
-Opened when clicking settings on any module. Dynamically renders:
-- Per-module widgets (sliders, toggle buttons, preset buttons) using `instanceof` pattern matching
-- Hotkey binding row with `Set hotkey` / `Clear Hotkey`
+Dynamically renders widgets using `instanceof` pattern matching:
+- Sliders, toggles, preset buttons
+- Hotkey binding with Set/Clear
 
 #### Modern UI Framework (`framework/`)
-Reusable glassy widgets built from scratch:
-- **`ModernButton`** — Rounded glass-effect buttons with hover states
-- **`ModernSlider`** — Translucent slider with value tooltip
-- **`ModernToggle`** — Sleek on/off toggle switch
-- **`ModernTextField`** — Glass-effect text input with placeholder
+- **`ModernButton`** — Rounded glass-effect buttons
+- **`ModernSlider`** — Translucent slider with tooltip
+- **`ModernToggle`** — On/off switch
+- **`ModernTextField`** — Glass-effect text input
 
 #### `NotificationManager`
-A static list of `Notification` records (message + expiry timestamp). Renders toasts on the HUD layer regardless of what's open.
+Toast notifications with configurable position (TOP_RIGHT, TOP_LEFT, BOTTOM_RIGHT, BOTTOM_LEFT).
 
 #### `ProfileScreen`
-Manages 4 saved config slots with editable names, explicit save/load actions, and overwrite confirmation.
+4 profile slots with editable names, explicit save/load, overwrite confirmation.
 
 ---
 
 ## Module Reference
 
-### Combat
+### Combat Highlights
 
 #### `AimAssist`
-- **How it works:** Every tick, scans all living entities within a configurable FOV cone and 5-block radius. Picks the closest by yaw angle. Smoothly interpolates player yaw/pitch toward the target's chest area using a fraction of the total angular delta (`delta / speedFactor`). Adds ±1.5° noise to defeat rotation-pattern detectors.
-- **Trigger condition:** Player must be holding a Sword **and** holding Left Click (attack key)
-- **Detectability:** Subtle — smooth movement looks human. Patterns emerge at high speed values.
-- **Settings:** `Smoothing` (1–10, higher = slower), `FOV Limit` (10°–360°)
-
-#### `AutoBlock`
-- **How it works:** After every sword hit, virtually holds the `keyUse` (right-click) key for a configurable duration. On Hypixel, holding right-click with a sword triggers the 1.8-style "block-hitting" animation even in 1.21.
-- **Trigger condition:** Player holds a sword in main hand and hits something
-- **Detectability:** Blatant — blocking pattern is very consistent. Strength slider reduces hold duration to make it intermittent.
-- **Settings:** `Strength` slider (0–100), preset buttons (Legit, Normal, Obvious)
-
-#### `Criticals`
-- **How it works:** Hooks `MultiPlayerGameMode.attack` via mixin. Before the attack packet is sent, fires 4 movement packets: `y+0.0625`, `y`, `y+0.0125`, `y` — a tiny simulated bounce the server interprets as airborne state, registering the hit as a critical.
-- **Trigger condition:** Player attacks any entity
-- **Detectability:** Blatant — the server sees positional packets immediately before every attack. The `Chance %` slider randomizes whether crits fire, making the pattern less consistent.
-- **Settings:** `Crit Chance` (0.0–1.0)
-
-#### `NoHitDelay`
-- **How it works:** Uses `player.resetAttackStrengthTicker()` to remove the 1.9+ attack cooldown, allowing 1.8-style spam clicking.
-- **Detectability:** Blatant — attack cadence patterns matching 1.8 on a 1.9+ server are easily flagged.
-- **Settings:** Configurable hit chance (0% to 100%), tick delay override, and server-specific presets (Vanilla/Hypixel/Mineplex/Blatant).
-
-#### `SilentAura`
-- **How it works:** Replaces normal Aura by keeping the client camera completely stationary. Targets entities using `gameMode.attack()` directly. No rotation packets are sent making it much harder to detect visually or heuristically.
-- **Detectability:** Blatant on strict configurations — attacking entities outside FOV or without moving look direction can be flagged.
-- **Settings:** Attack CPS bounds, attack radius, target prioritizing (Yaw/Distance/Health), and entity filtering options.
-
-#### `Reach`
-- **How it works:** Uses Minecraft's built-in `Attributes` system (`ENTITY_INTERACTION_RANGE`, `BLOCK_INTERACTION_RANGE`) with `AttributeModifier` UUIDs that are added on enable and removed on disable.
-- **Detectability:** Blatant — servers log hit distances. Values above ~3.5 blocks are flagged immediately on Hypixel.
-- **Settings:** `Entity reach` slider (3.0–8.0), `Block reach` slider (4.5–10.0), presets (Legit, Normal, Obvious, Blatant)
+- Scans entities in FOV cone with configurable radius
+- Smooth yaw/pitch interpolation with ±1.5° noise for anti-detection
+- Target areas: Center/Head/Feet
+- Target modes: Yaw/Distance
+- Supports Swords, Axes, Maces, Tridents
 
 #### `Velocity`
-- **How it works:** Hooks `ClientPacketListener.handleSetEntityMotion` via mixin at `RETURN`. After vanilla applies the knockback vector, scales XYZ delta movement by `kbPercent`. At 90% the player still visibly flinches but absorbs significantly less distance.
-- **Detectability:** Subtle at ≥70% — the client still receives and somewhat applies knockback. At 0% (None preset), the server sees motion applied that the client nullifies — detectable by acceleration analysis.
-- **Settings:** `Knockback %` slider (0.0–1.0), presets (Legit 90%, Subtle 75%, Blatant 40%, None 0%)
+- Hooks `handleSetEntityMotion` at RETURN
+- Scales `deltaMovement` by `kbPercent`
+- Subtle at ≥70%, blatant at 0%
 
----
-
-### Movement
-
-#### `AlwaysSprint`
-- **How it works:** Sets `mc.player.setSprinting(true)` every tick if the player is moving forward and sprinting is normally allowed (not too hungry, not in liquid, etc.).
-- **Detectability:** Safe — vanilla sprint behavior, just automated.
-
-#### `NoJumpDelay`
-- **How it works:** Uses a Mixin + Accessor pair to zero out `LivingEntity.jumpDelay` (the 10-tick cooldown that prevents bunny-hopping). The accessor exposes the private int field for writing.
-- **Detectability:** Subtle — noticeable if the server measures jump frequency over time.
-
-#### `Scaffold`
-- **How it works:** Detects when the block below the player's feet is air, finds a hotbar block, switches to it with the synced inventory helper, places against a neighboring face, then switches back.
-- **Detectability:** Blatant — automated under-feet placement is still easy for anti-cheat to pattern.
-- **Settings:** None. `Scaffold` is intentionally kept as a plain regular scaffold in `v1.0.6`.
+#### `SilentAura`
+- Uses `gameMode.attack()` directly
+- No rotation packets sent
+- CPS bounds and radius settings
 
 #### `SpeedBridge`
-- **How it works:** Captures a bridge direction yaw on enable. Every tick, computes two vectors: backwards (away from bridge edge) and lateral. Checks if a block exists one step behind the player's feet. If the player is hanging over air, virtually holds `keyShift` (sneak) to prevent falling. When the block stack empties, `findNextBlockSlot()` scans the hotbar for the next `BlockItem` and calls `setSelectedSlot()`.
-- **Block refill logic:** Scans slots `(current+1) % 9` through `(current+8) % 9` — always picks the next adjacent slot first (lowest rotation distance), wrapping around.
-- **Detectability:** Safe/Subtle — sneak timing is the only automated action; placement is still fully manual.
+- Bridge assist with edge detection
+- Tower mode (hold jump + right-click while stationary)
+- Presets: Legit, Normal, Obvious, Blatant
+- HUD indicator showing TOWER/FLAT mode
 
----
+### Render Highlights
 
-### Player
-
-#### `AutoTools`
-- **How it works:** Reads `mc.hitResult` each tick. If it's a `BlockHitResult`, compares `stack.getDestroySpeed(blockState)` across all hotbar slots and calls `setSelectedSlot()` on the best one. For `EntityHitResult`, scores by item name (sword > mace > axe > trident).
-- **Detectability:** Safe — tool swapping is a normal player action.
-
-#### `NoFall`
-- **How it works:** Sends `ServerboundMovePlayerPacket` with `onGround = true` whenever the player has significant downward velocity, preventing the server from calculating fall damage.
-- **Detectability:** Blatant — NCP and Watchdog both track ground state vs. expected trajectory.
-
----
-
-### Visuals In Player
+#### `HUD`
+- Top-right (or left) corner info display
+- Toggleable: module list, FPS, ping, CPS
+- Notification position control
+- Uses Minecraft uniform font
 
 #### `ESP`
-- **How it works:** In `onRender()` (3D world render pass after entities are drawn), iterates nearby highlightable entities and renders wireframe boxes. Targets use a dedicated no-depth line render type so the boxes stay visible through walls.
-- **Detectability:** Safe — purely client-side visual; the server never sees it.
-- **Settings:** Toggle players / mobs / animals independently, and `Through Walls`.
-
-#### `Health`
-- **How it works:** Renders vertical health indicators beside entities during the 3D world render pass. Uses billboarded quads (or thick lines) that face the camera. The scale can be adjusted via a slider to control the physical width of the bar.
-- **Detectability:** Safe — purely client-side visual.
-- **Settings:** `Through Walls`, `Show Invisible`, and `Bar Scale` slider (0.5–10.0).
-
-#### `Arrows`
-- **How it works:** Renders directional arrow indicators pointing toward nearby entities or projectiles, with configurable radius and distance display.
-- **Detectability:** Safe — purely client-side visual.
-
-#### `LatencyAlerts`
-- **How it works:** Monitors ping from `mc.getConnection()` and fires toast notifications when ping exceeds a threshold or spikes.
-- **Detectability:** Safe — client-side only.
-
-#### `Freecam`
-- **How it works:** On enable, saves the player's position and freezes movement input. Polls `KeyMapping.isDown()` on WASD/Jump/Shift to move a virtual camera position each tick. The player body stays frozen at the original position.
-- **Detectability:** Safe — the server doesn't receive movement packets while the player is "frozen".
-
-#### `FullBright`
-- **How it works:** Saves `mc.options.gamma` on enable, sets it to `16.0` (well above the normal max of 1.0, which forces full ambient light rendering), restores on disable.
-- **Detectability:** Safe — gamma is a client-only graphics option.
-
-#### `HudModule`
-- **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current ping from `mc.getConnection()`, and CPS.
-- **Detectability:** Safe — client-side only.
-
-#### `ProfileScreen`
-- **How it works:** Manages 4 saved config slots with editable names, explicit save/load actions, and overwrite confirmation before replacing an existing slot.
-- **Detectability:** Safe — client-side GUI only.
+- Team-colored hitbox rendering
+- Team detection via vanilla `isAlliedTo()` and armor colors
+- Separate toggles for players/mobs/animals
+- Through walls toggle
 
 ---
 
-### SMP
+## Design Decisions
 
-#### Block ESPs (`ChestESP`, `OreESP`, `BedESP`, `ShulkerESP`)
-- **How it works:** Separated from entity ESP into survival-specific categories. Iterates chunks based on range using varying timers (e.g. 1-second delay for block iteration to avoid lag) and renders wireframes.
-- **Detectability:** Safe — client-side rendering.
+### Why packet spoofing for Criticals?
+Spoofing `ServerboundMovePlayerPacket` with ground-state packets is harder to detect than actual jumping — the server sees position updates, not physical Y movement.
 
-#### `AutoXPThrow`
-- **How it works:** Bypasses normal right-click delay by aggressively interacting via packet/controller logic while XP bottles are held. Switch speed handles auto-inventory cycling.
-- **Detectability:** Moderate — rapid slot interaction can generate irregular inventory packets.
+### Why Properties over JSON?
+Zero dependencies. Java's built-in Properties handles everything we need with crash-safe atomic writes.
 
----
-
-## Design Decisions & Bypass Reasoning
-
-### Why not cancel knockback packets entirely?
-Cancelling `ClientboundSetEntityMotionPacket` at HEAD makes the server think the client received velocity but the client reports zero movement to NCP checks. Scaling at RETURN means the client *does* receive velocity and the reduced movement is plausible as normal physics.
-
-### Why add noise to AimAssist rotations?
-Watchdog and NCP both score rotation streams for inhuman consistency. If every tick snaps exactly toward the target's center, the variance is 0.0 — impossible for a human. Adding ±1.5° per tick from `Math.random()` gives a realistic jitter distribution.
-
-### Why use `ServerboundMovePlayerPacket` for Criticals instead of actually jumping?
-A real jump changes the player's Y position visibly and is affected by momentum. It also sends a full movement update that must match subsequent packets. Spoof-packets only affect server state for one tick and don't require the client to actually be in the air — much harder to correlate.
-
-### Why `setSelectedSlot()` instead of sending `ServerboundSetCarriedItemPacket` for slot swaps?
-`setSelectedSlot()` updates both the client inventory and sends the packet automatically. Manually sending the packet while mismatching client state can cause desync.
-
-### Why Properties file instead of JSON for config?
-Zero external dependencies. Java's built-in `Properties` gives us `load()`, `store()`, and comment support out of the box. The file is easily hand-editable and survives crashes (we write atomically using `Files.newOutputStream`).
+### Why `instanceof` pattern matching in settings?
+Scales well for the current module count without needing a provider interface per module.
 
 ---
 
@@ -398,21 +283,21 @@ Zero external dependencies. Java's built-in `Properties` gives us `load()`, `sto
 
 ### Requirements
 - Java 21
-- Minecraft Java 1.21.11 with Fabric Loader installed
-- Fabric API in your mods folder
+- Minecraft 1.21.11 + Fabric Loader 0.16.10+
+- Fabric API 0.140.0+1.21.11
 
 ### Build
 ```bash
 ./gradlew build
 ```
-Output jar: `build/libs/PhantomMod-*.jar`
+Output: `build/libs/PhantomMod-*.jar`
 
 ### Install
-1. Drop the jar into `.minecraft/mods/`
-2. Drop Fabric API jar into `.minecraft/mods/`
-3. Launch with the Fabric profile
+1. Drop jar into `.minecraft/mods/`
+2. Drop Fabric API into `.minecraft/mods/`
+3. Launch with Fabric profile
 
-### Config file location
+### Config Locations
 - **Windows:** `%appdata%\.minecraft\config\phantom-memory.properties`
 - **macOS:** `~/Library/Application Support/minecraft/config/phantom-memory.properties`
 - **Linux:** `~/.minecraft/config/phantom-memory.properties`

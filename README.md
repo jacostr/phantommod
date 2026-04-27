@@ -7,66 +7,68 @@
 | **Latest Version** | v0.9.0 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v0.9.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium liquid glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
+PhantomMod `v0.9.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
 
 ## Features
 
-- **Premium ClickGUI** — Liquid glassy aesthetic with category tabs, search filtering, and per-module settings
-- **Profile System** — Save and load up to 4 custom configuration profiles
-- **HUD Overlay** — Real-time display of enabled modules, FPS, ping, and CPS
+- **Premium ClickGUI** — Liquid glassy aesthetic with category tabs (Combat, Movement, Player, Render, SMP), search filtering, and per-module settings
+- **Profile System** — Save and load up to 4 custom configuration profiles with custom names
+- **HUD Overlay** — Real-time display of enabled modules, FPS, ping, and CPS (fully configurable)
 - **Toast Notifications** — Non-intrusive on-screen confirmations for module toggles
-- **Client Commands** — `/bridge` commands for quick SpeedBridge preset switching
-- **Silent-by-Default Logging** — Debug logging hidden unless explicitly enabled
+- **Notification Positions** — Moveable toasts (TOP_RIGHT, TOP_LEFT, BOTTOM_RIGHT, BOTTOM_LEFT)
+- **Team Detection** — Armor color matching and vanilla team allied detection
 
 ## Modules
 
 ### Combat
-- `AimAssist`
-- `AutoClicker`
-- `BowAimbot`
-- `BlockHit`
-- `Criticals`
-- `HitSelect`
-- `JumpReset`
-- `NoHitDelay`
-- `Reach`
-- `RightClicker`
-- `SilentAura`
-- `Triggerbot`
-- `Velocity`
-- `WaterClutch`
-- `WTap`
-- `WeaponCycler`
+- `AimAssist` — Smooth camera aim with FOV cone, target area selection, and weapon support
+- `AutoClicker` — Left click automation with CPS bounds and presets
+- `BowAimbot` — Predictive bow aim for projectiles
+- `BlockHit` — Sword block-hit automation
+- `Criticals` — Packet-based critical hits
+- `HitSelect` — Attack timing gate
+- `JumpReset` — Jump reset assist after taking hits
+- `NoHitDelay` — Attack cooldown bypass
+- `Reach` — Extended reach for entities and blocks
+- `RightClicker` — Right click automation
+- `SilentAura` — Stealth combat without rotation packets
+- `Triggerbot` — Auto attack when crosshair on target
+- `Velocity` — Knockback reduction
+- `WaterClutch` — Auto bucket swap underwater
+- `WTap` — Sprint reset on attack
+- `WeaponCycler` — Auto-switch to best weapon
 
 ### Movement
-- `AlwaysSprint`
-- `NoJumpDelay`
-- `SafeWalk`
-- `Scaffold`
-- `SpeedBridge`
+- `AlwaysSprint` — Sprint enforcement
+- `NoJumpDelay` — Jump cooldown removal
+- `SafeWalk` — Edge protection
+- `Scaffold` — Under-feet block placement
+- `SpeedBridge` — Bridge assist + tower mode with presets
 
-### Player / Visuals
-- `AntiAFK`
-- `AntiBot`
-- `AutoTools`
-- `AutoTotem`
-- `ESP`
-- `FastPlace`
-- `FullBright`
-- `Health`
-- `HUD`
-- `Indicators`
-- `LatencyAlerts`
-- `Trajectories`
-- `TimeChanger`
-- `BedESP`
+### Player
+- `AntiAFK` — Idle movement prevention
+- `AntiBot` — Client-side bot filtering
+- `AutoTools` — Auto tool swap
+- `AutoTotem` — Auto totem equip
+- `AutoXPThrow` — Fast XP throwing
+- `FastPlace` — Reduced place delay
+- `LatencyAlerts` — Ping spike notifications
+
+### Render
+- `BedESP` — Bed block highlighting
+- `ESP` — Entity hitbox highlighting with team colors
+- `FullBright` — Gamma override
+- `Health` — Entity health bars
+- `HUD` — Corner info overlay (FPS/ping/CPS)
+- `Indicators` — Target markers
+- `TimeChanger` — World time override
+- `Trajectories` — Projectile prediction
 
 ### SMP
-- `AutoXPThrow`
-- `ChestESP`
-- `OreESP`
-- `OreFinder`
-- `ShulkerESP`
+- `ChestESP` — Chest block highlighting
+- `OreESP` — Ore block highlighting
+- `OreFinder` — Ore search helper
+- `ShulkerESP` — Shulker box highlighting
 
 ## Controls
 
@@ -76,20 +78,18 @@ PhantomMod `v0.9.0` is a client-side Fabric mod for Minecraft `1.21.11`. It feat
 
 Each module can also have its own hotkey assigned from the settings screen.
 
-If you need to change the ClickGUI open bind to a different key, simply open Minecraft's native `Options -> Controls -> Key Binds` menu, scroll down to the `PhantomMod` (or `main`) category, and rebind `Open Phantom GUI` to whatever you prefer.
-
 ## Configuration
 
-PhantomMod stores its settings in `phantom-memory.properties` inside your Minecraft config directory. Module enabled state, hotkeys, and per-module settings are all persisted there.
+PhantomMod stores settings in `phantom-memory.properties` in your Minecraft config directory. Module enabled state, hotkeys, and per-module settings are all persisted there.
 
-Custom profiles are stored in `config/phantom-profiles/` and can be managed from the "Profiles" menu in the ClickGUI.
+Profiles are stored in `config/phantom-profiles/` and can be managed from the "Profiles" menu in the ClickGUI.
 
 ## Installation
 
-1. Install Fabric Loader for Minecraft `1.21.11`.
-2. Install Fabric API for Minecraft `1.21.11`.
-3. Place the PhantomMod jar in your `.minecraft/mods` folder.
-4. Launch the Fabric profile.
+1. Install Fabric Loader for Minecraft `1.21.11`
+2. Install Fabric API for Minecraft `1.21.11`
+3. Place the PhantomMod jar in your `.minecraft/mods` folder
+4. Launch with the Fabric profile
 
 ## Build
 
@@ -97,12 +97,7 @@ Requirements:
 - Java `21`
 - Minecraft `1.21.11`
 - Fabric Loader `0.16.10+`
-- Fabric API for Minecraft `1.21.11`
-
-Tested with:
 - Fabric API `0.140.0+1.21.11`
-
-Build with:
 
 ```bash
 ./gradlew build
@@ -110,50 +105,47 @@ Build with:
 
 The built jar is written to `build/libs/`.
 
-## v0.9.0 Notes
-
-- **Stealth & Logging**: Silent-by-default logger; activity hidden unless Debug Console or Log File is enabled in HUD settings. File logging to `phantom.log` for troubleshooting.
-- **Velocity Fixing**: Thread-safe network hook using the new `Vec3` packet format for 1.21.11.
-- **Combat Overhaul**: AimAssist and AutoClicker now support Axes, Maces, and Tridents.
-- **SpeedBridge Polish**: Fixed `towerModeEnabled` logic and removed unimplemented "Predictive" settings.
-- **AntiBot Tuning**: Name length thresholds exposed in GUI configuration.
-
-### Visuals
-- **Health**: Vertical billboarded health bars (replaces old Nametags).
-- **ESP**: High-performance entity highlighting (hitboxes).
-- **Trajectories**: Projectile path prediction and landing indicators.
-- **FullBright**: Gamma override for night vision.
-- **HUD**: Configurable corner info display with FPS/ping/CPS.
-- **Indicators**: Visual state and target markers.
-- **LatencyAlerts**: Ping spike notifications.
-
 ## Project Structure
 
 ```
 PhantomMod/
 ├── src/main/java/com/phantom/
-│   ├── PhantomMod.java              ← Fabric mod entrypoint + commands
+│   ├── PhantomMod.java              ← Fabric mod entrypoint
 │   ├── module/
+│   │   ├── Module.java             ← Abstract base class
 │   │   ├── ModuleManager.java      ← Registry + event dispatch
+│   │   ├── ModuleCategory.java    ← COMBAT, MOVEMENT, PLAYER, RENDER, SMP
 │   │   └── impl/
-│   │       ├── combat/            ← Combat modules
-│   │       ├── movement/          ← Movement modules
-│   │       ├── player/            ← Player utility modules
-│   │       ├── render/            ← Visual/HUD modules
-│   │       └── smp/               ← SMP-specific modules
+│   │       ├── combat/            ← 16 combat modules
+│   │       ├── movement/         ← 5 movement modules
+│   │       ├── player/           ← 7 player modules
+│   │       ├── render/           ← 8 visual modules
+│   │       └── smp/             ← 4 SMP modules
 │   ├── config/
 │   │   ├── ConfigManager.java     ← phantom-memory.properties persistence
-│   │   └── ProfileManager.java     ← Profile slot management
+│   │   └── ProfileManager.java    ← Profile slot management
 │   ├── gui/
-│   │   ├── ClickGUIScreen.java    ← Main UI with glassy aesthetic
-│   │   ├── ModuleSettingsScreen.java← Per-module settings
-│   │   ├── ProfileScreen.java      ← Profile management UI
-│   │   ├── NotificationManager.java← Toast notifications
+│   │   ├── ClickGUIScreen.java    ← Main glassy UI
+│   │   ├── ModuleSettingsScreen.java ← Per-module settings
+│   │   ├── ProfileScreen.java     ← Profile management
+│   │   ├── NotificationManager.java ← Toast notifications
 │   │   └── framework/            ← Modern UI widgets
-│   └── mixin/
-│       ├── ClientPacketListenerMixin.java ← Velocity packet hook
-│       ├── MultiPlayerGameModeMixin.java  ← Criticals hook
-│       └── LivingEntityJumpDelayMixin.java ← NoJumpDelay hook
+│   ├── mixin/
+│   │   ├── ClientPacketListenerMixin.java ← Velocity hook
+│   │   ├── MultiPlayerGameModeMixin.java ← Criticals hook
+│   │   ├── LivingEntityJumpDelayMixin.java ← NoJumpDelay hook
+│   │   ├── ItemInHandRendererMixin.java   ← Reach hook
+│   │   ├── EntityRendererMixin.java       ← ESP rendering
+│   │   ├── MinecraftClientMixin.java       ← Right-click delay
+│   │   ├── LevelMixin.java                ← World hooks
+│   │   └── TitleScreenMixin.java         ← Title screen hooks
+│   ├── render/
+│   │   └── EntityOutlineRender.java      ← Entity outline rendering
+│   └── util/
+│       ├── AnimationUtil.java
+│       ├── ESPColor.java
+│       ├── InventoryUtil.java
+│       └── RenderUtil.java
 └── src/main/resources/
     ├── fabric.mod.json
     └── phantom.mixins.json

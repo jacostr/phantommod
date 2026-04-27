@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PhantomMod</title>
-<meta name="description" content="PhantomMod v0.9.0 for Minecraft 1.21.11. Download the release, browse modules, and get setup fast.">
+<meta name="description" content="PhantomMod v0.9.0 for Minecraft 1.21.11. A premium client mod with glassy ClickGUI, combat modules, and HUD overlay.">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -15,15 +15,14 @@
 
   <header>
     <div class="brand">
-     <!--  <div class="brand-icon">P</div>     LOGO in top right corner  --> 
       <span class="brand-name">PhantomMod</span>
       <span class="brand-ver">v0.9.0</span>
     </div>
     <nav>
       <a href="#download">Download</a>
       <a href="#modules">Modules</a>
-      <a href="#profiles">Profiles</a>
-      <a href="#changes">Changes</a>
+      <a href="#features">Features</a>
+      <a href="#changes">Changelog</a>
       <a href="#install">Install</a>
     </nav>
   </header>
@@ -32,7 +31,7 @@
     <div class="hero-left">
       <div class="hero-eyebrow">Fabric 1.21.11 Client Mod</div>
       <h1>The <em>free</em> ghost client of Minecraft.</h1>
-      <p class="hero-sub">PhantomMod v0.9.0 features a premium glassy ClickGUI, sidebar navigation, profile management, and improved combat modules.</p>
+      <p class="hero-sub">PhantomMod v0.9.0 delivers a premium glassy ClickGUI with sidebar navigation, 40+ modules, profile management, and a configurable HUD overlay.</p>
       <div class="hero-ctas">
         <a class="btn btn-primary" href="https://github.com/jacostr/phantommod/releases/tag/V0.9.0" target="_blank" rel="noreferrer">Download latest</a>
         <a class="btn btn-secondary" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">View GitHub</a>
@@ -40,7 +39,7 @@
       <div class="hero-stats">
         <div class="stat"><span class="stat-label">Version</span><span class="stat-val">v0.9.0</span></div>
         <div class="stat"><span class="stat-label">Minecraft</span><span class="stat-val">1.21.11</span></div>
-        <div class="stat"><span class="stat-label">Stack</span><span class="stat-val">Fabric + Java 21</span></div>
+        <div class="stat"><span class="stat-label">Modules</span><span class="stat-val">40+</span></div>
       </div>
     </div>
     <div class="terminal">
@@ -52,30 +51,40 @@
       </div>
       <div class="term-body">
         <div class="tline"><span class="tk">release</span><span class="tv green">v0.9.0</span></div>
-        <div class="tline"><span class="tk">status</span><span class="tv green">beta</span></div>
+        <div class="tline"><span class="tk">status</span><span class="tv green">release</span></div>
         <div class="tline"><span class="tk">loader</span><span class="tv">Fabric 1.21.11</span></div>
-        <div class="tline"><span class="tk">build</span><span class="tv green">stable</span></div>
+        <div class="tline"><span class="tk">modules</span><span class="tv green">40+</span></div>
       </div>
     </div>
   </section>
 
-  <div class="sec-divider" id="download">
-    <span class="sec-divider-label">Download</span>
+  <div class="sec-divider" id="features">
+    <span class="sec-divider-label">Features</span>
     <div class="sec-divider-line"></div>
   </div>
 
-  <div class="download-grid section">
-    <div class="dl-card">
-      <div class="dl-card-tag">Spawn Point</div>
-      <h3>Jump straight into the release.</h3>
-      <p>Grab the latest jar, drop it into your mods folder, and launch with Fabric. That's it.</p>
-      <a class="dl-link" href="https://github.com/jacostr/phantommod/releases/tag/V0.9.0" target="_blank" rel="noreferrer">Open GitHub Releases</a>
-    </div>
-    <div class="dl-card">
-      <div class="dl-card-tag">Source</div>
-      <h3>Browse the full project.</h3>
-      <p>Check the codebase, read docs, or prep the next release directly from the repository.</p>
-      <a class="dl-link" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">Open Repository</a>
+  <div class="section">
+    <div class="module-grid">
+      <div class="mod-card">
+        <span class="mod-badge visuals">UI</span>
+        <h4>Premium ClickGUI</h4>
+        <p>Glassy aesthetic with sidebar navigation, search filtering, and per-module settings with sliders and presets.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge movement">HUD</span>
+        <h4>Configurable Overlay</h4>
+        <p>Real-time display of enabled modules, FPS, ping, and CPS. Fully positionable with toast notifications.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge player">Profiles</span>
+        <h4>4 Profile Slots</h4>
+        <p>Save and load complete module configurations. Custom named slots with overwrite confirmation.</p>
+      </div>
+      <div class="mod-card">
+        <span class="mod-badge combat">Combat</span>
+        <h4>16 Combat Modules</h4>
+        <p>AimAssist, SilentAura, Velocity, WTap, Criticals, Reach, and more with presets for any playstyle.</p>
+      </div>
     </div>
   </div>
 
@@ -85,94 +94,80 @@
   </div>
 
   <div class="section">
-    <div class="sec-head">
-      <div class="sec-eyebrow">Module Biomes</div>
-      <h2>Built for players.</h2>
-    </div>
     <div class="module-grid">
       <div class="mod-card">
         <span class="mod-badge combat">Combat</span>
-        <h4>AimAssist, Triggerbot, Velocity, WTap</h4>
-        <p>Core fight modules tuned for quick toggling, presets, and profile-driven setups.</p>
+        <h4>AimAssist, AutoClicker, Velocity, WTap</h4>
+        <p>16 combat modules with presets and configurable detectability for PvP.</p>
       </div>
       <div class="mod-card">
         <span class="mod-badge movement">Movement</span>
-        <h4>Scaffold, SafeWalk, SpeedBridge, NoJumpDelay</h4>
-        <p>Movement helpers focused on simple activation and less setup friction inside the ClickGUI.</p>
+        <h4>Scaffold, SpeedBridge, SafeWalk</h4>
+        <p>5 movement modules including bridge assist with tower mode.</p>
       </div>
       <div class="mod-card">
         <span class="mod-badge player">Player</span>
-        <h4>AutoTools, AutoTotem, AntiBot, FastPlace</h4>
-        <p>Quality-of-life tools for inventory flow, survival utility, and cleaner general play.</p>
+        <h4>AutoTools, AutoTotem, AntiBot</h4>
+        <p>7 player utilities for QoL and survival gameplay.</p>
       </div>
       <div class="mod-card">
-        <span class="mod-badge visuals">Visuals</span>
-        <h4>Health, ESP, FullBright, Indicators</h4>
-        <p>Client-side overlays including billboarded health bars and high-performance entity ESP.</p>
+        <span class="mod-badge visuals">Render</span>
+        <h4>ESP, Health, HUD, Trajectories</h4>
+        <p>8 visual modules with team-colored rendering and HUD overlay.</p>
       </div>
     </div>
   </div>
 
-  <div class="sec-divider" id="profiles">
-    <span class="sec-divider-label">Premade Profiles</span>
+  <div class="sec-divider" id="download">
+    <span class="sec-divider-label">Download</span>
     <div class="sec-divider-line"></div>
   </div>
 
-  <div class="section">
-    <div class="sec-head">
-      <div class="sec-eyebrow">Ready to Launch</div>
-      <h2>Engineered Presets.</h2>
+  <div class="download-grid section">
+    <div class="dl-card">
+      <div class="dl-card-tag">Latest Release</div>
+      <h3>PhantomMod v0.9.0</h3>
+      <p>Grab the latest jar, drop it into your mods folder, and launch with Fabric.</p>
+      <a class="dl-link" href="https://github.com/jacostr/phantommod/releases/tag/V0.9.0" target="_blank" rel="noreferrer">Open GitHub Releases</a>
     </div>
-    <div class="profile-grid">
-      <div class="profile-card">
-        <div class="prof-icon blue">S</div>
-        <div class="prof-info">
-          <h4>SMP / Vanilla+</h4>
-          <p>Tuned for survival. AutoTotem, WeaponCycler, + More for a smooth experience.</p>
-          <span class="prof-slot">Bundled in Slot 1</span>
-        </div>
-      </div>
-      <div class="profile-card">
-        <div class="prof-icon red">B</div>
-        <div class="prof-info">
-          <h4>Bedwars Legit</h4>
-          <p>The competitive standard. High-smoothing AimAssist, Wtap, Autoclicker, and optimized JumpReset + More.</p>
-          <span class="prof-slot">Bundled in Slot 2</span>
-        </div>
-      </div>
+    <div class="dl-card">
+      <div class="dl-card-tag">Source</div>
+      <h3>Browse the Code</h3>
+      <p>Full codebase with documentation. Read CONTRIBUTING.md for technical details.</p>
+      <a class="dl-link" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">Open Repository</a>
     </div>
   </div>
 
   <div class="sec-divider" id="changes">
-    <span class="sec-divider-label">What Changed</span>
+    <span class="sec-divider-label">Changelog</span>
     <div class="sec-divider-line"></div>
   </div>
 
   <div class="section">
     <div class="sec-head">
-      <div class="sec-eyebrow">v0.9.0 Changelog</div>
+      <div class="sec-eyebrow">v0.9.0</div>
       <h2>Premium UI and module refinements.</h2>
     </div>
     <div class="changes-list">
       <div class="change-item">
         <div class="change-num">01</div>
-        <h4>Velocity & Network Fix</h4>
-        <p>Implemented hardened network hooks for the Velocity module. Resolved a critical bug that prevented knockback reduction and improved overall packet stability.</p>
+        <h4>ClickGUI Redesign</h4>
+        <p>Completely new glassy aesthetic with sidebar navigation, search filtering, and modern UI widgets.</p>
       </div>
       <div class="change-item">
         <div class="change-num">02</div>
-        <h4>Logger 2.0 (Stealth)</h4>
-        <p>Introduced a silent-by-default logger. Toggles for console and file logging are now available in the HUD settings for maximum screenshare safety.</p>
+        <h4>Profile System</h4>
+        <p>4 named profile slots with save/load functionality and overwrite confirmation.</p>
       </div>
       <div class="change-item">
         <div class="change-num">03</div>
-        <h4>Module Audit cleanup</h4>
-        <p>Cleaned up dead settings in SpeedBridge and exposed advanced AntiBot thresholds in the ClickGUI. Expanded combat weapon detection.</p>
+        <h4>Configurable HUD</h4>
+        <p>Moveable notification positions, toggleable FPS/ping/CPS display, corner switching.</p>
       </div>
       <div class="change-item">
         <div class="change-num">04</div>
-        <h4>Rendering & Stability</h4>
-        <p>Refined billboarded health bars and added extensive null-safety checks to prevent connection timeouts on high-lag servers.</p>
+        <h4>Team Detection</h4>
+        <p>Base module now includes armor color and vanilla team alliance detection for ESP.</p>
       </div>
     </div>
   </div>
@@ -191,11 +186,11 @@
       </div>
       <div class="step">
         <div class="step-n">2</div>
-        <div class="step-text">Install the matching <strong>Fabric API</strong> build</div>
+        <div class="step-text">Install <strong>Fabric API</strong> for 1.21.11</div>
       </div>
       <div class="step">
         <div class="step-n">3</div>
-        <div class="step-text">Download the <strong>PhantomMod release jar</strong></div>
+        <div class="step-text">Download <strong>PhantomMod v0.9.0</strong></div>
       </div>
       <div class="step">
         <div class="step-n">4</div>
@@ -203,13 +198,13 @@
       </div>
       <div class="step">
         <div class="step-n">5</div>
-        <div class="step-text">Launch Minecraft using the <strong>Fabric profile</strong></div>
+        <div class="step-text">Launch with the <strong>Fabric profile</strong></div>
       </div>
     </div>
     <div class="install-note">
       <div class="install-note-tag">Quick Note</div>
-      <h3>Designed for a clean release handoff.</h3>
-      <p>The current build and website all match the v0.9.0 release state.</p>
+      <h3>Ready to use.</h3>
+      <p>Default keybinds: RIGHT_SHIFT opens ClickGUI, H toggles HUD, Y toggles ESP.</p>
       <div class="note-btns">
         <a class="btn btn-primary" href="https://github.com/jacostr/phantommod/releases/tag/V0.9.0" target="_blank" rel="noreferrer">Download Mod</a>
         <a class="btn btn-secondary" href="https://github.com/jacostr/phantommod" target="_blank" rel="noreferrer">View Source</a>
