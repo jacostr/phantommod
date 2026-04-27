@@ -148,7 +148,7 @@ public class ClickGUIScreen extends Screen {
         graphics.pose().pushMatrix();
         graphics.pose().translate(guiLeft + 50, guiTop + 24);
         graphics.pose().scale(0.6f, 0.6f);
-        graphics.drawCenteredString(this.font, Component.literal("v0.9.0 Premium").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
+        graphics.drawCenteredString(this.font, Component.literal("v0.9.0").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
         graphics.pose().popMatrix();
 
         // Render Sidebar Components
