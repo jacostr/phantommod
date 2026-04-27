@@ -1,11 +1,24 @@
 # PhantomMod
 
+<p align="center">
+  <img src=".github/screenshots/clickgui.png" alt="PhantomMod ClickGUI" width="800">
+</p>
+
 | **Latest Version** | v0.7.0 | **Release Ready** |
 | **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
-PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It ships with a compact ClickGUI, per-module settings where applicable, saved hotkeys, toast notifications, saved profiles, and a configurable HUD overlay.
+PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium liquid glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
 
-## Included Modules
+## Features
+
+- **Premium ClickGUI** — Liquid glassy aesthetic with category tabs, search filtering, and per-module settings
+- **Profile System** — Save and load up to 4 custom configuration profiles
+- **HUD Overlay** — Real-time display of enabled modules, FPS, ping, and CPS
+- **Toast Notifications** — Non-intrusive on-screen confirmations for module toggles
+- **Client Commands** — `/bridge` commands for quick SpeedBridge preset switching
+- **Silent-by-Default Logging** — Debug logging hidden unless explicitly enabled
+
+## Modules
 
 ### Combat
 - `AimAssist`
@@ -35,7 +48,6 @@ PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 ### Player / Visuals
 - `AntiAFK`
 - `AntiBot`
-- `AutoGG`
 - `AutoTools`
 - `AutoTotem`
 - `ESP`
@@ -45,7 +57,6 @@ PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 - `HUD`
 - `Indicators`
 - `LatencyAlerts`
-- `TNTTimer`
 - `Trajectories`
 - `TimeChanger`
 - `BedESP`
@@ -62,6 +73,8 @@ PhantomMod `v0.7.0` is a client-side Fabric mod for Minecraft `1.21.11`. It ship
 | Action | Default |
 | --- | --- |
 | Open ClickGUI | `RIGHT_SHIFT` |
+| SpeedBridge Presets | `/bridge legit` / `normal` / `obvious` / `blatant` |
+| SpeedBridge Tower Mode | `/bridge tower` / `flat` |
 
 Each module can also have its own hotkey assigned from the settings screen.
 
@@ -101,34 +114,51 @@ The built jar is written to `build/libs/`.
 
 ## v0.7.0 Notes
 
-- **Stealth & Logging (Stealth Audit)**: 
-    - **Logger 2.0**: Implemented a "Silent-by-Default" logger. Mod activity is completely hidden unless the user enables **Debug Console** or **Log File** in the HUD settings.
-    - Added a file-logging system that writes to `phantom.log` for troubleshooting without exposing info to screenshares.
-- **Velocity Fixing**:
-    - Resolved a critical bug where the Velocity module was not hooked to incoming packets.
-    - Implemented a hardened, thread-safe network hook using the new `Vec3` packet format for 1.21.11.
-- **Module Polish**:
-    - **SpeedBridge**: Fixed `towerModeEnabled` logic and removed unimplemented "Predictive" settings for a cleaner UI.
-    - **AntiBot**: Exposed name length thresholds in the configuration so they can be tuned via GUI.
-    - **Combat Overhaul**: AimAssist and AutoClicker now support Axes, Maces, and Tridents.
-- **Stability**:
-    - Fixed critical bugs including a double-import in `AutoTotem` and unstandardized `System.err` calls.
-    - Added robust null-safety to all network-facing code to prevent timeouts and crashes.
+- **Stealth & Logging**: Silent-by-default logger; activity hidden unless Debug Console or Log File is enabled in HUD settings. File logging to `phantom.log` for troubleshooting.
+- **Velocity Fixing**: Thread-safe network hook using the new `Vec3` packet format for 1.21.11.
+- **Combat Overhaul**: AimAssist and AutoClicker now support Axes, Maces, and Tridents.
+- **SpeedBridge Polish**: Fixed `towerModeEnabled` logic and removed unimplemented "Predictive" settings.
+- **AntiBot Tuning**: Name length thresholds exposed in GUI configuration.
 
 ### Visuals
-- **Health**: Vertical indicators with billboarded scaling bars (replaces old Nametags).
+- **Health**: Vertical billboarded health bars (replaces old Nametags).
 - **ESP**: High-performance entity highlighting (hitboxes).
-- **Arrows**: Directional indicators for nearby threats.
+- **Trajectories**: Projectile path prediction and landing indicators.
 - **FullBright**: Gamma override for night vision.
-- **HUD**: Configurable corner info display.
+- **HUD**: Configurable corner info display with FPS/ping/CPS.
 - **Indicators**: Visual state and target markers.
 - **LatencyAlerts**: Ping spike notifications.
 
-## Project Notes
+## Project Structure
 
-- Entrypoint: `src/main/java/com/phantom/PhantomMod.java`
-- Module registry: `src/main/java/com/phantom/module/ModuleManager.java`
-- Config persistence: `src/main/java/com/phantom/config/ConfigManager.java`
-- GUI screens: `src/main/java/com/phantom/gui/`
+```
+PhantomMod/
+├── src/main/java/com/phantom/
+│   ├── PhantomMod.java              ← Fabric mod entrypoint + commands
+│   ├── module/
+│   │   ├── ModuleManager.java      ← Registry + event dispatch
+│   │   └── impl/
+│   │       ├── combat/            ← Combat modules
+│   │       ├── movement/          ← Movement modules
+│   │       ├── player/            ← Player utility modules
+│   │       ├── render/            ← Visual/HUD modules
+│   │       └── smp/               ← SMP-specific modules
+│   ├── config/
+│   │   ├── ConfigManager.java     ← phantom-memory.properties persistence
+│   │   └── ProfileManager.java     ← Profile slot management
+│   ├── gui/
+│   │   ├── ClickGUIScreen.java    ← Main UI with glassy aesthetic
+│   │   ├── ModuleSettingsScreen.java← Per-module settings
+│   │   ├── ProfileScreen.java      ← Profile management UI
+│   │   ├── NotificationManager.java← Toast notifications
+│   │   └── framework/            ← Modern UI widgets
+│   └── mixin/
+│       ├── ClientPacketListenerMixin.java ← Velocity packet hook
+│       ├── MultiPlayerGameModeMixin.java  ← Criticals hook
+│       └── LivingEntityJumpDelayMixin.java ← NoJumpDelay hook
+└── src/main/resources/
+    ├── fabric.mod.json
+    └── phantom.mixins.json
+```
 
-See `CONTRIBUTING.md` for the full reference.
+See `CONTRIBUTING.md` for the full technical reference.
