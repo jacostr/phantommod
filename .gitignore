@@ -28,3 +28,6 @@ crash-reports/
 # Fabric / Loom generated files
 remappedSrc/
 .fabric/
+
+# Other
+Oldsource/
