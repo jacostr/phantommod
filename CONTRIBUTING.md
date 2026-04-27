@@ -38,10 +38,10 @@ PhantomMod is a self-contained Fabric client mod. The primary goals are:
 | Technology | Version | Why |
 |---|---|---|
 | **Minecraft Java** | 1.21.11 | Target version |
-| **Fabric Loader** | Latest stable | Mod loader; lightweight, fast startup |
-| **Fabric API** | Latest stable | Event hooks (tick, HUD render, world render) |
+| **Fabric Loader** | 0.16.10+ | Mod loader; lightweight, fast startup |
 | **Fabric Loom** | 1.14.10 | Gradle build plugin; remapping + mixin processing |
-| **SpongePowered Mixin** | Bundled | Bytecode injection into vanilla classes |
+| **Fabric API** | 0.140.0+ | Event hooks (tick, HUD render, world render) |
+| **SpongePowered Mixin** | Bundled via Loom | Bytecode injection into vanilla classes |
 | **Java** | 21 | Required by Minecraft 1.21+ |
 | **MojMap** | Bundled via Loom | Official Mojang obfuscation mappings |
 
@@ -63,66 +63,62 @@ PhantomMod/
 │   │   ├── ConfigManager.java       ← Reads/writes phantom-memory.properties
 │   │   └── ProfileManager.java      ← Manages named profile slots
 │   ├── gui/
-│   │   ├── ClickGUIScreen.java      ← Main module toggle overlay (M)
-│   │   ├── ModuleSettingsScreen.java← Per-module settings with sliders/buttons
+│   │   ├── ClickGUIScreen.java      ← Main glassy UI with sidebar tabs
+│   │   ├── ModuleSettingsScreen.java← Per-module settings with sliders/presets
 │   │   ├── NotificationManager.java ← Toast-style on-screen popups
 │   │   ├── ProfileScreen.java       ← Save/load UI for 4 profile slots
-│   │   └── widget/
-│   │       └── PhantomSlider.java   ← Reusable slider widget
+│   │   └── framework/            ← Modern UI widgets (buttons, sliders, toggles, text fields)
 │   ├── mixin/
 │   │   ├── ClientPacketListenerMixin.java   ← Hooks velocity packets (Velocity module)
 │   │   ├── LivingEntityJumpAccessor.java    ← Accessor for private jump timer field
 │   │   ├── LivingEntityJumpDelayMixin.java  ← Removes jump cooldown (NoJumpDelay)
 │   │   └── MultiPlayerGameModeMixin.java    ← Attack hook (Criticals module)
-│   ├── module/
-│   │   ├── Module.java              ← Abstract base class for every module
-│   │   ├── ModuleCategory.java      ← Enum: COMBAT, MOVEMENT, PLAYER, SMP
-│   │   ├── ModuleManager.java       ← Registry; dispatches tick/render/keybind events
-│   │   └── impl/
-│   │       ├── combat/
-│   │       │   ├── AimAssist.java   ← Smooth camera aim toward targets
-│   │       │   ├── AutoBlock.java   ← Auto sword-block on hit
-│   │       │   ├── AutoClicker.java ← Left click automation with presets
-│   │       │   ├── BlockHit.java    ← Visual/hold-use block-hit behavior
-│   │       │   ├── Criticals.java   ← Spoofed mini-jump critical hits
-│   │       │   ├── HitSelect.java   ← Attack timing / selective hit gating
-│   │       │   ├── JumpReset.java   ← Jump reset assist after taking hits
-│   │       │   ├── NoHitDelay.java  ← Attack cooldown removal/reduction
-│   │       │   ├── Reach.java       ← Extended entity/block reach
-│   │       │   ├── RightClicker.java← Right click automation
-│   │       │   ├── SilentAura.java  ← Stealth combat module without rotations
-│   │       │   ├── Triggerbot.java  ← Auto attack when crosshair is on target
-│   │       │   ├── Velocity.java    ← Knockback percentage reduction
-│   │       │   └── WTap.java        ← Sprint reset on attack
-│   │       ├── movement/
-│   │       │   ├── AlwaysSprint.java    ← Sprint state enforcement
-│   │       │   ├── NoJumpDelay.java     ← Jump cooldown removal
-│   │       │   ├── SafeWalk.java        ← Edge protection while walking
-│   │       │   ├── Scaffold.java        ← Under-feet block placement
-│   │       │   └── SpeedBridge.java     ← Edge-detection bridging assist
-│   │       ├── player/
-│   │       │   ├── AntiAFK.java     ← Idle movement / input prevention
-│   │       │   ├── AntiBot.java     ← Client-side bot filtering helper
-│   │       │   ├── AutoTools.java   ← Auto tool/weapon swap
-│   │       │   ├── AutoTotem.java   ← Auto offhand totem equip
-│   │       │   ├── FastPlace.java   ← Reduced right-click place delay
-│   │       │   ├── Freecam.java     ← Camera detach free-flying
-│   │       │   └── NoFall.java      ← Fall damage prevention
-│   │       ├── render/
-│   │       │   ├── Arrows.java      ← Directional arrow indicators
-│   │       │   ├── ESP.java         ← Entity ESP overlay
-│   │       │   ├── FullBright.java  ← Gamma override for night vision
-│   │       │   ├── HudModule.java   ← Corner info overlay
-│   │       │   ├── Indicators.java  ← On-screen target / state indicators
-│   │       │   ├── LatencyAlerts.java ← Ping spike notifications
-│   │       │   └── Health.java      ← Entity health indicators (scalable bars)
-│   │       └── smp/
-│   │           ├── AutoXPThrow.java ← Fast XP bottle usage helper
-│   │           ├── BedESP.java      ← Bed block ESP
-│   │           ├── ChestESP.java    ← Chest block ESP
-│   │           ├── OreESP.java      ← Ore block ESP
-│   │           ├── OreFinder.java   ← Ore search helper
-│   │           └── ShulkerESP.java  ← Shulker box ESP
+│   ├── module/impl/
+│   │   ├── combat/
+│   │   │   ├── AimAssist.java   ← Smooth camera aim toward targets
+│   │   │   ├── AutoClicker.java ← Left click automation with presets
+│   │   │   ├── BowAimbot.java  ← Bow projectile aim assist
+│   │   │   ├── BlockHit.java    ← Visual/hold-use block-hit behavior
+│   │   │   ├── Criticals.java   ← Spoofed mini-jump critical hits
+│   │   │   ├── HitSelect.java   ← Attack timing / selective hit gating
+│   │   │   ├── JumpReset.java   ← Jump reset assist after taking hits
+│   │   │   ├── NoHitDelay.java  ← Attack cooldown removal/reduction
+│   │   │   ├── Reach.java       ← Extended entity/block reach
+│   │   │   ├── RightClicker.java← Right click automation
+│   │   │   ├── SilentAura.java  ← Stealth combat without rotations
+│   │   │   ├── Triggerbot.java  ← Auto attack when crosshair on target
+│   │   │   ├── Velocity.java    ← Knockback percentage reduction
+│   │   │   ├── WaterClutch.java ← Auto-swap to water bucket underwater
+│   │   │   ├── WTap.java        ← Sprint reset on attack
+│   │   │   └── WeaponCycler.java← Auto-switch to best weapon
+│   │   ├── movement/
+│   │   │   ├── AlwaysSprint.java    ← Sprint state enforcement
+│   │   │   ├── NoJumpDelay.java     ← Jump cooldown removal
+│   │   │   ├── SafeWalk.java        ← Edge protection while walking
+│   │   │   ├── Scaffold.java        ← Under-feet block placement
+│   │   │   └── SpeedBridge.java     ← Edge-detection bridging assist
+│   │   ├── player/
+│   │   │   ├── AntiAFK.java     ← Idle movement / input prevention
+│   │   │   ├── AntiBot.java     ← Client-side bot filtering helper
+│   │   │   ├── AutoTools.java   ← Auto tool/weapon swap
+│   │   │   ├── AutoTotem.java   ← Auto offhand totem equip
+│   │   │   ├── AutoXPThrow.java ← Fast XP bottle usage helper
+│   │   │   ├── FastPlace.java   ← Reduced right-click place delay
+│   │   │   └── LatencyAlerts.java ← Ping spike notifications
+│   │   ├── render/
+│   │   │   ├── BedESP.java      ← Bed block ESP
+│   │   │   ├── ESP.java         ← Entity ESP overlay
+│   │   │   ├── FullBright.java  ← Gamma override for night vision
+│   │   │   ├── Health.java      ← Entity health bars (billboarded)
+│   │   │   ├── HudModule.java   ← Corner info overlay
+│   │   │   ├── Indicators.java  ← On-screen target / state indicators
+│   │   │   ├── TimeChanger.java ← World time override
+│   │   │   └── Trajectories.java← Projectile path prediction
+│   │   └── smp/
+│   │       ├── ChestESP.java    ← Chest block ESP
+│   │       ├── OreESP.java      ← Ore block ESP
+│   │       ├── OreFinder.java   ← Ore search helper
+│   │       └── ShulkerESP.java  ← Shulker box ESP
 ├── src/main/resources/
 │   ├── fabric.mod.json              ← Mod metadata, entrypoint declaration
 │   └── phantom.mixins.json          ← Mixin registration file
@@ -223,30 +219,31 @@ All mixins are declared in **`phantom.mixins.json`**.
 ### GUI System
 
 #### `ClickGUIScreen`
-The main overlay opened with M. Renders:
-- Category tabs (Combat / Movement / Player / SMP) at the top
-- A dedicated `HUD Settings` button in the bottom-right corner
-- A search box to quickly filter modules by name
-- Module rows with enable/disable buttons and a `≡` hamburger icon to open settings
+The main overlay opened with RIGHT_SHIFT. Features a premium liquid glassy aesthetic with:
+- Sidebar-based category navigation (Combat / Movement / Player / SMP)
+- Search box to filter modules by name
+- Module rows with enable/disable toggles and settings access
+- `Profiles` button in the sidebar to open profile management
 
 Scroll is handled via `mouseScrolled` tracking an `int scrollOffset` clamped to `maxScroll`. All widget Y positions are offset by `-scrollOffset` in `rebuildUI()`.
 
 #### `ModuleSettingsScreen`
-Opened when clicking the `≡` icon on any module. Dynamically renders:
-- "How to use" text from `module.getUsageGuide()`
-- Module-specific widgets (sliders, toggle buttons) using `instanceof` pattern matching
+Opened when clicking settings on any module. Dynamically renders:
+- Per-module widgets (sliders, toggle buttons, preset buttons) using `instanceof` pattern matching
 - Hotkey binding row with `Set hotkey` / `Clear Hotkey`
 
-Modules without configurable options, such as the simplified `Scaffold`, do not expose a settings screen in the ClickGUI.
-
-**Why instanceof pattern matching?**  
-It avoids needing a separate `SettingsProvider` interface or abstract factory per module. The screen knows about each module type and renders widgets accordingly. This is simpler for a small project — if modules grew to 50+, a provider pattern would scale better.
-
-#### `PhantomSlider`
-Extends `AbstractSliderButton` (vanilla widget). Maps a 0.0–1.0 internal slider value to a real double range (`min` to `max`). Displays integers cleanly (no `.00` for whole numbers).
+#### Modern UI Framework (`framework/`)
+Reusable glassy widgets built from scratch:
+- **`ModernButton`** — Rounded glass-effect buttons with hover states
+- **`ModernSlider`** — Translucent slider with value tooltip
+- **`ModernToggle`** — Sleek on/off toggle switch
+- **`ModernTextField`** — Glass-effect text input with placeholder
 
 #### `NotificationManager`
-A static list of `Notification` records (message + expiry timestamp). `render()` is called from both the HUD render hook and over GUI screens to ensure toasts appear regardless of what's open.
+A static list of `Notification` records (message + expiry timestamp). Renders toasts on the HUD layer regardless of what's open.
+
+#### `ProfileScreen`
+Manages 4 saved config slots with editable names, explicit save/load actions, and overwrite confirmation.
 
 ---
 
@@ -357,8 +354,8 @@ A static list of `Notification` records (message + expiry timestamp). `render()`
 - **Detectability:** Safe — gamma is a client-only graphics option.
 
 #### `HudModule`
-- **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current Ping from `mc.getConnection()`, and CPS.
-- **Detectability:** Safe — HUD is client-side only.
+- **How it works:** In `onHudRender()`, draws a sorted list of currently-enabled module names in the top-right corner. Optionally draws FPS, current ping from `mc.getConnection()`, and CPS.
+- **Detectability:** Safe — client-side only.
 
 #### `ProfileScreen`
 - **How it works:** Manages 4 saved config slots with editable names, explicit save/load actions, and overwrite confirmation before replacing an existing slot.
