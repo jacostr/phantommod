@@ -9,6 +9,7 @@ package com.phantom.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import com.phantom.util.RenderUtil;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -75,9 +76,13 @@ public final class NotificationManager {
 
             int textWidth = mc.font.width(notification.message());
             int x = startX;
-            graphics.fill(x - 5, y - 5, x + textWidth + 8, y + 13, 0xD0101010);
-            graphics.drawString(mc.font, notification.message(), x, y, 0xFFFFFFFF, true);
-            y += 18;
+            
+            // Glassy Notification Panel
+            RenderUtil.drawGlassPanel(graphics, x - 5, y - 5, textWidth + 12, 18, 0xA0101010, 0x40A8E6A3);
+            net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
+            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(notification.message()).withStyle(s -> s.withFont(cleanFont)), x, y, 0xFFFFFFFF, false);
+            
+            y += 22;
         }
     }
 

@@ -213,10 +213,9 @@ public class HudModule extends Module {
         p.setProperty("hud.file_logger", Boolean.toString(fileLogger));
     }
 
-    /** Draws the module list; returns screen-space pixel height consumed. */
     private int drawModuleHud(GuiGraphics graphics) {
         List<String> lines = new ArrayList<>();
-        lines.add("PhantomMod");
+        lines.add("PHANTOM MOD");
 
         if (showModuleList && PhantomMod.getModuleManager() != null) {
             for (Module module : PhantomMod.getModuleManager().getModules()) {
@@ -233,12 +232,22 @@ public class HudModule extends Module {
         graphics.pose().pushMatrix();
         graphics.pose().scale(scale, scale);
 
+        net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             int color = i == 0 ? 0xFFA8E6A3 : 0xFFFFFFFF;
             int x = alignLeft ? 8 : scaledWidth - mc.font.width(line) - 8;
-            graphics.drawString(mc.font, Component.literal(line), x, y, color, true);
-            y += i == 0 ? 11 : 10;
+            
+            if (i == 0) {
+                graphics.pose().pushMatrix();
+                graphics.pose().scale(1.1f, 1.1f);
+                graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont)), (int)(x / 1.1f), (int)(y / 1.1f), color, true);
+                graphics.pose().popMatrix();
+                y += 12;
+            } else {
+                graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont)), x, y, color, true);
+                y += 10;
+            }
         }
 
         graphics.pose().popMatrix();
@@ -258,23 +267,24 @@ public class HudModule extends Module {
         graphics.pose().pushMatrix();
         graphics.pose().scale(scale, scale);
 
+        net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
         if (showFps) {
             String txt = "FPS: " + mc.getFps();
-            graphics.drawString(mc.font, Component.literal(txt),
+            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
                     statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
         if (showPing) {
             String txt = getPingText();
-            graphics.drawString(mc.font, Component.literal(txt),
+            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
                     statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
         if (showCps) {
             String txt = "CPS: " + getCps();
-            graphics.drawString(mc.font, Component.literal(txt),
+            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
                     statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
         }
 

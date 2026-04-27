@@ -47,10 +47,19 @@ public class BlockHit extends Module {
         }
     }
 
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private double chance = 0.65D;
     private boolean requireMouseDown = false;
     private boolean visualAnimation = true;
     private Mode mode = Mode.MANUAL;
+    private Preset currentPreset = Preset.NORMAL;
 
     private int holdTicksRemaining = 0;
     private boolean holdingUse = false;
@@ -173,6 +182,17 @@ public class BlockHit extends Module {
             mc.options.keyUse.setDown(false);
         }
         holdingUse = false;
+    }
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
     }
 
     // ── Getters / Setters ──────────────────────────────────────────────────────

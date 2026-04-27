@@ -26,6 +26,15 @@ public class SpeedBridge extends Module {
     private static final int UNSNEAK_GRACE_TICKS = 2;
     private static final double STATIONARY_THRESHOLD = 0.08D;
 
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+        public static Preset fromInt(int i) { return values()[Math.max(0, Math.min(3, i))]; }
+    }
+
     private long lastPlaceTime;
     private double autoOffDelay = 3.0;
     private boolean sneakingFromModule;
@@ -49,6 +58,7 @@ public class SpeedBridge extends Module {
     private int activeIndicatorTimer = 0;
 
     private int preset = 1;
+    private Preset currentPreset = Preset.NORMAL;
 
     public SpeedBridge() {
         super(
@@ -387,17 +397,31 @@ public class SpeedBridge extends Module {
         saveConfig();
     }
 
+    public Preset getCurrentPreset() {
+        return currentPreset;
+    }
+
     public int getPreset() {
         return preset;
     }
 
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
+    }
+
     public void setPreset(int preset) {
-        this.preset = Math.max(0, Math.min(3, preset));
-        switch (this.preset) {
-            case 0 -> applyPresetLegit();
-            case 1 -> applyPresetNormal();
-            case 2 -> applyPresetObvious();
-            case 3 -> applyPresetBlatant();
+        this.currentPreset = Preset.fromInt(preset);
+        switch (this.currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
         }
     }
 

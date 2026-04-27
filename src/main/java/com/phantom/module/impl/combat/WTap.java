@@ -17,6 +17,14 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WTap extends Module {
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private double chance = 1.0D;
     private int triggerDelayMs = 70;
     private int releaseDelayMs = 50;
@@ -24,6 +32,7 @@ public class WTap extends Module {
     private int cooldownMs = 250;
     private boolean selectHits = true;
     private boolean playersOnly = true;
+    private Preset currentPreset = Preset.NORMAL;
 
     private long scheduledTapAt = -1L;
     private long tapStartedAt = -1L;
@@ -121,6 +130,17 @@ public class WTap extends Module {
                 && !mc.player.isInWater()
                 && !mc.player.isInLava()
                 && !mc.player.getAbilities().flying;
+    }
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
     }
 
     public double getChance() {

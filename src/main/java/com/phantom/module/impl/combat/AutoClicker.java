@@ -24,12 +24,21 @@ import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AutoClicker extends Module {
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private double minCps = 10.0D;
     private double maxCps = 14.0D;
     private boolean onlyWithWeapon = true;
     private boolean requireMouseDown = true;
     private boolean hitEntitiesOnly = true;
     private boolean breakBlockPause = true;
+    private Preset currentPreset = Preset.NORMAL;
 
     private long lastClickAt;
     private long nextDelayMs = 100L;
@@ -109,6 +118,17 @@ public class AutoClicker extends Module {
         jitterOffsetCps = ThreadLocalRandom.current().nextDouble(-0.75D, 0.55D);
     }
 
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
+    }
 
     private boolean isHoldingWeapon() {
         if (mc.player == null) return false;

@@ -38,6 +38,14 @@ public class Triggerbot extends Module {
         public String getLabel() { return label; }
     }
 
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private int extraDelayTicks;
     private boolean requireMouseDown = true;
     private boolean airCrits = true;
@@ -46,6 +54,7 @@ public class Triggerbot extends Module {
     private double earlyHitChance = 0.0D;
     private boolean limitItems = true;
     private TargetMode targetMode = TargetMode.BOTH;
+    private Preset currentPreset = Preset.NORMAL;
 
     private int readyTicks;
     private int lastAttackGameTick = -1;
@@ -146,6 +155,17 @@ public class Triggerbot extends Module {
         }
         String id = mc.player.getMainHandItem().getItem().getDescriptionId().toLowerCase(Locale.ROOT);
         return id.contains("sword") || id.contains("axe") || id.contains("trident") || id.contains("mace");
+    }
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
     }
 
     private boolean canAttackForAirCrits() {

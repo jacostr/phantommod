@@ -31,11 +31,20 @@ import java.util.Properties;
 
 public class Reach extends Module {
 
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private double entityReach = 3.5;
     private double blockReach  = 5.0;
     private boolean onlyWhileSprinting = true;
     private boolean movingOnly = false;
     private boolean disableInWater = true;
+    private Preset currentPreset = Preset.NORMAL;
 
     private static final double EPSILON = 1e-9;
 
@@ -135,6 +144,17 @@ public class Reach extends Module {
     // -------------------------------------------------------------------------
     // Getters / setters
     // -------------------------------------------------------------------------
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
+    }
 
     public double getEntityReach() { return entityReach; }
 

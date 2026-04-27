@@ -1,16 +1,10 @@
-/* Copyright (c) 2026 PhantomMod. All rights reserved. */
-/*
- * Scaffold.java — Automatically places blocks under the player (Movement module).
- *
- * Detects when the block directly below is air, temporarily adjusts pitch downward,
- * triggers a use-item action to place a block, then restores pitch.
- * Detectability: Blatant — impossible look angles are flagged by anti-cheat.
- */
 package com.phantom.module.impl.movement;
 
+import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.util.InventoryUtil;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -19,7 +13,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.Properties;
+
 public class Scaffold extends Module {
+    private boolean safeWalk = true;
+    private boolean swingArm = true;
+    private int placeDelay = 0;
+    private int delayTimer = 0;
+
     public Scaffold() {
         super("Scaffold",
                 "Automatically places blocks under you while you move.\nDetectability: Blatant.",
@@ -37,9 +38,15 @@ public class Scaffold extends Module {
             return;
         }
 
+        if (delayTimer > 0) {
+            delayTimer--;
+            return;
+        }
+
         BlockPos pos = mc.player.blockPosition().below();
         if (mc.level.getBlockState(pos).isAir()) {
             placeBlock(pos);
+            delayTimer = placeDelay;
         }
     }
 
@@ -59,7 +66,7 @@ public class Scaffold extends Module {
                 BlockHitResult hitResult = new BlockHitResult(hitVec, face, neighbor, false);
 
                 mc.gameMode.useItemOn(mc.player, InteractionHand.MAIN_HAND, hitResult);
-                mc.player.swing(InteractionHand.MAIN_HAND);
+                if (swingArm) mc.player.swing(InteractionHand.MAIN_HAND);
                 break;
             }
         }
@@ -79,6 +86,36 @@ public class Scaffold extends Module {
 
     @Override
     public boolean hasConfigurableSettings() {
-        return false;
+        return true;
+    }
+
+    @Override
+    public Screen createSettingsScreen(Screen parent) {
+        return new ModuleSettingsScreen(parent, this);
+    }
+
+    public boolean isSafeWalk() { return safeWalk; }
+    public void setSafeWalk(boolean safeWalk) { this.safeWalk = safeWalk; saveConfig(); }
+
+    public boolean isSwingArm() { return swingArm; }
+    public void setSwingArm(boolean swingArm) { this.swingArm = swingArm; saveConfig(); }
+
+    public int getPlaceDelay() { return placeDelay; }
+    public void setPlaceDelay(int placeDelay) { this.placeDelay = placeDelay; saveConfig(); }
+
+    @Override
+    public void loadConfig(Properties p) {
+        super.loadConfig(p);
+        safeWalk = Boolean.parseBoolean(p.getProperty("scaffold.safewalk", "true"));
+        swingArm = Boolean.parseBoolean(p.getProperty("scaffold.swingarm", "true"));
+        placeDelay = Integer.parseInt(p.getProperty("scaffold.placedelay", "0"));
+    }
+
+    @Override
+    public void saveConfig(Properties p) {
+        super.saveConfig(p);
+        p.setProperty("scaffold.safewalk", Boolean.toString(safeWalk));
+        p.setProperty("scaffold.swingarm", Boolean.toString(swingArm));
+        p.setProperty("scaffold.placedelay", Integer.toString(placeDelay));
     }
 }

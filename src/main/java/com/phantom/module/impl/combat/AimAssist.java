@@ -97,10 +97,19 @@ public class AimAssist extends Module {
         }
     }
 
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private double smoothing = 5.0;
     private double snapiness = 3.0;
     private double fov = 90.0;
     private double distance = 4.5;
+    private boolean useFov = true;
     private boolean requireMouseDown = true;
     private boolean clickAim = true;
     private boolean aimVertically;
@@ -109,14 +118,16 @@ public class AimAssist extends Module {
     private boolean targetPlayers = true;
     private boolean targetMobs = true;
     private boolean targetAnimals;
+    private boolean showFovCircle = true;
     private TargetArea targetArea = TargetArea.CENTER;
     private TargetMode targetMode = TargetMode.YAW;
+    private Preset currentPreset = Preset.NORMAL;
     private boolean attackHeldLastTick;
     private boolean breakBlocksPause = true;
     private long clickAimWindowUntil;
     
     public AimAssist() {
-        super("AimAssist", "Smoothly adjusts your camera toward nearby targets with configurable speed, range, and target mode.\nDetectability: Subtle", ModuleCategory.COMBAT, -1);
+        super("AimAssist", "Adjusts your camera toward nearby targets with configurable speed, smoothness, range, and target mode.\nDetectability: Subtle --> Blatant", ModuleCategory.COMBAT, -1);
     }
 
     @Override
@@ -124,6 +135,21 @@ public class AimAssist extends Module {
         return true;
     }
 
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
+        }
+    }
+
+    public boolean isUseFov() { return useFov; }
+    public void setUseFov(boolean useFov) { this.useFov = useFov; saveConfig(); }
+    public boolean isShowFovCircle() { return showFovCircle; }
+    public void setShowFovCircle(boolean showFovCircle) { this.showFovCircle = showFovCircle; saveConfig(); }
     public double getSmoothing() { return smoothing; }
     public void setSmoothing(double smoothing) {
         this.smoothing = Math.max(1.0, Math.min(10.0, smoothing));
@@ -229,6 +255,21 @@ public class AimAssist extends Module {
         updateAim();
     }
 
+    @Override
+    public void onHudRender(net.minecraft.client.gui.GuiGraphics graphics) {
+        if (showFovCircle && mc.player != null && mc.options != null && mc.screen == null) {
+            float centerX = mc.getWindow().getGuiScaledWidth() / 2.0F;
+            float centerY = mc.getWindow().getGuiScaledHeight() / 2.0F;
+            
+            // FOV is in degrees, we need to convert it to pixels roughly
+            // This is a heuristic: (fov / 2) / (actual game fov) * window width
+            double gameFov = mc.options.fov().get();
+            float radius = (float) ((fov / 2.0) / gameFov * mc.getWindow().getGuiScaledWidth() * 0.5);
+            
+            com.phantom.util.RenderUtil.drawCircle(graphics, centerX, centerY, radius, 0x80A8E6A3);
+        }
+    }
+
     private void updateAim() {
         if (mc.player == null || mc.level == null || mc.options == null) return;
         if (shouldPauseForBlockBreaking()) return;
@@ -266,7 +307,7 @@ public class AimAssist extends Module {
         List<Entity> entities = mc.level.getEntities(mc.player, mc.player.getBoundingBox().inflate(distance));
         return entities.stream()
             .filter(this::isValidTarget)
-            .filter(e -> isInFov(e, fov))
+            .filter(e -> !useFov || isInFov(e, fov))
             .min(Comparator.comparingDouble(this::targetSortValue))
             .orElse(null);
     }

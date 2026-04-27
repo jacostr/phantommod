@@ -1,267 +1,245 @@
-/*
- * ClickGUIScreen.java — The main module toggle overlay, opened with M.
- *
- * Displays all registered modules in categorised tabs (Combat, Movement, Player).
- * Each row has an enable/disable button and a hamburger (≡) icon that opens
- * ModuleSettingsScreen for that module. Includes a search bar and scroll support.
- *
- * This is the primary interface users interact with to manage PhantomMod features.
- */
 package com.phantom.gui;
 
 import com.phantom.PhantomMod;
-import com.phantom.gui.NotificationManager;
-import com.phantom.gui.ProfileScreen;
+import com.phantom.gui.framework.*;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
-import com.phantom.module.impl.render.HudModule;
+import com.phantom.util.RenderUtil;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FontDescription;
+import net.minecraft.resources.Identifier;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 
+/**
+ * Completely remade ClickGUI with a premium liquid glassy aesthetic.
+ * Features a sidebar-based category navigation and custom custom-built widgets.
+ */
 public class ClickGUIScreen extends Screen {
-    private static final int BUTTON_WIDTH = 150;
-    private static final int CFG_WIDTH = 34;
-    private static final int PROFILE_WIDTH = 86;
-    private static final int ROW_HEIGHT = 20;
-    private static final int ROW_SPACING = 6;
-    private static final int TAB_HEIGHT = 20;
-    /** Pixels from top: tabs + search box. */
-    private static final int LIST_TOP = 52;
-
-
+    private int guiWidth;
+    private int guiHeight;
+    private static final int SIDEBAR_WIDTH = 100;
+    private static final int PADDING = 10;
+    
     private ModuleCategory selectedCategory = ModuleCategory.COMBAT;
-    private int scrollOffset;
-    private int maxScroll;
     private String searchText = "";
-    private boolean rebuildingSearch;
-    private EditBox searchBox;
+    private int scrollOffset = 0;
+    private int maxScroll = 0;
+
+    private final List<BaseComponent> components = new ArrayList<>();
+    private final List<BaseComponent> sidebarComponents = new ArrayList<>();
+    private ModernTextField searchField;
 
     public ClickGUIScreen() {
-        super(Component.literal("Phantom Mod"));
+        super(Component.literal("PhantomMod"));
     }
 
     @Override
     protected void init() {
+        // Ensure at least 20px padding from screen edges
+        this.guiWidth = Math.min(this.width - 40, (int)(this.width * 0.8));
+        this.guiHeight = Math.min(this.height - 40, (int)(this.height * 0.8));
         rebuildUI();
     }
 
     private void rebuildUI() {
-        rebuildingSearch = true;
-        this.clearWidgets();
-        
-        int tabWidth = 60;
-        int totalTabsWidth = ModuleCategory.values().length * tabWidth;
-        int startX = Math.max(90, (this.width - totalTabsWidth) / 2 + 15);
+        components.clear();
+        sidebarComponents.clear();
 
-        for (int i = 0; i < ModuleCategory.values().length; i++) {
-            ModuleCategory category = ModuleCategory.values()[i];
-            boolean isSelected = category == selectedCategory;
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
+        int guiLeft = centerX - guiWidth / 2;
+        int guiTop = centerY - guiHeight / 2;
 
-            this.addRenderableWidget(Button.builder(
-                            Component.literal(category.getLabel()),
-                            button -> {
-                                selectedCategory = category;
-                                scrollOffset = 0;
-                                rebuildUI();
-                            })
-                    .bounds(startX + (i * tabWidth), 4, tabWidth - 2, TAB_HEIGHT)
-                    .build());
+        // --- Sidebar ---
+        int sidebarY = guiTop + 40;
+        for (ModuleCategory category : ModuleCategory.values()) {
+            sidebarComponents.add(new ModernButton(guiLeft + 5, sidebarY, SIDEBAR_WIDTH - 10, 20, 
+                Component.literal(category.getLabel()), 
+                btn -> {
+                    selectedCategory = category;
+                    scrollOffset = 0;
+                    rebuildUI();
+                }));
+            sidebarY += 24;
         }
 
-        this.searchBox = new EditBox(this.font, 24, 28, this.width - 48, 18, Component.literal("search"));
-        this.searchBox.setMaxLength(64);
-        this.searchBox.setBordered(true);
-        this.searchBox.setHint(Component.literal("Search modules…"));
-        this.searchBox.setValue(searchText);
-        this.setInitialFocus(this.searchBox);
-        this.searchBox.setResponder(s -> {
-            if (rebuildingSearch) {
-                return;
-            }
-            searchText = s;
-            scrollOffset = 0;
+        // Sidebar Bottom Profiles Button
+        int bottomY = guiTop + guiHeight - 30;
+        sidebarComponents.add(new ModernButton(guiLeft + 5, bottomY, SIDEBAR_WIDTH - 10, 20, 
+            Component.literal("Profiles"), 
+            btn -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager(), false))));
+
+        // --- Main Area ---
+        int mainX = guiLeft + SIDEBAR_WIDTH + PADDING;
+        int mainWidth = guiWidth - SIDEBAR_WIDTH - PADDING * 2;
+
+        searchField = new ModernTextField(mainX, guiTop + 10, mainWidth, 20, "Search modules...", text -> {
+            this.searchText = text;
+            this.scrollOffset = 0;
             rebuildUI();
         });
-        this.addRenderableWidget(this.searchBox);
+        searchField.setText(searchText);
+        components.add(searchField);
 
-        int profileX = 6;
-        int profileY = LIST_TOP + 18;
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Custom"),
-                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager(), false)))
-                .bounds(profileX, profileY, PROFILE_WIDTH, ROW_HEIGHT)
-                .build());
-
-        this.addRenderableWidget(Button.builder(
-                        Component.literal("Premade"),
-                        button -> this.minecraft.setScreen(new ProfileScreen(this, PhantomMod.getModuleManager(), true)))
-                .bounds(profileX, profileY + ROW_HEIGHT + ROW_SPACING, PROFILE_WIDTH, ROW_HEIGHT)
-                .build());
-
-        int btnY = this.height - 24;
-        this.addRenderableWidget(Button.builder(Component.literal("Disable All"), button -> {
-            PhantomMod.getModuleManager().getModules().forEach(m -> { if (m.isEnabled()) m.toggle(); });
-            NotificationManager.push("All modules disabled.");
-            rebuildUI();
-        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
-
-        btnY -= 24;
-        this.addRenderableWidget(Button.builder(Component.literal("Reset Binds"), button -> {
-            PhantomMod.getModuleManager().getModules().forEach(m -> m.setKey(-1));
-            PhantomMod.saveConfig();
-            NotificationManager.push("All keybinds cleared.");
-            rebuildUI();
-        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
-
-        btnY -= 24;
-        this.addRenderableWidget(Button.builder(Component.literal("Reset Settings"), button -> {
-            PhantomMod.resetConfig();
-            PhantomMod.saveConfig();
-            NotificationManager.push("Settings reset to default.");
-            rebuildUI();
-        }).bounds(6, btnY, PROFILE_WIDTH, ROW_HEIGHT).build());
-
-        HudModule hudModule = PhantomMod.getModuleManager().getModuleByClass(HudModule.class);
-        if (hudModule != null) {
-            int hudSettingsY = this.height - (ROW_HEIGHT * 2) - 10;
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("HUD Settings"),
-                            button -> this.minecraft.setScreen(hudModule.createSettingsScreen(this)))
-                    .bounds(this.width - PROFILE_WIDTH - 6, hudSettingsY, PROFILE_WIDTH, ROW_HEIGHT)
-                    .build());
-
-            this.addRenderableWidget(Button.builder(
-                            Component.literal("Debug"),
-                            button -> this.minecraft.setScreen(new DebugSettingsScreen(this)))
-                    .bounds(this.width - PROFILE_WIDTH - 6, this.height - 24, PROFILE_WIDTH, ROW_HEIGHT)
-                    .build());
-        }
-
-
+        // Module List
         String q = searchText.trim().toLowerCase(Locale.ROOT);
         List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
-                .filter(module -> !(module instanceof HudModule))
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());
 
-        updateMaxScroll(modules);
-
-        int rowY = LIST_TOP - scrollOffset;
+        int moduleY = guiTop + 40 - scrollOffset;
         for (Module module : modules) {
-            if (rowY + ROW_HEIGHT < LIST_TOP - 2 || rowY > this.height - 12) {
-                rowY += ROW_HEIGHT + ROW_SPACING;
+            if (moduleY + 24 < guiTop + 40 || moduleY > guiTop + guiHeight - 10) {
+                moduleY += 28;
                 continue;
             }
 
-            int left = this.width / 2 - 95;
+            // Module Toggle
+            components.add(new ModernToggle(mainX, moduleY, 40, 20, "", module.isEnabled(), val -> {
+                module.toggle();
+            }));
 
-            this.addRenderableWidget(Button.builder(
-                            Component.literal(module.getName() + ": " + getDisplayedState(module)),
-                            button -> {
-                                module.toggle();
-                                rebuildUI();
-                            })
-                    .bounds(left, rowY, BUTTON_WIDTH, ROW_HEIGHT)
-                    .build());
-
+            // Settings Button (if applicable)
             if (module.hasConfigurableSettings()) {
-                this.addRenderableWidget(Button.builder(
-                                Component.empty(),
-                                button -> this.minecraft.setScreen(module.createSettingsScreen(this)))
-                        .bounds(left + BUTTON_WIDTH + 6, rowY, CFG_WIDTH, ROW_HEIGHT)
-                        .build());
+                components.add(new ModernButton(mainX + mainWidth - 30, moduleY, 30, 20, 
+                    Component.literal("≡"), 
+                    btn -> this.minecraft.setScreen(module.createSettingsScreen(this))));
             }
 
-            rowY += ROW_HEIGHT + ROW_SPACING;
+            moduleY += 28;
         }
-
-        rebuildingSearch = false;
+        
+        maxScroll = Math.max(0, (modules.size() * 28) - (guiHeight - 50));
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
-        graphics.fill(0, 0, this.width, LIST_TOP, 0xFF202020);
-        graphics.fill(0, LIST_TOP, this.width, this.height, 0x90101010);
+        int centerX = this.width / 2;
+        int centerY = this.height / 2;
+        int guiLeft = centerX - guiWidth / 2;
+        int guiTop = centerY - guiHeight / 2;
 
-        // Header Branding
-        int brandX = 4;
-        graphics.drawString(this.font, "PhantomMod", brandX, 10, 0xFFA8E6A3);
-        int verWidth = this.font.width("v0.6.0");
-        int brandWidth = this.font.width("PhantomMod");
-        graphics.drawString(this.font, "v0.6.0", brandX + brandWidth / 2 - verWidth / 2, 20, 0xFF888888);
-        graphics.drawString(this.font, "Configs", 8, LIST_TOP + 6, 0xFFFFFFFF);
+        // Draw Liquid Glassy Backgrounds
+        // Sidebar
+        RenderUtil.drawGlassPanel(graphics, guiLeft, guiTop, SIDEBAR_WIDTH, guiHeight, 0x80101010, 0x30FFFFFF);
+        
+        // Main Panel
+        RenderUtil.drawGlassPanel(graphics, guiLeft + SIDEBAR_WIDTH, guiTop, guiWidth - SIDEBAR_WIDTH, guiHeight, 0x60050505, 0x20FFFFFF);
 
-        super.render(graphics, mouseX, mouseY, delta);
+        // Draw Logo / Title
+        FontDescription cleanFont = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "uniform"));
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(guiLeft + 50, guiTop + 25);
+        graphics.pose().scale(1.2f, 1.2f);
+        graphics.drawCenteredString(this.font, Component.literal("PHANTOM MOD").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFFA8E6A3);
+        graphics.pose().popMatrix();
+        
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(guiLeft + 50, guiTop + 38);
+        graphics.pose().scale(0.6f, 0.6f);
+        graphics.drawCenteredString(this.font, Component.literal("v0.8.0 Premium").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
+        graphics.pose().popMatrix();
 
-        int rowY = LIST_TOP - scrollOffset;
+        // Render Sidebar Components
+        for (BaseComponent component : sidebarComponents) {
+            component.render(graphics, mouseX, mouseY, delta);
+        }
+
+        // Render Main Components
+        for (BaseComponent component : components) {
+            component.render(graphics, mouseX, mouseY, delta);
+        }
+
+        // Draw Scroll Bar
+        if (maxScroll > 0) {
+            int scrollBarX = guiLeft + guiWidth - 8;
+            int scrollBarY = guiTop + 40;
+            int scrollBarHeight = guiHeight - 50;
+            
+            // Track
+            graphics.fill(scrollBarX, scrollBarY, scrollBarX + 4, scrollBarY + scrollBarHeight, 0x40000000);
+            
+            // Thumb
+            int thumbHeight = Math.max(20, (int) ((double) (guiHeight - 50) * (guiHeight - 50) / (maxScroll + guiHeight - 50)));
+            int thumbY = scrollBarY + (int) ((double) scrollOffset / maxScroll * (scrollBarHeight - thumbHeight));
+            graphics.fill(scrollBarX, thumbY, scrollBarX + 4, thumbY + thumbHeight, 0xFFA8E6A3);
+        }
+        
+        // Render Module Names
         String q = searchText.trim().toLowerCase(Locale.ROOT);
         List<Module> modules = PhantomMod.getModuleManager().getModules().stream()
-                .filter(module -> !(module instanceof HudModule))
                 .filter(m -> q.isEmpty() ? m.getCategory() == selectedCategory : true)
                 .filter(m -> q.isEmpty() || m.getName().toLowerCase(Locale.ROOT).contains(q))
                 .collect(Collectors.toList());
 
+        int textY = guiTop + 46 - scrollOffset;
         for (Module module : modules) {
-            if (rowY + ROW_HEIGHT < LIST_TOP - 2 || rowY > this.height - 12) {
-                rowY += ROW_HEIGHT + ROW_SPACING;
-                continue;
+            if (textY + 10 >= guiTop + 40 && textY <= guiTop + guiHeight - 10) {
+                graphics.drawString(this.font, Component.literal(module.getName()).withStyle(s -> s.withFont(cleanFont)), guiLeft + SIDEBAR_WIDTH + PADDING + 55, textY, 0xFFFFFFFF, false);
             }
-
-            int left = this.width / 2 - 95;
-            if (module.hasConfigurableSettings()) {
-                int btnX = left + BUTTON_WIDTH + 6;
-                int btnY = rowY;
-                int textW = this.font.width("≡");
-                graphics.drawString(this.font, "≡", btnX + CFG_WIDTH / 2 - textW / 2, btnY + ROW_HEIGHT / 2 - 4, 0xFFFFFFFF, false);
-            }
-
-            rowY += ROW_HEIGHT + ROW_SPACING;
+            textY += 28;
         }
 
         NotificationManager.render(graphics);
     }
 
     @Override
-    public boolean isPauseScreen() {
-        return false;
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isFocused) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        for (BaseComponent component : sidebarComponents) {
+            if (component.mouseClicked(mouseX, mouseY, button)) return true;
+        }
+        for (BaseComponent component : components) {
+            if (component.mouseClicked(mouseX, mouseY, button)) return true;
+        }
+        return super.mouseClicked(event, isFocused);
+    }
+
+    @Override
+    public boolean mouseReleased(net.minecraft.client.input.MouseButtonEvent event) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int button = event.button();
+        for (BaseComponent component : components) {
+            component.mouseReleased(mouseX, mouseY, button);
+        }
+        return super.mouseReleased(event);
+    }
+
+    @Override
+    public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
+        if (searchField.keyPressed(event.key(), event.scancode(), event.modifiers())) return true;
+        return super.keyPressed(event);
+    }
+
+    @Override
+    public boolean charTyped(net.minecraft.client.input.CharacterEvent event) {
+        if (searchField.charTyped((char) event.codepoint(), 0)) return true;
+        return super.charTyped(event);
     }
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (maxScroll <= 0) {
-            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+        int nextOffset = Math.max(0, Math.min(maxScroll, scrollOffset - (int)(scrollY * 20)));
+        if (nextOffset != scrollOffset) {
+            scrollOffset = nextOffset;
+            rebuildUI();
+            return true;
         }
-
-        int nextOffset = clamp(scrollOffset - (int) (scrollY * 18.0D), 0, maxScroll);
-        if (nextOffset == scrollOffset) {
-            return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
-        }
-
-        scrollOffset = nextOffset;
-        rebuildUI();
-        return true;
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
-    private void updateMaxScroll(List<Module> modules) {
-        int contentHeight = modules.size() * (ROW_HEIGHT + ROW_SPACING);
-        int visibleHeight = this.height - LIST_TOP - 20;
-        maxScroll = Math.max(0, contentHeight - visibleHeight);
-        scrollOffset = clamp(scrollOffset, 0, maxScroll);
-    }
-
-    private int clamp(int value, int min, int max) {
-        return Math.max(min, Math.min(max, value));
-    }
-
-    private String getDisplayedState(Module module) {
-        return module.isEnabled() ? "ON" : "OFF";
+    @Override
+    public boolean isPauseScreen() {
+        return false;
     }
 }

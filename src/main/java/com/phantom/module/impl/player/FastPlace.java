@@ -19,8 +19,17 @@ import net.minecraft.world.item.BlockItem;
 import java.util.Properties;
 
 public class FastPlace extends Module {
+    public enum Preset {
+        LEGIT("Legit"), NORMAL("Normal"), OBVIOUS("Obvious"), BLATANT("Blatant");
+        private final String name;
+        Preset(String name) { this.name = name; }
+        public String getName() { return name; }
+        public Preset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private int delayTicks;
     private boolean blocksOnly = true;
+    private Preset currentPreset = Preset.NORMAL;
 
     public FastPlace() {
         super("FastPlace",
@@ -43,6 +52,17 @@ public class FastPlace extends Module {
         MinecraftClientAccessor accessor = (MinecraftClientAccessor) mc;
         if (accessor.phantom$getRightClickDelay() > delayTicks) {
             accessor.phantom$setRightClickDelay(delayTicks);
+        }
+    }
+
+    public Preset getCurrentPreset() { return currentPreset; }
+    public void cyclePreset() {
+        currentPreset = currentPreset.next();
+        switch (currentPreset) {
+            case LEGIT -> applyPresetLegit();
+            case NORMAL -> applyPresetNormal();
+            case OBVIOUS -> applyPresetObvious();
+            case BLATANT -> applyPresetBlatant();
         }
     }
 

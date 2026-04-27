@@ -20,9 +20,24 @@ public class TimeChanger extends Module {
         }
     }
 
+    public enum TimePreset {
+        DAY("Day", 6000), 
+        DUSK("Dusk", 13000), 
+        NIGHT("Night", 18000), 
+        DAWN("Dawn", 23000);
+        
+        private final String label;
+        private final int time;
+        TimePreset(String label, int time) { this.label = label; this.time = time; }
+        public String getLabel() { return label; }
+        public int getTime() { return time; }
+        public TimePreset next() { return values()[(this.ordinal() + 1) % values().length]; }
+    }
+
     private int targetTime = 6000;
     private boolean freezeTime = true;
     private WeatherMode weatherMode = WeatherMode.DEFAULT;
+    private TimePreset currentPreset = TimePreset.DAY;
 
     public TimeChanger() {
         super("Environment", "Changes world time & weather locally.", ModuleCategory.RENDER, -1);
@@ -45,10 +60,12 @@ public class TimeChanger extends Module {
         }
     }
 
-    public void setPresetDay() { setTargetTime(6000); }
-    public void setPresetDusk() { setTargetTime(13000); }
-    public void setPresetMidnight() { setTargetTime(18000); }
-    public void setPresetDawn() { setTargetTime(23000); }
+    public void cycleTimePreset() {
+        currentPreset = currentPreset.next();
+        setTargetTime(currentPreset.getTime());
+    }
+
+    public TimePreset getCurrentPreset() { return currentPreset; }
 
     public int getTargetTime() { return targetTime; }
     public void setTargetTime(double time) { this.targetTime = (int) time; saveConfig(); }
