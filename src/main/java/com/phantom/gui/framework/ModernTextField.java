@@ -90,4 +90,12 @@ public class ModernTextField extends BaseComponent {
     public String getText() {
         return text;
     }
+
+    public boolean isFocused() {
+        return focused;
+    }
+
+    public void setFocused(boolean focused) {
+        this.focused = focused;
+    }
 }

@@ -82,7 +82,7 @@ public class DebugSettingsScreen extends Screen {
             component.render(graphics, mouseX, mouseY, delta);
         }
 
-        NotificationManager.render(graphics, 10, this.height - 30);
+        NotificationManager.render(graphics);
     }
 
     @Override

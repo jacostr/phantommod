@@ -57,7 +57,7 @@ public class ClickGUIScreen extends Screen {
         int guiTop = centerY - guiHeight / 2;
 
         // --- Sidebar ---
-        int sidebarY = guiTop + 40;
+        int sidebarY = guiTop + 45;
         for (ModuleCategory category : ModuleCategory.values()) {
             sidebarComponents.add(new ModernButton(guiLeft + 5, sidebarY, SIDEBAR_WIDTH - 10, 20, 
                 Component.literal(category.getLabel()), 
@@ -79,12 +79,14 @@ public class ClickGUIScreen extends Screen {
         int mainX = guiLeft + SIDEBAR_WIDTH + PADDING;
         int mainWidth = guiWidth - SIDEBAR_WIDTH - PADDING * 2;
 
+        boolean wasFocused = searchField != null && searchField.isFocused();
         searchField = new ModernTextField(mainX, guiTop + 10, mainWidth, 20, "Search modules...", text -> {
             this.searchText = text;
             this.scrollOffset = 0;
             rebuildUI();
         });
         searchField.setText(searchText);
+        searchField.setFocused(wasFocused);
         components.add(searchField);
 
         // Module List
@@ -108,9 +110,11 @@ public class ClickGUIScreen extends Screen {
 
             // Settings Button (if applicable)
             if (module.hasConfigurableSettings()) {
-                components.add(new ModernButton(mainX + mainWidth - 30, moduleY, 30, 20, 
+                ModernButton settingsBtn = new ModernButton(mainX + mainWidth - 40, moduleY, 40, 20, 
                     Component.literal("≡"), 
-                    btn -> this.minecraft.setScreen(module.createSettingsScreen(this))));
+                    btn -> this.minecraft.setScreen(module.createSettingsScreen(this)));
+                settingsBtn.setTextScale(1.4f);
+                components.add(settingsBtn);
             }
 
             moduleY += 28;
@@ -136,13 +140,13 @@ public class ClickGUIScreen extends Screen {
         // Draw Logo / Title
         FontDescription cleanFont = new FontDescription.Resource(Identifier.fromNamespaceAndPath("minecraft", "uniform"));
         graphics.pose().pushMatrix();
-        graphics.pose().translate(guiLeft + 50, guiTop + 25);
+        graphics.pose().translate(guiLeft + 50, guiTop + 12);
         graphics.pose().scale(1.2f, 1.2f);
         graphics.drawCenteredString(this.font, Component.literal("PHANTOM MOD").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFFA8E6A3);
         graphics.pose().popMatrix();
         
         graphics.pose().pushMatrix();
-        graphics.pose().translate(guiLeft + 50, guiTop + 38);
+        graphics.pose().translate(guiLeft + 50, guiTop + 24);
         graphics.pose().scale(0.6f, 0.6f);
         graphics.drawCenteredString(this.font, Component.literal("v0.8.0 Premium").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
         graphics.pose().popMatrix();
@@ -182,7 +186,11 @@ public class ClickGUIScreen extends Screen {
         int textY = guiTop + 46 - scrollOffset;
         for (Module module : modules) {
             if (textY + 10 >= guiTop + 40 && textY <= guiTop + guiHeight - 10) {
-                graphics.drawString(this.font, Component.literal(module.getName()).withStyle(s -> s.withFont(cleanFont)), guiLeft + SIDEBAR_WIDTH + PADDING + 55, textY, 0xFFFFFFFF, false);
+                graphics.pose().pushMatrix();
+                graphics.pose().translate(guiLeft + SIDEBAR_WIDTH + PADDING + 55, textY);
+                graphics.pose().scale(1.1f, 1.1f);
+                graphics.drawString(this.font, Component.literal(module.getName()).withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFFFFFFFF, false);
+                graphics.pose().popMatrix();
             }
             textY += 28;
         }

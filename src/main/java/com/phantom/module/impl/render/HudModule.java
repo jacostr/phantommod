@@ -53,6 +53,7 @@ public class HudModule extends Module {
     private CornerSide statsSide = CornerSide.LEFT;
     private boolean debugLogger = false;
     private boolean fileLogger = false;
+    private com.phantom.gui.NotificationManager.Position notificationPos = com.phantom.gui.NotificationManager.Position.TOP_LEFT;
 
     // CPS tracking — ring buffer of click timestamps over the last 1000 ms
     private final long[] clickTimes = new long[20];
@@ -198,6 +199,14 @@ public class HudModule extends Module {
         fileLogger = Boolean.parseBoolean(p.getProperty("hud.file_logger", "false"));
         com.phantom.util.Logger.setDebugEnabled(debugLogger);
         com.phantom.util.Logger.setFileLoggingEnabled(fileLogger);
+        
+        String nPos = p.getProperty("hud.notification_pos");
+        if (nPos != null) {
+            try {
+                notificationPos = com.phantom.gui.NotificationManager.Position.valueOf(nPos);
+                com.phantom.gui.NotificationManager.setPosition(notificationPos);
+            } catch (IllegalArgumentException ignored) {}
+        }
     }
 
     @Override
@@ -211,6 +220,17 @@ public class HudModule extends Module {
         p.setProperty("hud.stats_side", statsSide.name());
         p.setProperty("hud.debug_logger", Boolean.toString(debugLogger));
         p.setProperty("hud.file_logger", Boolean.toString(fileLogger));
+        p.setProperty("hud.notification_pos", notificationPos.name());
+    }
+
+    public com.phantom.gui.NotificationManager.Position getNotificationPos() {
+        return notificationPos;
+    }
+
+    public void cycleNotificationPos() {
+        notificationPos = notificationPos.next();
+        com.phantom.gui.NotificationManager.setPosition(notificationPos);
+        saveConfig();
     }
 
     private int drawModuleHud(GuiGraphics graphics) {
@@ -235,17 +255,18 @@ public class HudModule extends Module {
         net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
+            net.minecraft.network.chat.Component styledLine = net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont));
             int color = i == 0 ? 0xFFA8E6A3 : 0xFFFFFFFF;
-            int x = alignLeft ? 8 : scaledWidth - mc.font.width(line) - 8;
+            int x = alignLeft ? 8 : scaledWidth - mc.font.width(styledLine) - 8;
             
             if (i == 0) {
                 graphics.pose().pushMatrix();
                 graphics.pose().scale(1.1f, 1.1f);
-                graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont)), (int)(x / 1.1f), (int)(y / 1.1f), color, true);
+                graphics.drawString(mc.font, styledLine, (int)(x / 1.1f), (int)(y / 1.1f), color, true);
                 graphics.pose().popMatrix();
                 y += 12;
             } else {
-                graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont)), x, y, color, true);
+                graphics.drawString(mc.font, styledLine, x, y, color, true);
                 y += 10;
             }
         }
@@ -270,22 +291,25 @@ public class HudModule extends Module {
         net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
         if (showFps) {
             String txt = "FPS: " + mc.getFps();
-            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
+            net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
+            graphics.drawString(mc.font, styled,
+                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
         if (showPing) {
             String txt = getPingText();
-            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
+            net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
+            graphics.drawString(mc.font, styled,
+                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
         if (showCps) {
             String txt = "CPS: " + getCps();
-            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont)),
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(txt) - 8, y, 0xFFFFFFFF, true);
+            net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
+            graphics.drawString(mc.font, styled,
+                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
         }
 
         graphics.pose().popMatrix();

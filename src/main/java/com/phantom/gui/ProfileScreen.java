@@ -55,7 +55,7 @@ public class ProfileScreen extends Screen {
         int startY = centerY - panelHeight / 2 + 50 - scrollOffset;
 
         // Switcher Button
-        components.add(new ModernButton(centerX + panelWidth / 2 - 110, centerY - panelHeight / 2 + 10, 100, 20, 
+        components.add(new ModernButton(centerX + panelWidth / 2 - 90, centerY - panelHeight / 2 + 10, 80, 20, 
             Component.literal(isPremade ? "To Custom" : "To Premade"), btn -> {
                 isPremade = !isPremade;
                 scrollOffset = 0;
@@ -146,14 +146,16 @@ public class ProfileScreen extends Screen {
 
         // Render premade labels if needed
         if (isPremade) {
-            int startX = centerX - panelWidth / 2 + 20;
+            int labelX = centerX - panelWidth / 2 + 20;
+            int yOffset = 0;
             int startY = centerY - panelHeight / 2 + 56 - scrollOffset;
             for (int slot = 0; slot < ProfileManager.SLOT_COUNT; slot++) {
                 if (ProfileManager.hasBundledProfile(slot)) {
-                    int y = startY + slot * 30;
+                    int y = startY + yOffset;
                     if (y > centerY - panelHeight / 2 + 40 && y < centerY + panelHeight / 2 - 40) {
-                        graphics.drawString(this.font, net.minecraft.network.chat.Component.literal(ProfileManager.getBundledName(slot)).withStyle(s -> s.withFont(cleanFont)), startX, y, 0xFFFFFFFF, false);
+                        graphics.drawString(this.font, net.minecraft.network.chat.Component.literal(ProfileManager.getBundledName(slot)).withStyle(s -> s.withFont(cleanFont)), labelX, y, 0xFFFFFFFF, false);
                     }
+                    yOffset += 30;
                 }
             }
         }
@@ -183,7 +185,7 @@ public class ProfileScreen extends Screen {
             graphics.fill(scrollBarX, thumbY, scrollBarX + 4, thumbY + thumbHeight, 0xFFA8E6A3);
         }
 
-        NotificationManager.render(graphics, 10, this.height - 30);
+        NotificationManager.render(graphics);
     }
 
     @Override

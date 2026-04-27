@@ -27,11 +27,32 @@ import java.util.List;
  * notification without holding a reference to a screen or manager instance.</p>
  */
 public final class NotificationManager {
+    public enum Position {
+        TOP_LEFT("Top Left"),
+        TOP_RIGHT("Top Right"),
+        TOP_CENTER("Top Center"),
+        BOTTOM_LEFT("Bottom Left"),
+        BOTTOM_RIGHT("Bottom Right"),
+        BOTTOM_CENTER("Bottom Center");
+
+        private final String label;
+        Position(String label) { this.label = label; }
+        public String getLabel() { return label; }
+        public Position next() {
+            return values()[(ordinal() + 1) % values().length];
+        }
+    }
+
     private static final long LIFETIME_MS = 1500L;
     private static final List<Notification> NOTIFICATIONS = new ArrayList<>();
+    private static Position currentPosition = Position.TOP_LEFT;
 
     private NotificationManager() {
     }
+
+    public static Position getPosition() { return currentPosition; }
+    public static void setPosition(Position pos) { currentPosition = pos; }
+    public static void cyclePosition() { currentPosition = currentPosition.next(); }
 
     /**
      * Queues a new notification that will be visible for {@link #LIFETIME_MS} ms.
@@ -54,15 +75,26 @@ public final class NotificationManager {
      * stacked vertically from y=12 downward with 18px per entry.</p>
      */
     public static void render(GuiGraphics graphics) {
-        render(graphics, 10, 12);
-    }
-
-    public static void render(GuiGraphics graphics, int startX, int startY) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.options.hideGui || mc.font == null) {
-            return;
+        if (mc.options.hideGui || mc.font == null || NOTIFICATIONS.isEmpty()) return;
+
+        int sw = mc.getWindow().getGuiScaledWidth();
+        int sh = mc.getWindow().getGuiScaledHeight();
+
+        int startY;
+        boolean isBottom = currentPosition.name().startsWith("BOTTOM");
+        
+        if (isBottom) {
+            startY = sh - 25 - (currentPosition == Position.BOTTOM_CENTER ? 30 : 0);
+        } else {
+            startY = 12;
         }
 
+        render(graphics, sw, sh, startY, isBottom);
+    }
+
+    private static void render(GuiGraphics graphics, int sw, int sh, int startY, boolean isBottom) {
+        Minecraft mc = Minecraft.getInstance();
         long now = System.currentTimeMillis();
         Iterator<Notification> iterator = NOTIFICATIONS.iterator();
         int y = startY;
@@ -74,15 +106,28 @@ public final class NotificationManager {
                 continue;
             }
 
-            int textWidth = mc.font.width(notification.message());
-            int x = startX;
+            net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
+            net.minecraft.network.chat.Component styledMsg = net.minecraft.network.chat.Component.literal(notification.message()).withStyle(s -> s.withFont(cleanFont));
+            int textWidth = mc.font.width(styledMsg);
+            
+            int x;
+            if (currentPosition.name().contains("RIGHT")) {
+                x = sw - textWidth - 15;
+            } else if (currentPosition.name().contains("CENTER")) {
+                x = (sw - textWidth) / 2;
+            } else {
+                x = 10;
+            }
             
             // Glassy Notification Panel
             RenderUtil.drawGlassPanel(graphics, x - 5, y - 5, textWidth + 12, 18, 0xA0101010, 0x40A8E6A3);
-            net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
-            graphics.drawString(mc.font, net.minecraft.network.chat.Component.literal(notification.message()).withStyle(s -> s.withFont(cleanFont)), x, y, 0xFFFFFFFF, false);
+            graphics.drawString(mc.font, styledMsg, x, y, 0xFFFFFFFF, false);
             
-            y += 22;
+            if (isBottom) {
+                y -= 22;
+            } else {
+                y += 22;
+            }
         }
     }
 

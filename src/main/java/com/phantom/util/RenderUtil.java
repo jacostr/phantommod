@@ -10,6 +10,19 @@ import java.awt.*;
  */
 public class RenderUtil {
 
+    public static void drawCircle(GuiGraphics graphics, float centerX, float centerY, float radius, int color) {
+        int segments = (int) (radius * 12); // High density for smoothness
+        segments = Math.max(128, Math.min(segments, 1024));
+        
+        for (int i = 0; i < segments; i++) {
+            double angle = (i * 2.0 * Math.PI / segments);
+            float x = centerX + (float)Math.cos(angle) * radius;
+            float y = centerY + (float)Math.sin(angle) * radius;
+            // Use tiny overlapping fills for a 'smoother' look without GL
+            graphics.fill((int)x, (int)y, (int)x + 1, (int)y + 1, color);
+        }
+    }
+
     /**
      * Draws a premium glass-style panel with subtle rounded corners.
      */
@@ -73,20 +86,6 @@ public class RenderUtil {
             int layerAlpha = (int) (alpha * (0.25f / (i + 1)));
             int layerColor = (layerAlpha << 24) | (color & 0x00FFFFFF);
             graphics.fill(x - i, y - i, x + width + i, y + height + i, layerColor);
-        }
-    }
-
-    public static void drawCircle(GuiGraphics graphics, float centerX, float centerY, float radius, int color) {
-        int segments = (int) (radius * 6);
-        segments = Math.max(64, Math.min(segments, 1024));
-        
-        for (int i = 0; i < segments; i++) {
-            double angle = (i * 2.0 * Math.PI / segments);
-            int x = (int) (centerX + Math.cos(angle) * radius);
-            int y = (int) (centerY + Math.sin(angle) * radius);
-            // Draw a 1.5x1.5 area for better visibility
-            graphics.fill(x, y, x + 1, y + 1, color);
-            if (i % 2 == 0) graphics.fill(x + 1, y, x + 2, y + 1, color); // slight thickening
         }
     }
 }

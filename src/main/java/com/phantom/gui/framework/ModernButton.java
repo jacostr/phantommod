@@ -13,6 +13,7 @@ public class ModernButton extends BaseComponent {
     private final Component label;
     private final Consumer<ModernButton> onClick;
     private float hoverFade = 0f;
+    private float textScale = 1.0f;
 
     public ModernButton(int x, int y, int width, int height, Component label, Consumer<ModernButton> onClick) {
         super(x, y, width, height);
@@ -33,8 +34,9 @@ public class ModernButton extends BaseComponent {
         
         int textColor = RenderUtil.interpolateColor(0xFFD0D0D0, 0xFFA8E6A3, hoverFade);
         graphics.pose().pushMatrix();
-        graphics.pose().translate(x + width / 2, y + (height - 8) / 2 + 1);
-        graphics.pose().scale(0.9f, 0.9f);
+        // Improved vertical centering
+        graphics.pose().translate(x + width / 2, y + (height - font.lineHeight * textScale) / 2 + (textScale > 1.0f ? 0 : 1));
+        graphics.pose().scale(textScale, textScale);
         graphics.drawCenteredString(font, styled(label), 0, 0, textColor);
         graphics.pose().popMatrix();
         
@@ -44,6 +46,10 @@ public class ModernButton extends BaseComponent {
     }
 
     public Component getMessage() { return label; }
+
+    public void setTextScale(float textScale) {
+        this.textScale = textScale;
+    }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
