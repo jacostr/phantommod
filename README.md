@@ -4,8 +4,6 @@
   <img src=".github/screenshots/clickgui.png" alt="PhantomMod ClickGUI" width="800">
 </p>
 
-| **Latest Version** | v0.9.0 | **Release Ready** |
-| **Target MC**     | 1.21.11 | **Fabric 1.21.11** |
 
 PhantomMod `v0.9.0` is a client-side Fabric mod for Minecraft `1.21.11`. It features a premium glassy ClickGUI with sidebar navigation, per-module settings with sliders and presets, saved hotkeys, toast notifications, profile management, and a configurable HUD overlay.
 
