@@ -11,7 +11,6 @@
 package com.phantom.module.impl.combat;
 
 import com.phantom.module.impl.player.AntiBot;
-import com.phantom.util.Logger;
 import com.phantom.module.Module;
 
 import com.phantom.module.ModuleCategory;
@@ -449,25 +448,14 @@ public class AimAssist extends Module {
     public void loadConfig(Properties properties) {
         super.loadConfig(properties);
         String s = properties.getProperty("aim.smoothing");
-        if (s != null) {
-            try { this.smoothing = Double.parseDouble(s); } 
-            catch (Exception e) { Logger.error("AimAssist: Failed to parse smoothing", e); }
-        }
+        if (s != null) { try { this.smoothing = Double.parseDouble(s); } catch (Exception ignored) {} }
         String snap = properties.getProperty("aim.snapiness");
-        if (snap != null) {
-            try { this.snapiness = Math.max(1.0, Math.min(10.0, Double.parseDouble(snap))); } 
-            catch (Exception e) { Logger.error("AimAssist: Failed to parse snapiness", e); }
-        }
+        if (snap != null) { try { this.snapiness = Math.max(1.0, Math.min(10.0, Double.parseDouble(snap))); } catch (Exception ignored) {} }
         String f = properties.getProperty("aim.fov");
-        if (f != null) {
-            try { this.fov = Double.parseDouble(f); } 
-            catch (Exception e) { Logger.error("AimAssist: Failed to parse fov", e); }
-        }
+        if (f != null) { try { this.fov = Double.parseDouble(f); } catch (Exception ignored) {} }
         String d = properties.getProperty("aim.distance");
-        if (d != null) {
-            try { this.distance = Math.max(2.5, Math.min(6.0, Double.parseDouble(d))); } 
-            catch (Exception e) { Logger.error("AimAssist: Failed to parse distance", e); }
-        }
+        if (d != null) { try { this.distance = Math.max(2.5, Math.min(6.0, Double.parseDouble(d))); } catch (Exception ignored) {} }
+        showFovCircle = Boolean.parseBoolean(properties.getProperty("aim.show_fov_circle", Boolean.toString(showFovCircle)));
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown)));
         clickAim = Boolean.parseBoolean(properties.getProperty("aim.click_aim", Boolean.toString(clickAim)));
         breakBlocksPause = Boolean.parseBoolean(properties.getProperty("aim.break_pause", Boolean.toString(breakBlocksPause)));
@@ -488,6 +476,7 @@ public class AimAssist extends Module {
         properties.setProperty("aim.snapiness", Double.toString(snapiness));
         properties.setProperty("aim.fov", Double.toString(fov));
         properties.setProperty("aim.distance", Double.toString(distance));
+        properties.setProperty("aim.show_fov_circle", Boolean.toString(showFovCircle));
         properties.setProperty("aim.require_mouse_down", Boolean.toString(requireMouseDown));
         properties.setProperty("aim.click_aim", Boolean.toString(clickAim));
         properties.setProperty("aim.break_pause", Boolean.toString(breakBlocksPause));

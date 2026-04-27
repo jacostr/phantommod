@@ -110,8 +110,8 @@ public class ClickGUIScreen extends Screen {
 
             // Settings Button (if applicable)
             if (module.hasConfigurableSettings()) {
-                ModernButton settingsBtn = new ModernButton(mainX + mainWidth - 40, moduleY, 40, 20, 
-                    Component.literal("≡"), 
+                ModernButton settingsBtn = new ModernButton(mainX + mainWidth - 30, moduleY + 2, 28, 16,
+                    Component.literal("≡"),
                     btn -> this.minecraft.setScreen(module.createSettingsScreen(this)));
                 settingsBtn.setTextScale(1.4f);
                 components.add(settingsBtn);
@@ -148,7 +148,7 @@ public class ClickGUIScreen extends Screen {
         graphics.pose().pushMatrix();
         graphics.pose().translate(guiLeft + 50, guiTop + 24);
         graphics.pose().scale(0.6f, 0.6f);
-        graphics.drawCenteredString(this.font, Component.literal("v0.8.0 Premium").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
+        graphics.drawCenteredString(this.font, Component.literal("v0.9.0 Premium").withStyle(s -> s.withFont(cleanFont)), 0, 0, 0xFF888888);
         graphics.pose().popMatrix();
 
         // Render Sidebar Components

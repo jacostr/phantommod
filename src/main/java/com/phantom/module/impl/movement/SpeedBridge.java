@@ -15,8 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import com.phantom.util.Logger;
-
 import java.util.Properties;
 
 
@@ -115,10 +113,7 @@ public class SpeedBridge extends Module {
             horizontalSpeed = Math.sqrt(
                     mc.player.getDeltaMovement().x() * mc.player.getDeltaMovement().x() +
                     mc.player.getDeltaMovement().z() * mc.player.getDeltaMovement().z());
-        } catch (Exception e) {
-            Logger.warn("SpeedBridge: Error calculating movement/inventory state - " + e.getMessage());
-            return;
-        }
+        } catch (Exception ignored) {}
 
         if (bridgeAssistEnabled && towerModeEnabled && isHoldingBlock &&
                 mc.options.keyJump.isDown() && mc.options.keyUse.isDown() &&
@@ -263,18 +258,14 @@ public class SpeedBridge extends Module {
         if (v != null) {
             try {
                 autoOffDelay = Double.parseDouble(v);
-            } catch (Exception e) {
-                Logger.error("SpeedBridge: Failed to parse auto_off_delay", e);
-            }
+            } catch (Exception ignored) {}
         }
 
         String delayVal = properties.getProperty("speedbridge.delay_ticks");
         if (delayVal != null) {
             try {
                 delayTicks = Math.max(0, Math.min(4, Integer.parseInt(delayVal.trim())));
-            } catch (NumberFormatException e) {
-                Logger.error("SpeedBridge: Failed to parse delay_ticks", e);
-            }
+            } catch (NumberFormatException ignored) {}
         }
         blocksOnly = Boolean.parseBoolean(properties.getProperty("speedbridge.blocks_only", Boolean.toString(blocksOnly)));
         sneakOnJump = Boolean.parseBoolean(properties.getProperty("speedbridge.sneak_on_jump", Boolean.toString(sneakOnJump)));

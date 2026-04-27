@@ -11,7 +11,6 @@
 package com.phantom.module.impl.player;
 
 import com.phantom.gui.ModuleSettingsScreen;
-import com.phantom.util.Logger;
 import com.phantom.module.Module;
 
 import com.phantom.module.ModuleCategory;
@@ -219,10 +218,10 @@ public class AutoTotem extends Module {
     @Override
     public void loadConfig(Properties p) {
         super.loadConfig(p);
-        try { healthThreshold = Mth.clamp(Double.parseDouble(p.getProperty("autototem.threshold", "10.0")), 0.0, 20.0); } catch (Exception e) { Logger.warn("AutoTotem: Failed to parse threshold"); }
+        try { healthThreshold = Mth.clamp(Double.parseDouble(p.getProperty("autototem.threshold", "10.0")), 0.0, 20.0); } catch (Exception ignored) {}
         alwaysEquip = Boolean.parseBoolean(p.getProperty("autototem.always", Boolean.toString(alwaysEquip)));
-        try { delayMin = Mth.clamp(Integer.parseInt(p.getProperty("autototem.delayMin", "30")), 0, 500); } catch (Exception e) { Logger.warn("AutoTotem: Failed to parse delayMin"); }
-        try { delayMax = Mth.clamp(Integer.parseInt(p.getProperty("autototem.delayMax", "60")), 0, 500); } catch (Exception e) { Logger.warn("AutoTotem: Failed to parse delayMax"); }
+        try { delayMin = Mth.clamp(Integer.parseInt(p.getProperty("autototem.delayMin", "30")), 0, 500); } catch (Exception ignored) {}
+        try { delayMax = Mth.clamp(Integer.parseInt(p.getProperty("autototem.delayMax", "60")), 0, 500); } catch (Exception ignored) {}
     }
 
     @Override

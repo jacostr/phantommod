@@ -8,7 +8,6 @@
  */
 package com.phantom.module.impl.combat;
 
-import com.phantom.util.Logger;
 import com.phantom.gui.ModuleSettingsScreen;
 
 import com.phantom.module.Module;
@@ -53,6 +52,9 @@ public class Triggerbot extends Module {
     private double targetMissChance = 0.0D;
     private double earlyHitChance = 0.0D;
     private boolean limitItems = true;
+    private boolean targetPlayers = true;
+    private boolean targetMobs = true;
+    private boolean targetAnimals = false;
     private TargetMode targetMode = TargetMode.BOTH;
     private Preset currentPreset = Preset.NORMAL;
 
@@ -256,12 +258,25 @@ public class Triggerbot extends Module {
         saveConfig();
     }
 
+    public boolean isTargetPlayers() { return targetPlayers; }
+    public void setTargetPlayers(boolean v) { targetPlayers = v; saveConfig(); }
+    public boolean isTargetMobs() { return targetMobs; }
+    public void setTargetMobs(boolean v) { targetMobs = v; saveConfig(); }
+    public boolean isTargetAnimals() { return targetAnimals; }
+    public void setTargetAnimals(boolean v) { targetAnimals = v; saveConfig(); }
+
     private boolean isValidTarget(Entity entity) {
-        return switch (targetMode) {
-            case PLAYERS -> entity instanceof Player;
-            case MOBS -> entity instanceof Mob;
-            case BOTH -> entity instanceof Player || entity instanceof Mob;
-        };
+        if (entity instanceof Player && targetPlayers) return true;
+        if (entity instanceof Mob && targetMobs) return true;
+        if ((entity instanceof net.minecraft.world.entity.animal.Animal || entity instanceof net.minecraft.world.entity.AgeableMob) && targetAnimals) return true;
+        if (entity instanceof Player || entity instanceof Mob) {
+            return switch (targetMode) {
+                case PLAYERS -> entity instanceof Player;
+                case MOBS -> entity instanceof Mob;
+                case BOTH -> true;
+            };
+        }
+        return false;
     }
 
     public void applyPresetLegit() {
@@ -332,26 +347,20 @@ public class Triggerbot extends Module {
         if (missChance != null) {
             try {
                 targetMissChance = Math.max(0.0D, Math.min(1.0D, Double.parseDouble(missChance.trim())));
-            } catch (NumberFormatException e) {
-                Logger.warn("Triggerbot: Failed to parse target_miss_chance");
-            }
+            } catch (NumberFormatException ignored) {}
         }
 
         String earlyChance = properties.getProperty("triggerbot.early_hit_chance");
         if (earlyChance != null) {
             try {
                 earlyHitChance = Math.max(0.0D, Math.min(1.0D, Double.parseDouble(earlyChance.trim())));
-            } catch (NumberFormatException e) {
-                Logger.warn("Triggerbot: Failed to parse early_hit_chance");
-            }
+            } catch (NumberFormatException ignored) {}
         }
 
         limitItems = Boolean.parseBoolean(properties.getProperty("triggerbot.limit_items", Boolean.toString(limitItems)));
-        String mode = properties.getProperty("triggerbot.target_mode");
-        if (mode != null) {
-            try { targetMode = TargetMode.valueOf(mode.trim().toUpperCase(Locale.ROOT)); }
-            catch (IllegalArgumentException e) { Logger.warn("Triggerbot: Failed to parse target_mode"); }
-        }
+        targetPlayers = Boolean.parseBoolean(properties.getProperty("triggerbot.target_players", Boolean.toString(targetPlayers)));
+        targetMobs = Boolean.parseBoolean(properties.getProperty("triggerbot.target_mobs", Boolean.toString(targetMobs)));
+        targetAnimals = Boolean.parseBoolean(properties.getProperty("triggerbot.target_animals", Boolean.toString(targetAnimals)));
     }
 
     @Override
@@ -365,5 +374,8 @@ public class Triggerbot extends Module {
         properties.setProperty("triggerbot.early_hit_chance", Double.toString(earlyHitChance));
         properties.setProperty("triggerbot.limit_items", Boolean.toString(limitItems));
         properties.setProperty("triggerbot.target_mode", targetMode.name());
+        properties.setProperty("triggerbot.target_players", Boolean.toString(targetPlayers));
+        properties.setProperty("triggerbot.target_mobs", Boolean.toString(targetMobs));
+        properties.setProperty("triggerbot.target_animals", Boolean.toString(targetAnimals));
     }
 }

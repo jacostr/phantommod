@@ -48,15 +48,15 @@ public class ModuleSettingsScreen extends Screen {
 
     private void rebuildUI() {
         components.clear();
-        
+
         int centerX = this.width / 2;
         int centerY = this.height / 2;
         int startX = centerX - panelWidth / 2 + 20;
-        
+
         // Calculate description height to avoid overlap
         List<FormattedCharSequence> descLines = this.font.split(Component.literal(module.getDescription()), panelWidth - 40);
         int descriptionHeight = descLines.size() * 10;
-        int startY = centerY - panelHeight / 2 + 65 + descriptionHeight;
+        int startY = centerY - panelHeight / 2 + 45 + descriptionHeight;
         int y = startY - scrollOffset;
 
         // Back Button
@@ -162,18 +162,13 @@ public class ModuleSettingsScreen extends Screen {
             y += 25;
             addToggle(startX, y, "Show CPS", hud.isShowCps(), hud::setShowCps);
             y += 25;
-            addToggle(startX, y, "Debug Logger", hud.isDebugLogger(), hud::setDebugLogger);
-            y += 25;
-            addToggle(startX, y, "File Logger", hud.isFileLogger(), hud::setFileLogger);
-            y += 25;
-            // Mode cycler for alignment and side
-            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("HUD Side: " + (hud.isAlignLeft() ? "Left" : "Right")), btn -> {
-                hud.setAlignLeft(!hud.isAlignLeft());
+            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("HUD Side: " + hud.getHudCorner().getLabel()), btn -> {
+                hud.cycleHudCorner();
                 rebuildUI();
             }));
             y += 25;
-            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Stats Side: " + hud.getStatsSide().getLabel()), btn -> {
-                hud.cycleStatsSide();
+            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Notif Pos: " + hud.getNotificationPos().getLabel()), btn -> {
+                hud.cycleNotificationPos();
                 rebuildUI();
             }));
             y += 25;
@@ -205,8 +200,6 @@ public class ModuleSettingsScreen extends Screen {
             y += 25;
         } else if (module instanceof AimAssist aim) {
             addPresetCycler(startX, y, aim.getCurrentPreset().getName(), aim::cyclePreset);
-            y += 25;
-            addToggle(startX, y, "Show FOV", aim.isShowFovCircle(), aim::setShowFovCircle);
             y += 30;
             addSlider(startX, y, "Distance", 2.0, 8.0, aim.getDistance(), aim::setDistance);
             y += 35;
@@ -216,6 +209,8 @@ public class ModuleSettingsScreen extends Screen {
             y += 35;
             addSlider(startX, y, "FOV", 10.0, 360.0, aim.getFov(), aim::setFov);
             y += 35;
+            addToggle(startX, y, "Show FOV Circle", aim.isShowFovCircle(), aim::setShowFovCircle);
+            y += 25;
             addToggle(startX, y, "Require Mouse Down", aim.isRequireMouseDown(), aim::setRequireMouseDown);
             y += 25;
             addToggle(startX, y, "Click Aim", aim.isClickAim(), aim::setClickAim);
@@ -232,14 +227,12 @@ public class ModuleSettingsScreen extends Screen {
             y += 25;
             addToggle(startX, y, "Target Animals", aim.isTargetAnimals(), aim::setTargetAnimals);
             y += 25;
-            addToggle(startX, y, "Show FOV Circle", aim.isShowFovCircle(), aim::setShowFovCircle);
-            y += 25;
-            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Target: " + aim.getTargetArea().getLabel()), btn -> {
+            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Target Area: " + aim.getTargetArea().getLabel()), btn -> {
                 aim.cycleTargetArea();
                 rebuildUI();
             }));
             y += 25;
-            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Mode: " + aim.getTargetMode().getLabel()), btn -> {
+            components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Target Mode: " + aim.getTargetMode().getLabel()), btn -> {
                 aim.cycleTargetMode();
                 rebuildUI();
             }));
@@ -315,12 +308,6 @@ public class ModuleSettingsScreen extends Screen {
             y += 25;
             addToggle(startX, y, "Silent Aim", afk.isSilentAim(), afk::setSilentAim);
             y += 25;
-        } else if (module instanceof AutoGG gg) {
-            addSlider(startX, y, "Delay (ms)", 0, 5000, (double) gg.getDelayMs(), v -> gg.setDelayMs(v.intValue()));
-            y += 35;
-            // Message editing would need a text field, which we don't have yet.
-            // For now, we'll just show the current message in a button that cycles presets?
-            // Actually, let's just leave it as is.
         } else if (module instanceof WeaponCycler cycler) {
             components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Combo: " + cycler.getWeaponCombo().getLabel()), btn -> {
                 cycler.cycleWeaponCombo();
@@ -416,6 +403,12 @@ public class ModuleSettingsScreen extends Screen {
             addToggle(startX, y, "Shield Check", trigger.isShieldCheck(), trigger::setShieldCheck);
             y += 25;
             addToggle(startX, y, "Limit Items", trigger.isLimitItems(), trigger::setLimitItems);
+            y += 25;
+            addToggle(startX, y, "Target Players", trigger.isTargetPlayers(), trigger::setTargetPlayers);
+            y += 25;
+            addToggle(startX, y, "Target Mobs", trigger.isTargetMobs(), trigger::setTargetMobs);
+            y += 25;
+            addToggle(startX, y, "Target Animals", trigger.isTargetAnimals(), trigger::setTargetAnimals);
             y += 25;
             components.add(new ModernButton(startX, y, panelWidth - 40, 20, Component.literal("Target: " + trigger.getTargetMode().getLabel()), btn -> {
                 trigger.setTargetMode(Triggerbot.TargetMode.values()[(trigger.getTargetMode().ordinal() + 1) % Triggerbot.TargetMode.values().length]);
@@ -554,14 +547,12 @@ public class ModuleSettingsScreen extends Screen {
 
         // Render Components
         for (BaseComponent component : components) {
-            // Always render back button
             if (component instanceof ModernButton && ((ModernButton)component).getMessage().getString().contains("Back")) {
                 component.render(graphics, mouseX, mouseY, delta);
                 continue;
             }
-            // Clip other components
-            if (component.getY() + component.getHeight() > centerY - panelHeight / 2 + 60 &&
-                component.getY() < centerY + panelHeight / 2 - 20) {
+            if (component.getY() + component.getHeight() > centerY - panelHeight / 2 + 50 &&
+                component.getY() < centerY + panelHeight / 2 - 10) {
                 component.render(graphics, mouseX, mouseY, delta);
             }
         }
@@ -569,14 +560,14 @@ public class ModuleSettingsScreen extends Screen {
         // Draw Scroll Bar
         if (maxScroll > 0) {
             int scrollBarX = centerX + panelWidth / 2 - 8;
-            int scrollBarY = centerY - panelHeight / 2 + 60;
-            int scrollBarHeight = panelHeight - 80;
-            
+            int scrollBarY = centerY - panelHeight / 2 + 50;
+            int scrollBarHeight = panelHeight - 60;
+
             // Track
             graphics.fill(scrollBarX, scrollBarY, scrollBarX + 4, scrollBarY + scrollBarHeight, 0x40000000);
-            
+
             // Thumb
-            int thumbHeight = Math.max(20, (int) ((double) (panelHeight - 80) * (panelHeight - 80) / (maxScroll + panelHeight - 80)));
+            int thumbHeight = Math.max(20, (int) ((double) (panelHeight - 60) * (panelHeight - 60) / (maxScroll + panelHeight - 60)));
             int thumbY = scrollBarY + (int) ((double) scrollOffset / maxScroll * (scrollBarHeight - thumbHeight));
             graphics.fill(scrollBarX, thumbY, scrollBarX + 4, thumbY + thumbHeight, 0xFFA8E6A3);
         }
@@ -614,8 +605,8 @@ public class ModuleSettingsScreen extends Screen {
         int button = event.button();
         
         int centerY = this.height / 2;
-        int panelMinY = centerY - panelHeight / 2 + 60;
-        int panelMaxY = centerY + panelHeight / 2 - 20;
+        int panelMinY = centerY - panelHeight / 2 + 40;
+        int panelMaxY = centerY + panelHeight / 2 - 10;
 
         for (BaseComponent component : components) {
             if (component instanceof ModernButton && ((ModernButton)component).getMessage().getString().contains("Back")) {
@@ -642,7 +633,7 @@ public class ModuleSettingsScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        int nextOffset = Math.max(0, Math.min(maxScroll, scrollOffset - (int)(scrollY * 20)));
+        int nextOffset = Math.max(0, Math.min(maxScroll, scrollOffset - (int)(scrollY * 15)));
         if (nextOffset != scrollOffset) {
             scrollOffset = nextOffset;
             rebuildUI();

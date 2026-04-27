@@ -7,7 +7,6 @@
 package com.phantom.module.impl.combat;
 
 import com.phantom.gui.ModuleSettingsScreen;
-import com.phantom.util.Logger;
 
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
@@ -263,15 +262,15 @@ public class JumpReset extends Module {
         checkFOV = Boolean.parseBoolean(properties.getProperty("jumpreset.check_fov", Boolean.toString(checkFOV)));
         String jcp = properties.getProperty("jumpreset.chance_percent");
         if (jcp != null) {
-            try { jumpChancePercent = Mth.clamp(Double.parseDouble(jcp.trim()), 0.0D, 100.0D); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse chance_percent"); }
+            try { jumpChancePercent = Mth.clamp(Double.parseDouble(jcp.trim()), 0.0D, 100.0D); } catch (NumberFormatException ignored) {}
         }
         String maxDelay = properties.getProperty("jumpreset.max_delay_ticks");
         if (maxDelay != null) {
-            try { maxDelayTicks = Math.max(0, Math.min(6, Integer.parseInt(maxDelay.trim()))); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse max_delay_ticks"); }
+            try { maxDelayTicks = Math.max(0, Math.min(6, Integer.parseInt(maxDelay.trim()))); } catch (NumberFormatException ignored) {}
         }
         String cooldown = properties.getProperty("jumpreset.cooldown_ticks");
         if (cooldown != null) {
-            try { cooldownTicks = Math.max(0, Math.min(20, Integer.parseInt(cooldown.trim()))); } catch (NumberFormatException e) { Logger.warn("JumpReset: Failed to parse cooldown_ticks"); }
+            try { cooldownTicks = Math.max(0, Math.min(20, Integer.parseInt(cooldown.trim()))); } catch (NumberFormatException ignored) {}
         }
     }
 

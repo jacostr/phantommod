@@ -9,7 +9,6 @@
  */
 package com.phantom.module.impl.combat;
 
-import com.phantom.util.Logger;
 import com.phantom.gui.ModuleSettingsScreen;
 
 import com.phantom.module.Module;
@@ -167,29 +166,27 @@ public class Velocity extends Module {
         super.loadConfig(properties);
         try {
             mode = Mode.valueOf(properties.getProperty("velocity.mode", "LEGIT"));
-        } catch (Exception e) { Logger.warn("Velocity: Failed to parse mode"); }
+        } catch (Exception ignored) {}
         setMode(mode);
 
         String h = properties.getProperty("velocity.horizontal");
         if (h != null) {
-            try { horizontalPercent = Double.parseDouble(h); } catch (Exception e) { Logger.warn("Velocity: Failed to parse horizontal"); }
+            try { horizontalPercent = Double.parseDouble(h); } catch (Exception ignored) {}
         }
         String v = properties.getProperty("velocity.vertical");
         if (v != null) {
-            try { verticalPercent = Double.parseDouble(v); } catch (Exception e) { Logger.warn("Velocity: Failed to parse vertical"); }
+            try { verticalPercent = Double.parseDouble(v); } catch (Exception ignored) {}
         }
         String interval = properties.getProperty("velocity.pulse_interval");
         if (interval != null) {
-            try { pulseInterval = Integer.parseInt(interval); } catch (Exception e) { Logger.warn("Velocity: Failed to parse pulse_interval"); }
+            try { pulseInterval = Integer.parseInt(interval); } catch (Exception ignored) {}
         }
 
         String chanceValue = properties.getProperty("velocity.chance");
         if (chanceValue != null) {
             try {
                 chance = Math.max(0.0, Math.min(1.0, Double.parseDouble(chanceValue.trim())));
-            } catch (NumberFormatException e) {
-                Logger.warn("Velocity: Failed to parse chance");
-            }
+            } catch (NumberFormatException ignored) {}
         }
         onlyWhileTargeting = Boolean.parseBoolean(
                 properties.getProperty("velocity.only_while_targeting", Boolean.toString(onlyWhileTargeting)));

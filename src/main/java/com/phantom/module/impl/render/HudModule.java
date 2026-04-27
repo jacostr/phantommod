@@ -26,13 +26,13 @@ import java.util.Properties;
 import org.lwjgl.glfw.GLFW;
 
 public class HudModule extends Module {
-    public enum CornerSide {
+    public enum HudCorner {
         LEFT("Left"),
         RIGHT("Right");
 
         private final String label;
 
-        CornerSide(String label) {
+        HudCorner(String label) {
             this.label = label;
         }
 
@@ -40,7 +40,7 @@ public class HudModule extends Module {
             return label;
         }
 
-        public CornerSide next() {
+        public HudCorner next() {
             return this == LEFT ? RIGHT : LEFT;
         }
     }
@@ -49,11 +49,8 @@ public class HudModule extends Module {
     private boolean showFps = true;
     private boolean showPing = true;
     private boolean showCps = true;
-    private boolean alignLeft;
-    private CornerSide statsSide = CornerSide.LEFT;
-    private boolean debugLogger = false;
-    private boolean fileLogger = false;
-    private com.phantom.gui.NotificationManager.Position notificationPos = com.phantom.gui.NotificationManager.Position.TOP_LEFT;
+    private HudCorner hudCorner = HudCorner.RIGHT;
+    private com.phantom.gui.NotificationManager.Position notificationPos = com.phantom.gui.NotificationManager.Position.TOP_RIGHT;
 
     // CPS tracking — ring buffer of click timestamps over the last 1000 ms
     private final long[] clickTimes = new long[20];
@@ -148,35 +145,15 @@ public class HudModule extends Module {
         saveConfig();
     }
 
-    public boolean isAlignLeft() {
-        return alignLeft;
-    }
+    public boolean isAlignLeft() { return hudCorner == HudCorner.LEFT; }
+    public HudCorner getHudCorner() { return hudCorner; }
+    public void setHudCorner(HudCorner v) { this.hudCorner = v; saveConfig(); }
+    public void cycleHudCorner() { hudCorner = hudCorner.next(); saveConfig(); }
 
-    public void setAlignLeft(boolean v) {
-        this.alignLeft = v;
-        saveConfig();
-    }
-
-    public CornerSide getStatsSide() {
-        return statsSide;
-    }
-
-    public void cycleStatsSide() {
-        statsSide = statsSide.next();
-        saveConfig();
-    }
-
-    public boolean isDebugLogger() { return debugLogger; }
-    public void setDebugLogger(boolean v) {
-        this.debugLogger = v;
-        com.phantom.util.Logger.setDebugEnabled(v);
-        saveConfig();
-    }
-
-    public boolean isFileLogger() { return fileLogger; }
-    public void setFileLogger(boolean v) {
-        this.fileLogger = v;
-        com.phantom.util.Logger.setFileLoggingEnabled(v);
+    public com.phantom.gui.NotificationManager.Position getNotificationPos() { return notificationPos; }
+    public void cycleNotificationPos() {
+        notificationPos = notificationPos.next();
+        com.phantom.gui.NotificationManager.setPosition(notificationPos);
         saveConfig();
     }
 
@@ -187,19 +164,10 @@ public class HudModule extends Module {
         showFps = Boolean.parseBoolean(p.getProperty("hud.show_fps", Boolean.toString(showFps)));
         showPing = Boolean.parseBoolean(p.getProperty("hud.show_ping", Boolean.toString(showPing)));
         showCps = Boolean.parseBoolean(p.getProperty("hud.show_cps", Boolean.toString(showCps)));
-        alignLeft = Boolean.parseBoolean(p.getProperty("hud.align_left", Boolean.toString(alignLeft)));
-        String side = p.getProperty("hud.stats_side");
-        if (side != null) {
-            try {
-                statsSide = CornerSide.valueOf(side);
-            } catch (IllegalArgumentException ignored) {
-            }
+        String corner = p.getProperty("hud.hud_corner");
+        if (corner != null) {
+            try { hudCorner = HudCorner.valueOf(corner); } catch (IllegalArgumentException ignored) {}
         }
-        debugLogger = Boolean.parseBoolean(p.getProperty("hud.debug_logger", "false"));
-        fileLogger = Boolean.parseBoolean(p.getProperty("hud.file_logger", "false"));
-        com.phantom.util.Logger.setDebugEnabled(debugLogger);
-        com.phantom.util.Logger.setFileLoggingEnabled(fileLogger);
-        
         String nPos = p.getProperty("hud.notification_pos");
         if (nPos != null) {
             try {
@@ -216,21 +184,8 @@ public class HudModule extends Module {
         p.setProperty("hud.show_fps", Boolean.toString(showFps));
         p.setProperty("hud.show_ping", Boolean.toString(showPing));
         p.setProperty("hud.show_cps", Boolean.toString(showCps));
-        p.setProperty("hud.align_left", Boolean.toString(alignLeft));
-        p.setProperty("hud.stats_side", statsSide.name());
-        p.setProperty("hud.debug_logger", Boolean.toString(debugLogger));
-        p.setProperty("hud.file_logger", Boolean.toString(fileLogger));
+        p.setProperty("hud.hud_corner", hudCorner.name());
         p.setProperty("hud.notification_pos", notificationPos.name());
-    }
-
-    public com.phantom.gui.NotificationManager.Position getNotificationPos() {
-        return notificationPos;
-    }
-
-    public void cycleNotificationPos() {
-        notificationPos = notificationPos.next();
-        com.phantom.gui.NotificationManager.setPosition(notificationPos);
-        saveConfig();
     }
 
     private int drawModuleHud(GuiGraphics graphics) {
@@ -253,12 +208,13 @@ public class HudModule extends Module {
         graphics.pose().scale(scale, scale);
 
         net.minecraft.network.chat.FontDescription cleanFont = new net.minecraft.network.chat.FontDescription.Resource(net.minecraft.resources.Identifier.fromNamespaceAndPath("minecraft", "uniform"));
+
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i);
             net.minecraft.network.chat.Component styledLine = net.minecraft.network.chat.Component.literal(line).withStyle(s -> s.withFont(cleanFont));
             int color = i == 0 ? 0xFFA8E6A3 : 0xFFFFFFFF;
-            int x = alignLeft ? 8 : scaledWidth - mc.font.width(styledLine) - 8;
-            
+            int x = hudCorner == HudCorner.LEFT ? 8 : scaledWidth - mc.font.width(styledLine) - 8;
+
             if (i == 0) {
                 graphics.pose().pushMatrix();
                 graphics.pose().scale(1.1f, 1.1f);
@@ -281,8 +237,9 @@ public class HudModule extends Module {
         final float scale = 0.8F;
         int scaledWidth = (int) (mc.getWindow().getGuiScaledWidth() / scale);
 
-        boolean statsOnLeft = statsSide == CornerSide.LEFT;
-        boolean sameSide = alignLeft == statsOnLeft;
+        HudCorner statsCorner = hudCorner == HudCorner.LEFT ? HudCorner.RIGHT : HudCorner.LEFT;
+        boolean alignLeft = statsCorner == HudCorner.LEFT;
+        boolean sameSide = isAlignLeft() == alignLeft;
         int y = sameSide ? (int) (moduleListHeight / scale) + 4 : 8;
 
         graphics.pose().pushMatrix();
@@ -293,7 +250,7 @@ public class HudModule extends Module {
             String txt = "FPS: " + mc.getFps();
             net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
             graphics.drawString(mc.font, styled,
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
+                    alignLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
@@ -301,7 +258,7 @@ public class HudModule extends Module {
             String txt = getPingText();
             net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
             graphics.drawString(mc.font, styled,
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
+                    alignLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
             y += 10;
         }
 
@@ -309,7 +266,7 @@ public class HudModule extends Module {
             String txt = "CPS: " + getCps();
             net.minecraft.network.chat.Component styled = net.minecraft.network.chat.Component.literal(txt).withStyle(s -> s.withFont(cleanFont));
             graphics.drawString(mc.font, styled,
-                    statsOnLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
+                    alignLeft ? 8 : scaledWidth - mc.font.width(styled) - 8, y, 0xFFFFFFFF, true);
         }
 
         graphics.pose().popMatrix();

@@ -4,7 +4,6 @@ package com.phantom.module.impl.render;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.Minecraft;
-import com.phantom.util.Logger;
 
 
 import java.util.List;
@@ -52,17 +51,14 @@ public class FullBright extends Module {
         try {
             return mc.options.gamma().get();
         } catch (Exception e) {
-            Logger.error("FullBright: Failed to read gamma", e);
+            return DEFAULT_GAMMA;
         }
-        return DEFAULT_GAMMA;
     }
 
     private void setGammaValue(double value) {
         try {
             mc.options.gamma().set(value);
             mc.options.save();
-        } catch (Exception e) {
-            Logger.error("FullBright: Failed to set gamma to " + value, e);
-        }
+        } catch (Exception ignored) {}
     }
 }

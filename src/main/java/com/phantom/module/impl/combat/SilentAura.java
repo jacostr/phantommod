@@ -12,7 +12,6 @@ import com.phantom.gui.ModuleSettingsScreen;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import com.phantom.module.impl.player.AntiBot;
-import com.phantom.util.Logger;
 
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.minecraft.client.gui.screens.Screen;
@@ -288,12 +287,12 @@ public class SilentAura extends Module {
     @Override
     public void loadConfig(Properties p) {
         super.loadConfig(p);
-        try { minCps = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.min_cps", "8.0")), 1.0, 20.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse min_cps"); }
-        try { maxCps = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.max_cps", "12.0")), minCps, 20.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse max_cps"); }
-        try { smoothing = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.smoothing", "5.0")), 1.0, 10.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse smoothing"); }
-        try { snapiness = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.snapiness", "3.0")), 1.0, 10.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse snapiness"); }
-        try { maxAngle = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.max_angle", "180.0")), 10.0, 360.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse max_angle"); }
-        try { attackRange = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.range", "4.0")), 2.0, 6.0); } catch (Exception e) { Logger.warn("SilentAura: Failed to parse range"); }
+        try { minCps = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.min_cps", "8.0")), 1.0, 20.0); } catch (Exception ignored) {}
+        try { maxCps = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.max_cps", "12.0")), minCps, 20.0); } catch (Exception ignored) {}
+        try { smoothing = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.smoothing", "5.0")), 1.0, 10.0); } catch (Exception ignored) {}
+        try { snapiness = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.snapiness", "3.0")), 1.0, 10.0); } catch (Exception ignored) {}
+        try { maxAngle = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.max_angle", "180.0")), 10.0, 360.0); } catch (Exception ignored) {}
+        try { attackRange = Mth.clamp(Double.parseDouble(p.getProperty("silentaura.range", "4.0")), 2.0, 6.0); } catch (Exception ignored) {}
         targetMode = TargetMode.fromString(p.getProperty("silentaura.target_mode"));
         requireMouseDown = Boolean.parseBoolean(p.getProperty("silentaura.require_mouse", Boolean.toString(requireMouseDown)));
         aimVertically = Boolean.parseBoolean(p.getProperty("silentaura.aim_vertically", Boolean.toString(aimVertically)));

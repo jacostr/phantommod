@@ -11,7 +11,6 @@ import com.phantom.module.impl.player.AntiBot;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 import net.minecraft.client.gui.screens.Screen;
-import com.phantom.util.Logger;
 import net.minecraft.util.Mth;
 
 import net.minecraft.world.InteractionHand;
@@ -244,13 +243,11 @@ public class AutoClicker extends Module {
         super.loadConfig(properties);
         String min = properties.getProperty("autoclicker.min_cps");
         if (min != null) {
-            try { minCps = Mth.clamp(Double.parseDouble(min.trim()), 1.0D, 20.0D); } 
-            catch (Exception e) { Logger.error("AutoClicker: Failed to parse min_cps", e); }
+            try { minCps = Mth.clamp(Double.parseDouble(min.trim()), 1.0D, 20.0D); } catch (Exception ignored) {}
         }
         String max = properties.getProperty("autoclicker.max_cps");
         if (max != null) {
-            try { maxCps = Mth.clamp(Double.parseDouble(max.trim()), minCps, 20.0D); } 
-            catch (Exception e) { Logger.error("AutoClicker: Failed to parse max_cps", e); }
+            try { maxCps = Mth.clamp(Double.parseDouble(max.trim()), minCps, 20.0D); } catch (Exception ignored) {}
         }
         onlyWithWeapon = Boolean.parseBoolean(properties.getProperty("autoclicker.only_with_weapon", Boolean.toString(onlyWithWeapon)));
         requireMouseDown = Boolean.parseBoolean(properties.getProperty("autoclicker.require_mouse_down", Boolean.toString(requireMouseDown)));

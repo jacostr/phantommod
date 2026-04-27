@@ -10,7 +10,6 @@
  */
 package com.phantom.module.impl.combat;
 
-import com.phantom.util.Logger;
 import com.phantom.module.Module;
 import com.phantom.module.ModuleCategory;
 
@@ -46,9 +45,7 @@ public class Criticals extends Module {
         if (c != null) {
             try {
                 chance = Math.max(0.0, Math.min(1.0, Double.parseDouble(c.trim())));
-            } catch (NumberFormatException e) {
-                Logger.warn("Criticals: Failed to parse config - " + e.getMessage());
-            }
+            } catch (NumberFormatException ignored) {}
         }
     }
 

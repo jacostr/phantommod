@@ -40,8 +40,6 @@ public class ClientPacketListenerMixin {
                     accessor.phantom$setMovement(scaled);
                 }
             }
-        } catch (Exception e) {
-            com.phantom.util.Logger.error("Velocity: Error processing motion packet", e);
-        }
+        } catch (Exception ignored) {}
     }
 }
